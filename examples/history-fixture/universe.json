@@ -1,0 +1,4 @@
+[
+  {"security_id":"fixture-history-a","asof_time":"2020-01-01T00:00:00Z","published_at":"2020-01-01T00:00:00Z","valid_until":"2020-01-04T00:00:00Z","eligible":true,"rejection_reason":null,"marketcap_asof":null,"dollar_volume":null,"sector_asof":null,"source_id":"fixture-history-v1"},
+  {"security_id":"fixture-history-b","asof_time":"2020-01-01T00:00:00Z","published_at":"2020-01-01T00:00:00Z","valid_until":"2020-01-04T00:00:00Z","eligible":true,"rejection_reason":null,"marketcap_asof":null,"dollar_volume":null,"sector_asof":null,"source_id":"fixture-history-v1"}
+]

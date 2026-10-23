@@ -86,6 +86,15 @@ This makes a public SEC request and saves raw submissions plus a checksum manife
 parse historical financial facts or make the synthetic sample real. No contact identity is inferred.
 The CLI does not auto-load `.env`; inject environment variables explicitly. No paid requests occur.
 
+## Historical export staging
+
+`uv run baghunter audit-history --bundle examples/history-fixture` audits the new fictional import
+example. `uv run baghunter ingest-history --bundle examples/history-fixture --output data/imported`
+preserves its source bytes and writes quarantined Parquet plus a coverage report. Normalized external
+exports can use the same adapter, with explicit source authorization and checksums. They remain
+EXTERNAL_UNVERIFIED and never become candidates automatically. See the
+[historical import contract](docs/HISTORICAL_IMPORT.md) for formats, PIT rules and resource limits.
+
 ## Development workflow
 
 Read [AGENTS.md](AGENTS.md). Short branches, lockfile installs, exact-head CI and independent model

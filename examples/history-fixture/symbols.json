@@ -1,0 +1,4 @@
+[
+  {"security_id":"fixture-history-a","ticker":"DEMO-H1","valid_from":"2020-01-01","valid_to":null,"published_at":"2020-01-01T00:00:00Z"},
+  {"security_id":"fixture-history-b","ticker":"DEMO-H2","valid_from":"2020-01-01","valid_to":null,"published_at":"2020-01-01T00:00:00Z"}
+]

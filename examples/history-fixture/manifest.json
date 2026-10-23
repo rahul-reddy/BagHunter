@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "mode": "FIXTURE",
+  "source_id": "fixture-history-v1",
+  "provider": "BagHunter synthetic import example",
+  "source_url": "fixture://history-example",
+  "retrieved_at": "2020-01-10T00:00:00Z",
+  "license_note": "Entirely fictional test observations. Not real market or filing evidence.",
+  "usage_authorized": true,
+  "universe_basis": "archived_pit",
+  "delisted_coverage": "included",
+  "actions_coverage": "complete",
+  "files": {
+    "instruments": "b68427194070b5bb6c36cd6eb9378a5324b7f08b6b96031e56807eb42eb5e380",
+    "symbols": "61d7f8808a9dbd78b70dfcaef8144b69a25fa367a7b48d36a0b44e68d1bdd3ac",
+    "universe": "9dbc8fb75f9effdec649880c8a3344c175068281ea03611a1cd6af987a88de65",
+    "bars": "2e1485682f4d4e6bf627ffc8cb7122ebbb5e3e8152e8faff7e860e901ce559d0",
+    "actions": "f808370bbb91eb18d7ea520dc641985c463c690323687928f496b128d6898823",
+    "facts": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "sessions": "f933a88b246235dc624a7f71781ada2a99c8831ba86bb7f74cce924834bad2c7"
+  }
+}

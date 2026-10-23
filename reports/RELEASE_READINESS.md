@@ -31,3 +31,9 @@ Exact tested/reviewed implementation: `7269b132db3b7cf202c6d86c7e249e2150eaee85`
 The squash merge has identical Git tree e5493b495f18ca9f8c95dcd1244c14ca0d3f258a.
 No empirical FAIL result is claimed: empirical gates are BLOCKED by missing evidence.
 One nonblocking reviewer advisory remains: specify UTF-8 for CSV exports before real multilingual data.
+
+Historical export staging increment: local structural/PIT/quarantine tests PASS (49 backend tests).
+The fixture audit and ingest commands were executed; outputs explicitly remain
+QUARANTINED_NOT_RESEARCH_READY. Schema/license declarations do not establish empirical data validity.
+The complete branding rename passed independent Claude review and was merged in PR #15 before
+this adapter work began. Current-head CI and independent review gate the new adapter PR separately.

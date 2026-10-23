@@ -20,3 +20,9 @@ Times require UTC offsets; nonfinite numbers and inconsistent OHLC fail validati
 Full target tables in `03_DATA_AND_ARCHITECTURE.md` are not all implemented. There is no real historical
 market-cap table, thesis table, instrument event ledger or production portfolio ledger yet. The toy
 execution audit is explicit JSON rather than a production execution schema.
+
+Historical normalized exports have a separate [import contract](HISTORICAL_IMPORT.md), implemented
+in packages/data/history.py. Instruments have no synthetic bucket defaults; symbols have publication
+times; universe rows include known publication, expiry, explicit null capitalization and exclusion
+reasons. SHA-256 manifests cover every input table and a declared calendar supports missing-session
+audits. Imported history is quarantined separately and cannot be consumed as a demo or live run.
