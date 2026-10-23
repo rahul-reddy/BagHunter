@@ -1,5 +1,6 @@
 """Read-only local API. No execution endpoint or job-trigger endpoint."""
 
+import csv
 import json
 import os
 import re
@@ -7,9 +8,60 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
+
+from packages.data.finviz import read_snapshot
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
+
+
+@app.get("/finviz/observations")
+def finviz_observations(
+    q: str = Query(default="", max_length=100),
+    offset: int = Query(default=0, ge=0, le=100_000),
+    limit: int = Query(default=50, ge=1, le=100),
+) -> dict[str, Any]:
+    snapshot_id = os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", "")
+    mode = os.environ.get("BAGHUNTER_FINVIZ_MODE", "EXTERNAL_UNVERIFIED")
+    if mode not in ("FIXTURE", "EXTERNAL_UNVERIFIED"):
+        raise HTTPException(503, "Invalid local Finviz source mode")
+    try:
+        report, rows = read_snapshot(snapshot_id, mode)  # type: ignore[arg-type]
+    except (OSError, ValueError, TypeError, KeyError, csv.Error):
+        raise HTTPException(
+            503, "No valid selected Finviz snapshot. See docs/FINVIZ.md for local setup."
+        ) from None
+    needle = q.strip().casefold()
+    matching = sorted(
+        (
+            row
+            for row in rows
+            if needle
+            in " ".join([row.ticker, row.company, row.sector or "", row.industry or ""]).casefold()
+        ),
+        key=lambda row: row.ticker,
+    )
+    now = datetime.now(UTC)
+    age_hours = (now - datetime.fromisoformat(report["retrieved_at"])).total_seconds() / 3600
+    return {
+        "coverage": report,
+        "served_at": now.isoformat(),
+        "age_hours": age_hours,
+        "stale": age_hours >= 24,
+        "total": len(matching),
+        "offset": offset,
+        "limit": limit,
+        "observations": [
+            row.model_dump(mode="json")
+            | {
+                "volume_shares": None if row.volume_shares is None else str(row.volume_shares),
+                "change_percent_reported": None
+                if row.change_fraction is None
+                else format((row.change_fraction * 100).normalize(), "f"),
+            }
+            for row in matching[offset : offset + limit]
+        ],
+    }
 
 
 def current() -> dict[str, Any]:

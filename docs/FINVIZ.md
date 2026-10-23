@@ -98,5 +98,50 @@ Repeatable supported API ingestion is a later step. Verify account-specific docu
 credentials from the local environment without logging authenticated URLs. The API announcement states
 a shared account limit of 10 requests per rolling five seconds across Export/API endpoints and
 HTTP 429 with `Retry-After: 5`; any client must respect concurrent account usage and bounded retries.
-No supported API client or credential storage is implemented by this increment. Next: resolve security
-types/identities and export-unit evidence before adding an explicitly separate current-data browser.
+No supported Finviz download client or credential storage is implemented by this increment.
+
+## Local observations browser
+
+The **Finviz Observations** navigation item shows a selected saved snapshot independently of the
+fixture run. It has search across ticker/company/sector/industry and alphabetical pagination, not
+candidate scores, historical profiles or eligibility decisions. Missing values stay visible and zero
+reported P/E is marked unresolved. Price and market cap display provider-reported scale without USD
+formatting. Unknown types/IDs remain unknown; a sector, industry or missing capitalization is not
+evidence that an observation is a common share or fund.
+
+Official screener help was checked again on 2026-10-23. It defines field meanings but does not
+establish this CSV's capitalization scale or permanent security identity. The authenticated API
+documentation still redirects to marketing without a browser login. Those gaps remain unresolved;
+the informational browser exposes them rather than promoting data into research inputs. Historical
+research and common-stock eligibility remain blocked on the missing evidence.
+
+Run from the repository root, after ingesting the local export:
+
+```powershell
+$env:BAGHUNTER_FINVIZ_SNAPSHOT='84f34ecbc902a7c007e448a27afb83b93a7a5483fb1a5be5f48bbb2dac748567'
+$env:BAGHUNTER_FINVIZ_MODE='EXTERNAL_UNVERIFIED'
+uv run uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+```
+
+Start the frontend in a second terminal with `npm --prefix apps/web run dev`, open
+http://127.0.0.1:5173 on this computer and choose Finviz Observations. These environment variables
+select a local archive, not a credential. Do not put the token in browser configuration. For fictional
+test archives only, mode FIXTURE displays a prominent synthetic label. There is no fixture fallback
+when an external snapshot is missing or corrupt. No snapshot is selected automatically.
+
+GET /finviz/observations accepts q (at most 100 characters), offset (0–100,000) and limit (1–100;
+default 50). Every read verifies the bounded original CSV/manifest, snapshot identity, derived JSON,
+Parquet values/types and coverage report. It never imports, repairs or writes data. Invalid selection,
+symlinks and corruption fail closed with a generic 503 response. A missing fixture run does not block
+this endpoint or browser. No network calls, automatic download or refresh of vendor data occur.
+
+Retrieval age is displayed; 24 hours marks a saved snapshot stale. This is a local age threshold,
+not proof of provider quote freshness: provider observation time remains unknown at every age.
+Responses are paginated, and changing a query or failing a reload removes old displayed rows.
+Reported decimals, exact percentage text and share volumes are sent as strings to avoid browser
+rounding of large integers; counts and retrieval ages remain numeric.
+The licensed dataset stays under Git-ignored data/ and is served only by the configured local API.
+Bind to localhost; no public hosting or redistribution is configured or authorized by this feature.
+
+Next: obtain authoritative export-unit and security master evidence before enabling currency-aware
+filters, common-share eligibility or candidate research. Today's observations cannot fill PIT history.

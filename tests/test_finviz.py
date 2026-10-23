@@ -144,6 +144,8 @@ def test_symlink_output_is_rejected(export, tmp_path):
         pytest.skip("Symlink creation unavailable on this host")
     with pytest.raises(ValueError, match="symlinks"):
         ingest(export)
+    with pytest.raises(ValueError, match="symlinks"):
+        finviz.read_snapshot("0" * 64, "FIXTURE")
     assert not list((tmp_path / "elsewhere").iterdir())
 
 
@@ -284,3 +286,88 @@ def test_cli_suppresses_sensitive_manifest_values(export):
     assert result.returncode == 2
     assert "PRIVATE_SENTINEL" not in result.stdout + result.stderr
     assert "Finviz import rejected" in result.stderr
+
+
+def test_snapshot_reader_is_read_only_and_preserves_decimals(export, monkeypatch):
+    report = ingest(export)
+
+    def fail(*args, **kwargs):
+        raise AssertionError("Reader attempted a mutation")
+
+    monkeypatch.setattr(Path, "mkdir", fail)
+    monkeypatch.setattr(Path, "write_bytes", fail)
+    monkeypatch.setattr(Path, "write_text", fail)
+    monkeypatch.setattr(Path, "rename", fail)
+    checked, rows = finviz.read_snapshot(report["snapshot_id"], "FIXTURE")
+    assert checked == report
+    assert rows[0].market_cap_reported == Decimal("123.45")
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "raw.csv",
+        "source-manifest.json",
+        "observations.json",
+        "coverage.json",
+        "observations.parquet",
+    ],
+)
+def test_snapshot_reader_rejects_tampering(export, name):
+    report = ingest(export)
+    (archive(report) / name).write_bytes(b"PRIVATE_CORRUPT_INPUT")
+    with pytest.raises((ValueError, OSError)):
+        finviz.read_snapshot(report["snapshot_id"], "FIXTURE")
+
+
+def test_finviz_api_is_separate_paginated_and_explicitly_selected(export, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from apps.api.main import app
+
+    report = ingest(export)
+    client = TestClient(app)
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_SNAPSHOT", report["snapshot_id"])
+    monkeypatch.delenv("BAGHUNTER_FINVIZ_MODE", raising=False)
+    # No silent fallback to the fixture namespace when external mode is configured by default.
+    assert client.get("/finviz/observations").status_code == 503
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_MODE", "FIXTURE")
+    response = client.get("/finviz/observations?limit=1").json()
+    assert response["coverage"]["mode"] == "FIXTURE"
+    assert response["total"] == 2 and len(response["observations"]) == 1
+    assert response["observations"][0]["market_cap_reported"] == "123.45"
+    assert response["observations"][0]["volume_shares"] == "0"
+    assert response["observations"][0]["change_percent_reported"] == "-1.25"
+    assert response["observations"][0]["security_id"] is None
+    assert response["stale"] is True and response["coverage"]["provider_observation_time"] is None
+    assert client.get("/runs/current").status_code == 503  # no demo run required by Finviz
+    assert (
+        client.get("/finviz/observations?offset=1&limit=1").json()["observations"][0]["ticker"]
+        == "DEMO-B"
+    )
+    assert client.get("/finviz/observations?q=FICTIONAL").json()["total"] == 1
+    assert client.get("/finviz/observations?q=no-match").json()["observations"] == []
+    assert client.get("/finviz/observations?offset=2").json()["observations"] == []
+    for query in ["limit=101", "limit=0", "offset=-1", "offset=100001", "q=" + "x" * 101]:
+        assert client.get("/finviz/observations?" + query).status_code == 422
+    assert client.post("/finviz/observations").status_code == 405
+    (archive(report) / "coverage.json").write_bytes(b"PRIVATE_CORRUPT_INPUT")
+    error = client.get("/finviz/observations")
+    assert error.status_code == 503 and "PRIVATE" not in error.text
+
+
+@pytest.mark.parametrize(
+    "snapshot,mode", [("../../.env", "FIXTURE"), ("", "FIXTURE"), ("0" * 64, "INVALID")]
+)
+def test_finviz_api_rejects_invalid_selection_without_creating_files(
+    tmp_path, monkeypatch, snapshot, mode
+):
+    from fastapi.testclient import TestClient
+
+    from apps.api.main import app
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_SNAPSHOT", snapshot)
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_MODE", mode)
+    assert TestClient(app).get("/finviz/observations").status_code == 503
+    assert not list(tmp_path.iterdir())
