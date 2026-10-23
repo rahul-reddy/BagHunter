@@ -2,7 +2,8 @@
 
 Current increment: normalized historical export adapter and coverage audit implemented after branding
 PR #15 was fully merged. Local suite: 49 backend tests; audit/ingest CLI executed on labeled fixtures.
-No licensed provider input yet; external imports are quarantined, never automatically research-ready.
+Owner confirmed Finviz Elite; no export or authenticated provider access supplied yet. Historical
+PIT/delisting coverage remains unverified. External imports stay quarantined. See docs/FINVIZ.md.
 The Sprint 4 empirical gates remain BLOCKED. See docs/HISTORICAL_IMPORT.md and STATUS.md.
 
 | Sprint | Acceptance | Evidence / limits |

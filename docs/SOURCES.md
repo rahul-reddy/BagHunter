@@ -20,6 +20,11 @@ supplied. An actionable client exists; the real-data gate remains BLOCKED. No ke
 the fixture; licensed market data requires explicit entitlement and coverage verification.
 
 Normalized local history export staging is now available (docs/HISTORICAL_IMPORT.md). The committed
-example is entirely fictional; no provider was selected, purchased or fetched. License use is a
+example is entirely fictional; no provider data was purchased or fetched. License use is a
 caller attestation and coverage remains unverified. Imports preserve original bytes and expose
 missingness without becoming a live source or an empirical study automatically.
+
+The owner confirmed an existing **Finviz Elite** subscription on 2026-10-23. Public official
+documentation supports screener CSV/API workflows; historical PIT and delisting coverage remain
+unverified. No authenticated access or export has been supplied. See [Finviz handoff](FINVIZ.md)
+for checked sources, current-snapshot boundaries and the local CSV input needed next.

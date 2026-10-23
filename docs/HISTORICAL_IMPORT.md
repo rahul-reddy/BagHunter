@@ -1,7 +1,8 @@
 # Historical export adapter and coverage audit
 
-This adapter ingests a **normalized local export**, not a vendor API. No provider has been selected
-or purchased. It enables a licensed source to be brought into a bounded, auditable staging area.
+This adapter ingests a **normalized local export**, not a vendor API. The owner has Finviz Elite;
+no export or authenticated provider connection has been supplied. See [Finviz handoff](FINVIZ.md).
+The adapter enables a licensed source to be brought into a bounded, auditable staging area.
 It does not activate candidates, fit a model, establish alpha, or verify a data license independently.
 
 ## Try the explicitly fictional example

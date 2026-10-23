@@ -32,3 +32,8 @@ approved with zero blockers, and PR #15 was squash-merged as 389db89. The tracke
 on main before the historical import branch was created. No provider credentials or entitlement were
 supplied; implement a provider-neutral local-export adapter and coverage audit without subscriptions,
 network data requests, fabricated observations or automatic research activation.
+
+2026-10-23 provider clarification: the owner already has Finviz Elite. Official sources support
+current screener CSV/API workflows but do not establish historical PIT membership or delisting
+coverage. First inspect an owner-exported CSV before implementing its current-snapshot converter;
+do not guess the authenticated export schema or backdate today's fundamentals. See FINVIZ.md.
