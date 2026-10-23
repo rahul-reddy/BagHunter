@@ -1,0 +1,4 @@
+interface:
+  display_name: "BagHunter Change Workflow"
+  short_description: "Build and review BagHunter changes safely"
+  default_prompt: "Use $baghunter-change-workflow to implement and verify this BagHunter change."

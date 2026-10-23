@@ -1,0 +1,20 @@
+# Sources and entitlements — checked 2026-10-23
+
+The runnable sample uses only the local deterministic fixture generator. Its `fixture://` URLs are
+source identifiers, not real filing citations. The dashboard links them to the local source ledger.
+
+- [SEC API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces):
+  unauthenticated submissions and XBRL endpoints. Current submissions include recent filing metadata
+  and references to older pages. The implemented client fetches the primary submissions page only;
+  historical pagination and accession-level fact normalization are pending.
+- [SEC developer resources](https://www.sec.gov/about/developer-resources): declared contact user agent,
+  efficient downloads and at most 10 requests/s aggregate. Our client caps itself at 2 requests/s in a
+  single process, retries transient failures, uses timeouts and content-addressed raw storage.
+  It does not auto-coordinate concurrent processes; run one download job at a time.
+- [Massive stocks](https://massive.com/stocks): candidate provider only. No selection, subscription,
+  account request or entitlement has occurred. Marketing coverage is not proof that any particular
+  plan includes historical PIT universe, delisting proceeds or redistribution rights.
+
+No real SEC filing was ingested in this release because a proper identifying user agent was not
+supplied. An actionable client exists; the real-data gate remains BLOCKED. No keys are needed for
+the fixture; licensed market data requires explicit entitlement and coverage verification.
