@@ -3,7 +3,8 @@
 Current increment: normalized historical export adapter and coverage audit implemented after branding
 PR #15 was fully merged. Local suite: 49 backend tests; audit/ingest CLI executed on labeled fixtures.
 Owner authorized a Finviz Elite API export; 11,783 screener rows are saved locally, separate from
-the synthetic dashboard. No supported typed importer exists yet. Historical
+the synthetic dashboard. The ingest-finviz CLI stages typed JSON/Parquet observations with source
+checksums, missingness and unknown identity/unit flags. Historical
 PIT/delisting coverage remains unverified. External imports stay quarantined. See docs/FINVIZ.md.
 The Sprint 4 empirical gates remain BLOCKED. See docs/HISTORICAL_IMPORT.md and STATUS.md.
 

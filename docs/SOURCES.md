@@ -28,4 +28,6 @@ The owner confirmed an existing **Finviz Elite** subscription on 2026-10-23. Pub
 documentation supports screener CSV/API workflows; historical PIT and delisting coverage remain
 unverified. An owner-authorized API export was saved locally on 2026-10-23, with original bytes,
 retrieval timestamp and checksum retained under ignored data/finviz/inbox/. See [Finviz handoff](FINVIZ.md)
-for checked sources, current-snapshot boundaries and the local CSV input needed next.
+for checked sources and the implemented local snapshot importer. No additional manual CSV input is
+needed for this increment. Screener field semantics were checked against the official help page;
+market-cap export scale and security types remain unverified.

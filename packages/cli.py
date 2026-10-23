@@ -1,10 +1,12 @@
 import argparse
+import csv
 import json
 import os
 import sys
 from datetime import datetime
 from pathlib import Path
 
+from packages.data.finviz import ingest_snapshot
 from packages.data.history import LocalHistoryProvider, ingest
 from packages.data.providers import SecClient
 from packages.pipeline import DEFAULT_ASOF, run
@@ -28,8 +30,25 @@ def main() -> None:
         cmd.add_argument("--bundle", required=True, type=Path)
         if name == "ingest-history":
             cmd.add_argument("--output", type=Path, default=Path("data/imported"))
+    finviz = sub.add_parser("ingest-finviz", help="Quarantine a local Finviz overview CSV snapshot")
+    finviz.add_argument("--csv", required=True, type=Path)
+    finviz.add_argument("--manifest", required=True, type=Path)
+    finviz.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
+    finviz.add_argument("--usage-authorized", required=True, action="store_true")
     args = parser.parse_args()
-    if args.command in ("audit-history", "ingest-history"):
+    if args.command == "ingest-finviz":
+        try:
+            result = ingest_snapshot(
+                args.csv, args.manifest, mode=args.mode, usage_authorized=args.usage_authorized
+            )
+        except (ValueError, OSError, TypeError, KeyError, csv.Error) as exc:
+            print(
+                f"Finviz import rejected ({type(exc).__name__}): "
+                "check local inputs against docs/FINVIZ.md; raw values suppressed.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
+    elif args.command in ("audit-history", "ingest-history"):
         try:
             result = (
                 ingest(args.bundle, args.output)

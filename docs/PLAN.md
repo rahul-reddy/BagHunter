@@ -37,3 +37,8 @@ network data requests, fabricated observations or automatic research activation.
 current screener CSV/API workflows but do not establish historical PIT membership or delisting
 coverage. First inspect an owner-exported CSV before implementing its current-snapshot converter;
 do not guess the authenticated export schema or backdate today's fundamentals. See FINVIZ.md.
+
+2026-10-23 snapshot increment: owner-authorized CSV export is saved locally. Implement its exact
+overview shape as a bounded local ingest-finviz command with typed snapshots and coverage flags.
+Market-cap export scale, security types and permanent identities remain unresolved; do not guess
+USD conversions, promote historical research inputs or replace the fixture dashboard automatically.

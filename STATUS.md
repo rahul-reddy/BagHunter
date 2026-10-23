@@ -1,4 +1,54 @@
-# Current handoff — Finviz Elite input identified / 2026-10-23
+# Current handoff — Finviz current snapshot importer / 2026-10-23
+
+## Implemented and locally executed
+
+packages/data/finviz.py and CLI ingest-finviz now validate the exact unfiltered overview CSV and
+its credential-free export manifest. Local ingestion of all 11,783 saved observations succeeded.
+Immutable snapshot: data/finviz/snapshots/external_unverified/
+84f34ecbc902a7c007e448a27afb83b93a7a5483fb1a5be5f48bbb2dac748567/.
+The coverage report says QUARANTINED_CURRENT_SNAPSHOT; the fixture dashboard is still synthetic.
+Source bytes, manifest, typed JSON/Parquet and coverage are retained. No API call or .env read is
+performed by the importer. All licensed observations and credentials remain Git-ignored.
+
+Missing fields: market cap 5,883; P/E 8,857; price 13; change 21. Four reported P/E values are zero,
+retained and counted. All permanent IDs are null and security types unknown. Market-cap provider
+scale is preserved without an unverified USD multiplier. Explicit percentages become fractions;
+volume uses reported shares for the current/last session, not historical session bars.
+
+## Validation and delivery
+
+Final runtime worktree: ruff check/format and mypy passed; pytest with coverage/JUnit passed
+91 tests with one Windows skip (symlink creation unavailable). The Linux CI run must exercise that
+symlink boundary. Tests include missing/zero values, decimal units, invalid numeric/text/CSV schemas,
+clock/hash/source authorization, mode separation, archive tampering, atomic publish failure/retry,
+future ingestion timestamps and CLI redaction. Repeat real-source ingestion was executed to verify
+existing archive semantics and retention of ingestion time. Current-head CI and independent review
+are required before guarded squash merge. No new UI behavior; browser acceptance runs in CI.
+JUnit: artifacts/test_results/finviz-pytest.xml. Local Markdown links and whitespace are checked.
+
+Initial head 8f61b02 passed Linux CI (88 backend/3 browser) and Claude review with zero blockers.
+Before merge, addressed its malformed-percent advisory: %, -%, N/A% and +% must reject rather than
+become missing values. Four regression cases were added; Observation validation also hides inputs.
+The full local suite and real-source repeat import passed again after this fix. Final-head CI and
+the same independent reviewer are required again. Empty/corrupt archives intentionally fail closed;
+remaining advisory comments are preserved in PR #19.
+
+## Remaining boundaries and next action
+
+No PIT history, archived universe, original fundamental vintages or delisting evidence is established.
+No real candidates or empirical findings are activated. Market-cap scale, currency/adjustments and
+security identities/types need source evidence. Do not infer security types from missing cap or
+manufacture permanent IDs from tickers. CSV/manifest are capped at 20 MiB/64 KiB, rows at 100,000.
+Repeat imports compare Parquet values and schema, not version-sensitive serialized bytes.
+
+Next: verify export-unit and security-type/identity evidence before adding a separately labeled
+current-data browser. No further manual export is needed. See docs/FINVIZ.md for the current command.
+Branding PR #15, historical staging PR #16 and Finviz handoff/export PRs #17–18 were fully merged
+before this implementation branch. No deployment, subscription purchase or trading occurred.
+
+## Prior handoffs
+
+### Current handoff — Finviz Elite input identified / 2026-10-23
 
 The owner authorized export using FINVIZ_TOKEN in ignored .env. HTTP 200 text/csv was retrieved at
 2026-10-23T17:57:17.673674+00:00: 11,783 rows, 11,783 unique nonempty tickers, 11 columns,
@@ -27,9 +77,9 @@ The owner does not need to perform the export manually. API export authorization
 earlier manual-input handoff. No new input is needed for inspection of the saved file.
 Do not treat current screens as archived historical membership or today's statements as old vintages.
 
-## Archived historical staging handoff
+#### Archived historical staging handoff
 
-## Sequencing checkpoint
+#### Sequencing checkpoint
 
 The complete BagHunter rename was committed/pushed, passed CI and local 23-backend/3-browser checks,
 received Claude approval with zero blockers, then squash-merged through merge-pr.ps1 in
@@ -38,7 +88,7 @@ on main before feat/historical-data-import was created. The next item did not st
 Research output fingerprint before/after branding remained
 84fcdf1abf85770ab82a5dcf9d4cb90a42b7c90e7adca1f4e53af1c827090fbb.
 
-## Implemented increment
+#### Implemented increment
 
 - packages/data/history.py: normalized local-export provider, dated membership/symbol reads,
   raw-bar policy, filing-lag cutoffs, source/ID/checksum validation and coverage audit.
@@ -49,7 +99,7 @@ Research output fingerprint before/after branding remained
 - Fixture example: two fictional instruments, five bars and one zero-proceeds delisting; facts missing.
 - Limits: 20 MiB/table, 64 KiB manifest and five million instrument/session audit combinations.
 
-## Executed evidence and gates
+#### Executed evidence and gates
 
 49 backend tests passed on the implementation worktree; ruff lint/format and mypy passed.
 Actual CLI audit and ingestion produced QUARANTINED_NOT_RESEARCH_READY with FIXTURE_ONLY and
@@ -64,7 +114,7 @@ JUnit: artifacts/test_results/history-pytest.xml; coverage.xml is from the expan
 History adapter file SHA-256 at local verification: 4c992180bd3fb852da8235764e20b2f0d1b4d6eeb02f8ad0e02c7de21640dcc5.
 Current-head CI and independent approval remain mandatory before this increment may merge.
 
-## Limitations and next step
+#### Limitations and next step
 
 No licensed provider/export has been supplied. All executable examples are synthetic. External
 exports remain unverified: schema/checksum checks cannot independently prove licensing, archived
@@ -81,9 +131,9 @@ Prior CSV-encoding and framework tooling advisories remain as described below; n
 Review access: API-funded Claude was unavailable; a process-local removal of API auth overrides used
 its already logged-in claude.ai subscription for the independent review. No stored authentication settings were edited.
 
-## Prior handoffs
+#### Prior handoffs
 
-### Current handoff — BagHunter branding / 2026-10-23
+##### Current handoff — BagHunter branding / 2026-10-23
 
 The app, browser title, header/footer/logo, Radar navigation, API title, CLI help, npm metadata,
 project brief and documentation now use BagHunter. The watchlist export is baghunter_watchlist.csv.
@@ -101,9 +151,9 @@ Next item remains the licensed PIT market-data adapter and coverage audit. Start
 branding PR is merged and the tracked worktree is clean. The local preview was started during the
 owner's prior session; restart the API after merge to pick up its title change.
 
-#### Previous verified fixture release
+###### Previous verified fixture release
 
-### Current handoff — fixture MVP shipped / 2026-10-23
+##### Current handoff — fixture MVP shipped / 2026-10-23
 
 Sprint 0–3 fixture vertical slice merged through [PR #1](https://github.com/rahul-reddy/BagHunter/pull/1)
 at `656cc7e8906cf0ea3add52404da10eb455034cf9`. The tested/reviewed PR head was
@@ -119,7 +169,7 @@ at `656cc7e8906cf0ea3add52404da10eb455034cf9`. The tested/reviewed PR head was
 - Demo run `e0280e146da378f5`; package source digest
   `4f432c33286a64f0b56defd403209e300c25346d2c255e160c575fe9cb52670c`.
 
-#### Executed evidence
+###### Executed evidence
 
 - Initial full `pwsh -NoProfile -File scripts/qa.ps1` (20 backend / 3 browser tests): locked Python/npm installs, harness self-test, skill validation,
   ruff lint/format, mypy, integrity/API tests, demo CLI, frontend lint/types/build, 3 browser tests.
@@ -137,7 +187,7 @@ at `656cc7e8906cf0ea3add52404da10eb455034cf9`. The tested/reviewed PR head was
 - Initial failures fixed: zero-volume denominator, missingness type inference, Windows directory lock
   retry, mismatched fixture peer strata, accessible score names and root data ignore pattern.
 
-#### Review hardening
+###### Review hardening
 
 Both Gemini advisories were addressed: explicit UTF-8 run reads and deterministic split → dividend →
 delist ordering. An additional audit found that missing evaluation exits could retain numeric wealth;
@@ -148,7 +198,7 @@ Full QA and final CI logs remain at artifacts/test_results. Final reviewed-head 
 Remaining nonblocking advisory: CSV exports lack explicit UTF-8 encoding; current fixture export
 fields are ASCII. Fix before supporting real multilingual names. No advisory was hidden or deleted.
 
-#### Remaining boundaries
+###### Remaining boundaries
 
 Entirely synthetic fixture; no empirical alpha or real stock recommendations. Zero verified theses.
 Real historical PIT universe/bars/actions entitlement is unavailable. SEC download needs a real
