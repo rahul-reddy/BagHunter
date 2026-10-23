@@ -105,6 +105,6 @@ jobs:
         run: uv run pip-audit && cd apps/web && npm audit
       - name: Secret advisory
         continue-on-error: true
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
