@@ -1,6 +1,6 @@
 # BagHunter contributor contract
 
-Alpha Hunter: a point-in-time US-equities research laboratory. Read `docs/PLAN.md`, `STATUS.md`,
+BagHunter: a point-in-time US-equities research laboratory. Read `docs/PLAN.md`, `STATUS.md`,
 `SPRINT_STATUS.md`, `NEXT_ACTION.md` and `00_START_HERE.md` before changing behavior.
 
 ## Layout

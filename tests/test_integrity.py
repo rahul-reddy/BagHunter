@@ -315,7 +315,7 @@ def test_sec_cache_http_failure_and_retry(tmp_path, monkeypatch):
         "Client",
         lambda **kw: original_client(transport=httpx.MockTransport(respond), **kw),
     )
-    manifest = SecClient("Alpha Lab contact@alpha.invalid", tmp_path).submissions("320193")
+    manifest = SecClient("BagHunter Lab contact@baghunter.invalid", tmp_path).submissions("320193")
     assert len(attempts) == 2
     assert manifest["status"] == "RAW_ONLY_NOT_PIT_NORMALIZED"
     assert (tmp_path / f"{manifest['sha256']}.json").exists()

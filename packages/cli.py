@@ -9,7 +9,7 @@ from packages.pipeline import DEFAULT_ASOF, run
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Alpha Hunter — research only; demo is FIXTURE")
+    parser = argparse.ArgumentParser(description="BagHunter — research only; demo is FIXTURE")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("demo", "ingest-demo", "study-demo", "backtest-demo"):
         cmd = sub.add_parser(name, help="Rebuild complete synthetic vertical slice")

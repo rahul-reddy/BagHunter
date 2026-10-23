@@ -22,3 +22,7 @@ coverage and adjustment semantics, then replay the same acceptance gates with re
 
 Later: configurable stages and score families, broader event studies, purged validation and untouched
 holdout, honest uncertainty, supported theses, incremental refresh. None are validated by fixture results.
+
+2026-10-23 owner decision: use BagHunter consistently across app and documentation, including
+Radar navigation and watchlist exports. Complete the reviewed branding squash merge before starting
+the next implementation item. Research-output fingerprints must remain unchanged by the rename.
