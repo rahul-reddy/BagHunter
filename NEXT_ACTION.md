@@ -1,8 +1,6 @@
 # Next action
 
-Finish the initial PR: wait for current-head CI, then run
-`pwsh -NoProfile -File scripts/cross-review.ps1 -Number <PR>` and, after all blockers are resolved,
-`pwsh -NoProfile -File scripts/merge-pr.ps1 -Number <PR>`.
+The fixture implementation is merged via PR #1 (656cc7e); its exact reviewed head is 7269b13.
 
 Restart demo: `uv run baghunter demo`.
 Backend: `uv run uvicorn apps.api.main:app --host 127.0.0.1 --port 8000`.

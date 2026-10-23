@@ -19,9 +19,9 @@ case/control anchor 2020-01-01; toy decisions 2019-12-31–2022-01-05 including 
 No empirical conclusions or verified theses. Missing subscriptions: historical PIT market data.
 No real SEC ingestion without contact identity; no historical financial parser yet.
 
-Initial observed failures and fixes are recorded in STATUS.md. Next priority: exact-head CI and
-independent PR review, followed by licensed real data rather than additional fixture sophistication.
+Initial observed failures and fixes are recorded in STATUS.md. Next priority: a licensed PIT market-data adapter and coverage audit.
 
-Review: dc64336 passed Linux/Windows CI and Gemini review (zero blockers). Advisories fixed;
-23 backend regression tests now include fail-closed incomplete evaluations, same-day actions and
-UTC clock equivalence. Revised exact-head CI/review are required by the merge gate.
+Release: PR #1 merged via merge-pr.ps1 as 656cc7e, with the same tree as tested/reviewed
+head 7269b13. Final Linux CI, Windows harness and Gemini review passed (zero blockers).
+23 backend tests include fail-closed evaluation, same-day actions and UTC clock equivalence.
+One nonblocking CSV UTF-8 advisory remains; fixture exports use ASCII fields.
