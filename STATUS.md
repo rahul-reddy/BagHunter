@@ -1,10 +1,16 @@
 # Current handoff — Finviz Elite input identified / 2026-10-23
 
-The owner confirmed an existing Finviz Elite subscription. No CSV, API token or authenticated
-documentation was supplied. docs/FINVIZ.md records verified official sources, a local CSV handoff,
-current-snapshot boundaries and the proposed converter. No Finviz importer is implemented yet.
+The owner authorized export using FINVIZ_TOKEN in ignored .env. HTTP 200 text/csv was retrieved at
+2026-10-23T17:57:17.673674+00:00: 11,783 rows, 11,783 unique nonempty tickers, 11 columns,
+1,320,890 bytes. Original bytes and credential-free manifest are under ignored
+data/finviz/inbox/20261023T175717Z/, with convenience copies at data/finviz/inbox/screener.csv and
+manifest.json. SHA-256 verified: 148ad7a687652508a6c5425df40def965ad90d76ea3ccf02a65b56ca850a9c05.
+CSV shape was validated; no vendor rows, tokens or authenticated URLs were logged or committed.
+git check-ignore confirmed .env, the CSV/manifest and local operational script are ignored.
+docs/FINVIZ.md records observed endpoint behavior and current-snapshot boundaries.
+No supported Finviz importer is implemented yet; units and security types require further inspection.
 Historical PIT universe, original filing vintages, actions and delisting coverage remain unverified.
-The dashboard and runnable examples still use synthetic fixtures; no provider data was fetched.
+The dashboard and runnable examples still use synthetic fixtures; local export is separate.
 
 Delivery checkpoints: branding PR #15 squash-merged as 389db89 before the historical adapter branch;
 historical adapter PR #16 squash-merged as b0c205b after exact-head CI and independent Claude approval
@@ -16,9 +22,9 @@ Validation for this handoff: official Finviz FAQ, Elite feature page and October
 read on 2026-10-23; local Markdown links and git diff whitespace checked. Current-head CI and
 independent review must pass before this documentation branch merges. No runtime code changed.
 
-Next required input: export one Finviz screener CSV to ignored data/finviz/inbox/screener.csv and
-provide its local path, actual timezone-aware export time and filters/column notes. No credentials
-are needed for that input. Inspect its actual schema before implementing a current-snapshot import.
+Next: use the saved CSV to verify units/security types and implement a current-snapshot importer.
+The owner does not need to perform the export manually. API export authorization supersedes the
+earlier manual-input handoff. No new input is needed for inspection of the saved file.
 Do not treat current screens as archived historical membership or today's statements as old vintages.
 
 ## Archived historical staging handoff

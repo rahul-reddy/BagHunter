@@ -26,5 +26,6 @@ missingness without becoming a live source or an empirical study automatically.
 
 The owner confirmed an existing **Finviz Elite** subscription on 2026-10-23. Public official
 documentation supports screener CSV/API workflows; historical PIT and delisting coverage remain
-unverified. No authenticated access or export has been supplied. See [Finviz handoff](FINVIZ.md)
+unverified. An owner-authorized API export was saved locally on 2026-10-23, with original bytes,
+retrieval timestamp and checksum retained under ignored data/finviz/inbox/. See [Finviz handoff](FINVIZ.md)
 for checked sources, current-snapshot boundaries and the local CSV input needed next.
