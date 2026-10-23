@@ -8,8 +8,9 @@
 | 3 | PASS local P0 fixture path | CLI → storage → API → browser, candidate charts/evidence, failed peer, 13-window toy baseline comparison |
 | 4–9 empirical research | BLOCKED / deferred | no licensed historical PIT universe, real actions/delist coverage or substantiated candidates |
 
-Executed `scripts/qa.ps1`: 23 pytest tests; 3 Playwright tests; desktop/mobile accessibility;
+Initial local `scripts/qa.ps1`: 20 pytest tests; 3 Playwright tests; desktop/mobile accessibility;
 ruff, mypy, TypeScript, ESLint, Vite build; review harness self-test and skill validation.
+After review hardening, 23 backend tests and 3 browser tests passed locally and in final CI.
 Evidence: artifacts/test_results/, coverage.xml, apps/web/playwright-report/, artifacts/screenshots/.
 Fixture run `e0280e146da378f5`; latest source `2023-03-30T22:00:00+00:00`.
 Raw lineage SHA: `7d8ee2fcb1af8c890f9eb5b7991926f5162d9615a0a79fb6ccc7c0071a2b2be7`.
@@ -19,9 +20,9 @@ case/control anchor 2020-01-01; toy decisions 2019-12-31–2022-01-05 including 
 No empirical conclusions or verified theses. Missing subscriptions: historical PIT market data.
 No real SEC ingestion without contact identity; no historical financial parser yet.
 
-Initial observed failures and fixes are recorded in STATUS.md. Next priority: exact-head CI and
-independent PR review, followed by licensed real data rather than additional fixture sophistication.
+Initial observed failures and fixes are recorded in STATUS.md. Next priority: a licensed PIT market-data adapter and coverage audit.
 
-Review: dc64336 passed Linux/Windows CI and Gemini review (zero blockers). Advisories fixed;
-23 backend regression tests now include fail-closed incomplete evaluations, same-day actions and
-UTC clock equivalence. Revised exact-head CI/review are required by the merge gate.
+Release: PR #1 merged via merge-pr.ps1 as 656cc7e, with the same tree as tested/reviewed
+head 7269b13. Final Linux CI, Windows harness and Gemini review passed (zero blockers).
+23 backend tests include fail-closed evaluation, same-day actions and UTC clock equivalence.
+One nonblocking CSV UTF-8 advisory remains; fixture exports use ASCII fields.
