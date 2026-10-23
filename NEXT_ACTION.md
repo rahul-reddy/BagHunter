@@ -9,9 +9,12 @@ importer is implemented and has staged all 11,783 rows under data/finviz/snapsho
 See [Finviz handoff](docs/FINVIZ.md) for the ingest-finviz command, format and coverage report.
 The separate Finviz Observations browser now supports read-only search/pagination of an explicitly
 selected saved snapshot. Unknown units/types/IDs are shown without currency conversion or ranking.
-Exactly one next implementation step: obtain authoritative export-unit and security master evidence
-before adding currency-aware filters or common-share eligibility. No additional manual CSV input
-is needed. See docs/FINVIZ.md for local environment selection and the browser boundary.
+The bounded OpenFIGI reference adapter now archives current mapping candidates for a deterministic
+sample and exposes source-bound evidence in the browser. Ten of 11,783 observations were queried;
+all ten returned a single candidate. No Finviz identity/type was promoted or historical gate opened.
+Exactly one next implementation step: add auditable company/share-class reconciliation for these
+candidates before considering identity promotion or a larger sample. See docs/REFERENCE.md.
+Export-scale/currency and historical master evidence remain unmet gates. No manual CSV input needed.
 Never put credentials in chat, manifests, commits or logs. Finviz historical PIT/delisting coverage
 remains unverified; current screens cannot fill historical universe or original filing-vintage gaps.
 

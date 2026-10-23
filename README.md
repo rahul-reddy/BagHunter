@@ -101,6 +101,9 @@ an immutable, quarantined current snapshot. It does not activate candidates or t
 The separate **Finviz Observations** view can browse that snapshot after local API selection; see
 [local browser setup](docs/FINVIZ.md#local-observations-browser). Unknown units/types and missing fields
 remain visible. This saved snapshot supplies no historical research evidence or validated candidates.
+The optional [OpenFIGI reference adapter](docs/REFERENCE.md) fetches at most ten current mapping
+candidates and exposes an explicitly selected batch under **Inspect reference evidence**. Its names,
+FIGIs and types remain candidates for reconciliation, separate from the original observations.
 
 ## Development workflow
 

@@ -6,9 +6,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import httpx
+
 from packages.data.finviz import ingest_snapshot
 from packages.data.history import LocalHistoryProvider, ingest
 from packages.data.providers import SecClient
+from packages.data.reference import fetch_reference
 from packages.pipeline import DEFAULT_ASOF, run
 
 
@@ -35,8 +38,36 @@ def main() -> None:
     finviz.add_argument("--manifest", required=True, type=Path)
     finviz.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
     finviz.add_argument("--usage-authorized", required=True, action="store_true")
+    reference = sub.add_parser(
+        "fetch-reference", help="Fetch at most ten current OpenFIGI candidates"
+    )
+    reference.add_argument("--snapshot", required=True)
+    reference.add_argument("--offset", type=int, default=0)
+    reference.add_argument("--limit", type=int, default=10)
     args = parser.parse_args()
-    if args.command == "ingest-finviz":
+    if args.command == "fetch-reference":
+        try:
+            evidence = fetch_reference(args.snapshot, args.offset, args.limit)
+            result = {
+                k: evidence[k]
+                for k in (
+                    "reference_id",
+                    "base_snapshot_id",
+                    "mode",
+                    "queried",
+                    "population",
+                    "counts",
+                    "flags",
+                )
+            }
+        except (ValueError, OSError, TypeError, KeyError, csv.Error, httpx.HTTPError) as exc:
+            print(
+                f"Reference lookup rejected ({type(exc).__name__}); raw details suppressed. "
+                "See docs/REFERENCE.md.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
+    elif args.command == "ingest-finviz":
         try:
             result = ingest_snapshot(
                 args.csv, args.manifest, mode=args.mode, usage_authorized=args.usage_authorized

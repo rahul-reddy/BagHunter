@@ -147,5 +147,7 @@ Original lexical formatting is retained in the raw CSV, not guaranteed in the di
 The licensed dataset stays under Git-ignored data/ and is served only by the configured local API.
 Bind to localhost; no public hosting or redistribution is configured or authorized by this feature.
 
-Next: obtain authoritative export-unit and security master evidence before enabling currency-aware
-filters, common-share eligibility or candidate research. Today's observations cannot fill PIT history.
+Current identity evidence can now be queried through the bounded [OpenFIGI reference adapter](REFERENCE.md)
+and inspected in this page's reference panel. Its candidates do not resolve the original observations'
+identities automatically. Next: reconcile company/share-class evidence before any current identity
+promotion. Export-unit evidence and historical membership remain separate unmet gates.

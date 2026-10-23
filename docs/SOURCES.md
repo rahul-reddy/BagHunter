@@ -31,3 +31,9 @@ retrieval timestamp and checksum retained under ignored data/finviz/inbox/. See 
 for checked sources and the implemented local snapshot importer. No additional manual CSV input is
 needed for this increment. Screener field semantics were checked against the official help page;
 market-cap export scale and security types remain unverified.
+
+[OpenFIGI API documentation](https://www.openfigi.com/api/documentation) was checked 2026-10-23.
+A public unauthenticated mapping client now archives a bounded alphabetical sample linked to the
+Finviz snapshot. Ten actual queries returned ten current candidates; no identity promotion or PIT
+history is inferred. Requests contain public ticker/context only. No account, subscription or key was
+created. See [reference evidence](REFERENCE.md) for limits, current-only semantics and source hashes.
