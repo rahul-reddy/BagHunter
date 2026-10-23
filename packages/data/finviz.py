@@ -59,6 +59,7 @@ class ExportManifest(Record):
 class Observation(Record):
     """Decimal fields retain provider scale. They are not dollar-normalized fundamentals."""
 
+    model_config = ConfigDict(frozen=True, extra="forbid", hide_input_in_errors=True)
     ticker: str
     company: str
     sector: str | None
@@ -124,6 +125,8 @@ def _parse(body: bytes) -> list[Observation]:
         if change not in MISSING and not change.endswith("%"):
             raise ValueError("Change must have explicit percent unit")
         fraction = None if change in MISSING else _number(change[:-1])
+        if change not in MISSING and fraction is None:
+            raise ValueError("Percentage has no numeric value")
         if fraction is not None:
             fraction /= 100
             if fraction < -1:

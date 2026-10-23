@@ -18,13 +18,20 @@ volume uses reported shares for the current/last session, not historical session
 ## Validation and delivery
 
 Final runtime worktree: ruff check/format and mypy passed; pytest with coverage/JUnit passed
-87 tests with one Windows skip (symlink creation unavailable). The Linux CI run must exercise that
+91 tests with one Windows skip (symlink creation unavailable). The Linux CI run must exercise that
 symlink boundary. Tests include missing/zero values, decimal units, invalid numeric/text/CSV schemas,
 clock/hash/source authorization, mode separation, archive tampering, atomic publish failure/retry,
 future ingestion timestamps and CLI redaction. Repeat real-source ingestion was executed to verify
 existing archive semantics and retention of ingestion time. Current-head CI and independent review
 are required before guarded squash merge. No new UI behavior; browser acceptance runs in CI.
 JUnit: artifacts/test_results/finviz-pytest.xml. Local Markdown links and whitespace are checked.
+
+Initial head 8f61b02 passed Linux CI (88 backend/3 browser) and Claude review with zero blockers.
+Before merge, addressed its malformed-percent advisory: %, -%, N/A% and +% must reject rather than
+become missing values. Four regression cases were added; Observation validation also hides inputs.
+The full local suite and real-source repeat import passed again after this fix. Final-head CI and
+the same independent reviewer are required again. Empty/corrupt archives intentionally fail closed;
+remaining advisory comments are preserved in PR #19.
 
 ## Remaining boundaries and next action
 
