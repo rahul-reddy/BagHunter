@@ -96,7 +96,8 @@ EXTERNAL_UNVERIFIED and never become candidates automatically. See the
 [historical import contract](docs/HISTORICAL_IMPORT.md) for formats, PIT rules and resource limits.
 
 The owner has Finviz Elite. Its current-screener export handoff and remaining historical-data gaps
-are documented in [Finviz setup](docs/FINVIZ.md). No Finviz importer is connected yet.
+are documented in [Finviz setup](docs/FINVIZ.md). `ingest-finviz` imports the saved overview CSV into
+an immutable, quarantined current snapshot. It does not activate candidates or the fixture dashboard.
 
 ## Development workflow
 
