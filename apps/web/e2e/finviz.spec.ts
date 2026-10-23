@@ -14,6 +14,14 @@ const coverage = {
   flags: ['FIXTURE_ONLY', 'NO_PIT_HISTORY', 'UNRESOLVED_PERMANENT_IDENTITIES'],
   status: 'QUARANTINED_CURRENT_SNAPSHOT', provider_observation_time: null,
 };
+const referenceCandidate = (figi = 'BBG000TST001') => ({ figi, ticker: 'DEMO-X', name: 'Fictional reference candidate',
+  exchCode: 'US', marketSector: 'Equity', securityType: 'Common Stock', securityType2: 'Common Stock',
+  compositeFIGI: figi, shareClassFIGI: 'BBG000TST002' });
+const referenceEvidence = { reference_id: 'd'.repeat(64), base_snapshot_id: coverage.snapshot_id,
+  mode: 'FIXTURE', retrieved_at: '2020-01-02T12:00:01Z', response_sha256: 'e'.repeat(64),
+  queried: 2, population: 51, offset: 0, flags: ['FIXTURE_ONLY', 'CURRENT_REFERENCE_ONLY_NOT_PIT', 'NOT_IDENTITY_PROMOTION'],
+  records: [{ ticker: 'DEMO-X', status: 'AMBIGUOUS', candidates: [referenceCandidate(), referenceCandidate('BBG000TST003')], identity_promoted: false },
+    { ticker: 'DEMO-Y', status: 'NO_MATCH_REPORTED', candidates: [], identity_promoted: false }] };
 
 test('Finviz browsing, search, pagination and failure never mix with fixture rankings', async ({ page }) => {
   await page.route('**/api/runs/current', route => route.fulfill({ status: 503, body: '{}' }));
@@ -55,9 +63,14 @@ test('Finviz mobile accessibility, lineage and snapshot label', async ({ page })
     coverage, age_hours: 0.1, stale: false, total: 1, offset: 0, limit: 50,
     observations: [observation('DEMO-X', '<script>fictional company</script>')],
   } }));
+  await page.route('**/api/finviz/reference', route => route.fulfill({ json: referenceEvidence }));
   await page.goto('/');
   await page.getByRole('button', { name: 'Finviz Observations', exact: true }).click();
   await expect(page.getByText('<script>fictional company</script>')).toBeVisible();
+  await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
+  await expect(page.getByText('SYNTHETIC REFERENCE FIXTURE')).toBeVisible();
+  await page.getByText('DEMO-X · AMBIGUOUS · 2 candidates', { exact: true }).click();
+  await expect(page.getByText('Fictional reference candidate', { exact: false }).first()).toBeVisible();
   await page.getByRole('region', { name: 'Scrollable Finviz observations' }).focus();
   await expect(page.getByRole('region', { name: 'Scrollable Finviz observations' })).toBeFocused();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -68,4 +81,29 @@ test('Finviz mobile accessibility, lineage and snapshot label', async ({ page })
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: '../../artifacts/screenshots/finviz-mobile.png', fullPage: true });
+});
+
+test('reference evidence rejects cross-source data, labels external mode and clears errors', async ({ page }) => {
+  await page.route('**/api/finviz/observations?**', route => route.fulfill({ json: {
+    coverage: { ...coverage, mode: 'EXTERNAL_UNVERIFIED' }, age_hours: 1, stale: false,
+    total: 1, offset: 0, limit: 50, observations: [observation('DEMO-X', 'Fictional external-mode test')],
+  } }));
+  await page.route('**/api/finviz/reference', route => route.fulfill({ json: {
+    ...referenceEvidence, mode: 'EXTERNAL_UNVERIFIED', base_snapshot_id: 'c'.repeat(64),
+  } }));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Finviz Observations', exact: true }).click();
+  await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
+  await expect(page.getByRole('alert')).toContainText('different source selection');
+  await expect(page.getByText('DEMO-X · AMBIGUOUS · 2 candidates', { exact: true })).toHaveCount(0);
+  await page.route('**/api/finviz/reference', route => route.fulfill({ json: {
+    ...referenceEvidence, mode: 'EXTERNAL_UNVERIFIED',
+  } }));
+  await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
+  await expect(page.getByText('OPENFIGI · CURRENT CANDIDATES', { exact: true })).toBeVisible();
+  await page.route('**/api/finviz/reference', route => route.fulfill({ status: 503, body: '{}' }));
+  await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
+  await expect(page.getByRole('alert')).toContainText('No valid local reference batch');
+  await expect(page.getByText('DEMO-X · AMBIGUOUS · 2 candidates', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Fictional external-mode test')).toBeVisible();
 });

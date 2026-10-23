@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ReferenceEvidence } from './ReferenceEvidence';
 
 type Observation = {
   ticker: string; company: string; sector: string | null; industry: string | null;
@@ -71,6 +72,7 @@ export function FinvizBrowser() {
             onClick={() => setRequest(previous => ({ ...previous, offset: Math.max(0, previous.offset - data.limit) }))}>Previous observations</button>
             <button className="secondary" disabled={data.offset + data.limit >= data.total}
               onClick={() => setRequest(previous => ({ ...previous, offset: previous.offset + data.limit }))}>Next observations</button></div>
+          <ReferenceEvidence key={data.coverage.snapshot_id} baseSnapshotId={data.coverage.snapshot_id} mode={data.coverage.mode}/>
           <details><summary>Source lineage and coverage gaps</summary>
             <p>Snapshot <span className="hash">{data.coverage.snapshot_id}</span></p>
             <p>CSV SHA-256 <span className="hash">{data.coverage.source_sha256}</span></p>

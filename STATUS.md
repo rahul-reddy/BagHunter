@@ -1,6 +1,60 @@
-# Current handoff — Finviz observation browser / 2026-10-23
+# Current handoff — current reference evidence / 2026-10-23
 
-## Implemented increment
+## Implemented and executed
+
+OpenFIGI's documented public mapping API is now available through fetch-reference, with no API key,
+account creation, .env read or purchase. It queries at most ten alphabetically selected public tickers
+from the verified external Finviz snapshot. Request bytes, response bytes, timestamps, source binding,
+hashes and derived candidate evidence are archived under ignored data/reference/openfigi/.
+The client has 3.1-second spacing within a process, three-attempt retry budgets, Retry-After handling,
+30-second HTTP timeouts, a 4 MiB response cap and 100 candidates/job. Redirects and unsafe contexts
+are rejected. Other processes sharing the IP still need coordination.
+
+The verified external batch queried 10 of 11,783 observations, returning ten SINGLE_CANDIDATE
+results. Reference ID: c713cfb8f3a2d9700defc22d9fa8d386095f7e9ebec913b3af5662fc47df58ae.
+It belongs to Finviz snapshot 84f34ecbc902a7c007e448a27afb83b93a7a5483fb1a5be5f48bbb2dac748567.
+A preliminary local batch is retained as an ignored prototype; the documented selection above was
+re-fetched after making archived request bytes identical to the actual HTTP body. No raw rows logged.
+
+The optional Current reference evidence panel in Finviz Observations displays the explicitly selected
+batch, queried/total counts, candidate names/FIGIs/types, ambiguity/no-match states and lineage.
+GET /finviz/reference revalidates local evidence and source binding; it never fetches or writes.
+The browser rejects a different source/mode and clears previous evidence on failure. Fixture labels
+remain explicit. The preview API has the verified reference selected via environment, not a token.
+
+## Executed verification and delivery gates
+
+On the final runtime worktree: ruff check/format and mypy passed; full pytest with coverage/JUnit
+passed 152 tests with two Windows symlink skips. Linux CI must execute both symlink boundaries.
+Frontend lint, types and build passed. Six Playwright tests passed, including reference ambiguity,
+external/fixture labels, mismatched-source rejection, reload errors, accessibility, mobile overflow,
+and the existing fixture research flows. No actual provider rows are used in committed tests.
+API and real-browser smoke checks displayed the selected ten-record batch, with zero identities
+promoted and no provider rows logged. CLI printed aggregate counts only. Public source docs were
+checked, local Markdown links and git diff whitespace verified. Evidence: artifacts/test_results/
+reference-pytest.xml, coverage.xml and labeled fictional browser screenshots under artifacts/screenshots/.
+Current-head CI and independent review remain required before guarded squash merge.
+
+## Meaning and remaining work
+
+These are current provider candidates, not a historical security master or verified company match.
+Original Finviz IDs/types remain null/unknown; no research input, eligibility or ranking changed.
+A single exact-ticker US/equity result is not identity promotion. Ticker reuse, company/share-class
+matching, quote-time identity, delisted history, currency and market-cap export scale remain unresolved.
+Unqueried names are not classified as no-match. Names/results with context mismatches or ambiguity
+are retained without automatic selection. No new empirical study, candidate thesis or deployment.
+
+Exactly one next implementation step: add auditable company/share-class reconciliation for the
+queried candidates before considering current identity promotion or expanding the sample. Read
+docs/REFERENCE.md for commands, provenance and limitations. Prior browser PR #20 was fully merged
+as 06befae before this branch began; final CI passed 109 backend/5 browser tests, Claude approved
+with zero blockers and the reviewed/merged Git trees matched. Source rows and .env remain ignored.
+
+## Prior observation-browser handoff
+
+### Current handoff — Finviz observation browser / 2026-10-23
+
+#### Implemented increment
 
 Finviz Observations is a separate read-only snapshot explorer with alphabetical search/pagination,
 retrieval age, missing values, reported units, unknown type/identity labels and source lineage.
@@ -14,7 +68,7 @@ Query/offset/page-size limits are enforced. Prices/cap retain provider scale; sh
 percentage display text avoid browser numeric rounding. Search/reload errors remove prior rows.
 Fixture snapshots always show a synthetic label. The existing research pages still use fixtures.
 
-## Validation and delivery
+#### Validation and delivery
 
 On the final runtime worktree, ruff lint/format and mypy passed; pytest with coverage/JUnit passed
 108 tests plus one Windows symlink skip. The Linux CI gate must exercise the symlink boundary.
@@ -37,7 +91,7 @@ The real local API smoke check returned HTTP 200, total 11,783, mode EXTERNAL_UN
 permanent identity and unverified cap units from the existing immutable snapshot. Source data and
 .env remain ignored. The preview API was restarted with an explicit snapshot selection; no deploy.
 
-## Limitations and next action
+#### Limitations and next action
 
 No historical PIT membership, original filing vintages, security master, currency/adjustment or
 market-cap export-scale evidence was established. The browser is observational; empirical research
@@ -49,7 +103,7 @@ filters, common-share eligibility or candidate research. No new manual CSV input
 Prior importer PR #19 was fully squash-merged as eebfb42 before this branch began; its reviewed and
 merged trees matched. It passed 92 backend/3 browser CI tests and Claude approval with zero blockers.
 
-## Prior importer handoff
+#### Prior importer handoff
 
 ### Current handoff — Finviz current snapshot importer / 2026-10-23
 

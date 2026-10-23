@@ -47,3 +47,9 @@ USD conversions, promote historical research inputs or replace the fixture dashb
 security IDs. Keep them unresolved. Allow a separate informational browser with reported values,
 explicit snapshot selection, provenance/gap labels and no scoring, common-share eligibility or PIT
 promotion. Reader must validate the immutable archive and perform no writes or vendor requests.
+
+2026-10-23 current-reference increment: use the documented public OpenFIGI mapping API without keys,
+signup or spending. Query a bounded alphabetical sample (at most ten) with US/equity context; preserve
+all candidates, ambiguity, no-match and error states. Keep it separate from the earlier Finviz source
+and historical master: no ticker normalization, name-match inference or automatic identity promotion.
+Add a source-bound, read-only evidence panel and verify rate/retry/resource/privacy boundaries.
