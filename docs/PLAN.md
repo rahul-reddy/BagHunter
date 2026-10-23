@@ -26,3 +26,9 @@ holdout, honest uncertainty, supported theses, incremental refresh. None are val
 2026-10-23 owner decision: use BagHunter consistently across app and documentation, including
 Radar navigation and watchlist exports. Complete the reviewed branding squash merge before starting
 the next implementation item. Research-output fingerprints must remain unchanged by the rename.
+
+2026-10-23 sequencing checkpoint: branding was committed/pushed, CI passed, Claude independently
+approved with zero blockers, and PR #15 was squash-merged as 389db89. The tracked worktree was clean
+on main before the historical import branch was created. No provider credentials or entitlement were
+supplied; implement a provider-neutral local-export adapter and coverage audit without subscriptions,
+network data requests, fabricated observations or automatic research activation.

@@ -1,5 +1,10 @@
 # Sprint status — 2026-10-23
 
+Current increment: normalized historical export adapter and coverage audit implemented after branding
+PR #15 was fully merged. Local suite: 49 backend tests; audit/ingest CLI executed on labeled fixtures.
+No licensed provider input yet; external imports are quarantined, never automatically research-ready.
+The Sprint 4 empirical gates remain BLOCKED. See docs/HISTORICAL_IMPORT.md and STATUS.md.
+
 | Sprint | Acceptance | Evidence / limits |
 | --- | --- | --- |
 | 0 | PASS locally | Python 3.12/React scaffold; locked installs; lint, types, tests, build; health and dashboard |

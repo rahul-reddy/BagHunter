@@ -18,3 +18,8 @@ source identifiers, not real filing citations. The dashboard links them to the l
 No real SEC filing was ingested in this release because a proper identifying user agent was not
 supplied. An actionable client exists; the real-data gate remains BLOCKED. No keys are needed for
 the fixture; licensed market data requires explicit entitlement and coverage verification.
+
+Normalized local history export staging is now available (docs/HISTORICAL_IMPORT.md). The committed
+example is entirely fictional; no provider was selected, purchased or fetched. License use is a
+caller attestation and coverage remains unverified. Imports preserve original bytes and expose
+missingness without becoming a live source or an empirical study automatically.

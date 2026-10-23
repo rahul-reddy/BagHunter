@@ -1,0 +1,4 @@
+[
+  {"security_id":"fixture-history-a","name":"Fictional Supplier","first_seen":"2020-01-01","last_seen":null,"security_type":"common","exchange":"FIXTURE","delisted":false},
+  {"security_id":"fixture-history-b","name":"Fictional Failed Peer","first_seen":"2020-01-01","last_seen":"2020-01-02","security_type":"common","exchange":"FIXTURE","delisted":true}
+]
