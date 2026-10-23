@@ -1,0 +1,110 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    name: Verify workstation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The parent is needed to list what this change touched.
+          fetch-depth: 0
+      # A change to documentation alone skips the tests to save Actions minutes,
+      # but this job still runs and passes, because merge-pr.ps1 requires it.
+      # Docs-only means every changed path (both sides of a rename) is docs/** or
+      # a Markdown file at the repository root; Markdown anywhere else (skills,
+      # dashboard) can be read by code or copied into an image. Anything this step
+      # cannot establish runs the full suite: only docs_only=true skips.
+      - name: Classify the change
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base=""
+          if [ "$EVENT" = pull_request ]; then
+            # The checkout is GitHub's merge of the PR into its base: its first
+            # parent is the base, so the diff to it is exactly the PR's change.
+            if [ "$(git rev-list --parents -n 1 HEAD | wc -w)" -eq 3 ]; then
+              base=$(git rev-parse HEAD^1)
+            fi
+          elif [ "$EVENT" = push ] && [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ]; then
+            git fetch --quiet --depth=1 origin "$BEFORE" && base="$BEFORE"
+          fi
+          if [ -z "$base" ] || ! changed=$(git diff --name-only --no-renames "$base" HEAD); then
+            echo "Could not list the change; running everything."
+            exit 0
+          fi
+          if [ -z "$changed" ]; then
+            echo "Empty change; running everything."
+            exit 0
+          fi
+          echo "$changed"
+          while IFS= read -r path; do
+            case "$path" in
+              docs/*) ;;
+              */*) echo "Not docs-only: $path"; exit 0 ;;
+              *.md) ;;
+              *) echo "Not docs-only: $path"; exit 0 ;;
+            esac
+          done <<< "$changed"
+          echo "docs_only=true" >> "$GITHUB_OUTPUT"
+      - name: "Docs-only change: skipping tests"
+        if: steps.scope.outputs.docs_only == 'true'
+        run: echo "Only docs/ or root Markdown changed; tests skipped. The secret scan still runs." | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: astral-sh/setup-uv@v6
+        if: steps.scope.outputs.docs_only != 'true'
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        if: steps.scope.outputs.docs_only != 'true'
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: uv sync --locked
+        if: steps.scope.outputs.docs_only != 'true'
+      - name: Verify agent harness
+        if: steps.scope.outputs.docs_only != 'true'
+        run: |
+          pwsh -NoProfile -File scripts/cross-review-selftest.ps1
+          uv run python scripts/validate_skills.py
+      - run: uv run ruff check . && uv run ruff format --check . && uv run mypy packages apps/api
+        if: steps.scope.outputs.docs_only != 'true'
+      - run: uv run pytest --cov=packages --cov=apps/api --cov-report=xml --junitxml=artifacts/test_results/pytest.xml
+        if: steps.scope.outputs.docs_only != 'true'
+      - run: npm ci && npm run lint && npm run typecheck && npm run build
+        if: steps.scope.outputs.docs_only != 'true'
+        working-directory: apps/web
+      - run: npx playwright install --with-deps chromium && npm run test:e2e
+        if: steps.scope.outputs.docs_only != 'true'
+        working-directory: apps/web
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.scope.outputs.docs_only != 'true'
+        with:
+          name: verification-evidence
+          path: |
+            coverage.xml
+            apps/web/playwright-report
+            apps/web/test-results
+            artifacts/
+      - name: Dependency advisory
+        if: steps.scope.outputs.docs_only != 'true'
+        continue-on-error: true
+        run: uv run pip-audit && cd apps/web && npm audit
+      - name: Secret advisory
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
