@@ -1,4 +1,4 @@
-# ALPHA HUNTER — 100-Bagger DNA Lab
+# BagHunter — 100-Bagger DNA Lab
 
 > **Agent entrypoint.** Read this file first, then read the linked documents in order. Treat the combined package as the source of truth for the build.
 

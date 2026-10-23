@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
-app = FastAPI(title="Alpha Hunter — research only", version="0.1.0")
+app = FastAPI(title="BagHunter — research only", version="0.1.0")
 
 
 def current() -> dict[str, Any]:

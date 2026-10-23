@@ -1,7 +1,7 @@
 # 01 — Master mission and definition of success
 
 ## Vision
-Create **Alpha Hunter: The 100-Bagger DNA Lab**, a reusable investment research lab for early detection of potentially asymmetric equity opportunities. Combine:
+Create **BagHunter: The 100-Bagger DNA Lab**, a reusable investment research lab for early detection of potentially asymmetric equity opportunities. Combine:
 
 - **Archaeologist:** reconstruct what was knowable *before* extraordinary returns, including comparable nonwinners and delisted names.
 - **Discovery engine:** detect early price/volume breaks from consolidation, relative strength, accelerating financial performance, balance sheet changes, capital-cycle shifts and catalysts.

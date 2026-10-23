@@ -142,7 +142,7 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
             writer = csv.DictWriter(stream, fieldnames=list(labels[0]))
             writer.writeheader()
             writer.writerows(labels)
-        with (staging / "reports" / "alpha_watchlist.csv").open("w", newline="") as stream:
+        with (staging / "reports" / "baghunter_watchlist.csv").open("w", newline="") as stream:
             fields = ["security_id", "ticker", "asof_time", "stage", "score", "completeness"]
             writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
             writer.writeheader()

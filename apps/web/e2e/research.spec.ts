@@ -4,6 +4,7 @@ import { mkdir } from 'node:fs/promises';
 
 test('pipeline to browser: candidate factors, source evidence, hindsight and evaluation', async ({page}) => {
   await page.goto('/');
+  await expect(page).toHaveTitle('BagHunter · Research Lab');
   await expect(page.getByRole('heading', {name: 'Command Center'})).toBeVisible();
   await expect(page.getByRole('button', {name: 'DEMO-A fx-compound'})).toBeVisible();
   await expect(page.getByText('STALE / FIXTURE', {exact: false})).toBeVisible();
@@ -22,7 +23,7 @@ test('pipeline to browser: candidate factors, source evidence, hindsight and eva
   await page.getByRole('button', {name: 'Data Quality', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'Source ledger'})).toBeVisible();
   expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
-  await page.getByRole('button', {name: 'Alpha Radar', exact: true}).click();
+  await page.getByRole('button', {name: 'BagHunter Radar', exact: true}).click();
   await page.getByLabel('Find a security').fill('no-such-security');
   await expect(page.getByText('No securities match these filters.')).toBeVisible();
   await page.getByLabel('Find a security').fill('fx-compound');

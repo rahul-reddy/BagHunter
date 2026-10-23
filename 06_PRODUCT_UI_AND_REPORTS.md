@@ -5,7 +5,7 @@ Polished dark research terminal, restrained teal/amber color accents, excellent 
 
 ## Pages
 1. **Command Center:** market regime, theme breadth, new ignition count, emerging/confirmed counts, source freshness, last successful refresh, top research queue.
-2. **Alpha Radar:** sortable/filterable cross section by market cap, liquidity, sector, 1D/1W/1M/3M performance, volume burst, consolidation, fundamentals, stage, risk flags, evidence quality and score.
+2. **BagHunter Radar:** sortable/filterable cross section by market cap, liquidity, sector, 1D/1W/1M/3M performance, volume burst, consolidation, fundamentals, stage, risk flags, evidence quality and score.
 3. **100-Bagger Museum:** historical winners and matched failures side-by-side, earliest eligible date, what was knowable at that time, later outcomes visibly separated, cohorts and sector/regime filters.
 4. **Candidate DNA:** chart with base/breakout markers, earnings timeline, financials, dilution, catalysts, peer breadth, score ingredients, links, uncertainty, alternative explanations.
 5. **Thesis Studio:** bull/base/bear models, explicit probabilities only if defensible, catalyst checklist, falsification, independent bear reviewer and valuation sensitivity.
@@ -24,7 +24,7 @@ As-of date/time and data age; central thesis (1 paragraph); evidence table (metr
 New ignitions, advancing/deteriorating themes, watchlist changes, fresh filings, thesis breakers, data-quality alerts, candidates requiring investigation, no forced pick count.
 
 ## Exportable files
-`reports/historical_cohorts.csv`, `reports/failed_lookalikes.md`, `reports/model_validation.md`, `reports/alpha_watchlist.csv`, `reports/theses/<permanent-id>.md`, `reports/source_manifest.json`, `reports/research_limitations.md`. Additional PDF permitted only if document pipeline is available.
+`reports/historical_cohorts.csv`, `reports/failed_lookalikes.md`, `reports/model_validation.md`, `reports/baghunter_watchlist.csv`, `reports/theses/<permanent-id>.md`, `reports/source_manifest.json`, `reports/research_limitations.md`. Additional PDF permitted only if document pipeline is available.
 
 ## Interaction requirements
 Every score opens factor breakdown; every sourced financial value links to dated source; every chart labels as-of clock and adjustment basis; every backtest shows validation split and execution assumption; every missing datum is missing rather than zero. Provide search by ticker and persistent ID, visible reasons for inclusion/exclusion and an explicit 'research only' banner.

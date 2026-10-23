@@ -1,4 +1,4 @@
-# Alpha Hunter — 100-Bagger DNA Lab
+# BagHunter — 100-Bagger DNA Lab
 
 A local US-equities research laboratory with point-in-time feature cutoffs, failed-peer comparisons,
 a deterministic screening demonstration, and a read-only research terminal. **Research and simulation

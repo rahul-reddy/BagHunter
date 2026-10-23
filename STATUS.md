@@ -1,3 +1,23 @@
+# Current handoff — BagHunter branding / 2026-10-23
+
+The app, browser title, header/footer/logo, Radar navigation, API title, CLI help, npm metadata,
+project brief and documentation now use BagHunter. The watchlist export is baghunter_watchlist.csv.
+This rename is isolated on feat/baghunter-branding and must be fully squash-merged before the next item.
+
+Local validation on the rename worktree: 23 backend tests, ruff lint/format and mypy passed;
+CLI help and imported API title checked. A tracked-file search found no stale product-name references.
+Research signals, cohort study and toy evaluation have identical before/after SHA-256 fingerprint:
+`84fcdf1abf85770ab82a5dcf9d4cb90a42b7c90e7adca1f4e53af1c827090fbb`.
+Only run identity and the branded export filename change. Fixture-only research limitations persist.
+Browser smoke now asserts the BagHunter page title; frontend checks and current-head CI/review are
+required before merge. CI and independent approval are authoritative in the branding PR.
+
+Next item remains the licensed PIT market-data adapter and coverage audit. Start it only after the
+branding PR is merged and the tracked worktree is clean. The local preview was started during the
+owner's prior session; restart the API after merge to pick up its title change.
+
+## Previous verified fixture release
+
 # Current handoff — fixture MVP shipped / 2026-10-23
 
 Sprint 0–3 fixture vertical slice merged through [PR #1](https://github.com/rahul-reddy/BagHunter/pull/1)
