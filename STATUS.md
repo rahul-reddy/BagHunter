@@ -1,4 +1,27 @@
-# Current handoff — historical export staging / 2026-10-23
+# Current handoff — Finviz Elite input identified / 2026-10-23
+
+The owner confirmed an existing Finviz Elite subscription. No CSV, API token or authenticated
+documentation was supplied. docs/FINVIZ.md records verified official sources, a local CSV handoff,
+current-snapshot boundaries and the proposed converter. No Finviz importer is implemented yet.
+Historical PIT universe, original filing vintages, actions and delisting coverage remain unverified.
+The dashboard and runnable examples still use synthetic fixtures; no provider data was fetched.
+
+Delivery checkpoints: branding PR #15 squash-merged as 389db89 before the historical adapter branch;
+historical adapter PR #16 squash-merged as b0c205b after exact-head CI and independent Claude approval
+with zero blockers. Its reviewed and merged Git trees matched. Main CI run 39992228855 passed.
+That implementation's CI ran 49 backend and 3 browser tests. Those are prior implementation results,
+not a new test run for this documentation-only change.
+
+Validation for this handoff: official Finviz FAQ, Elite feature page and October 7 API announcement
+read on 2026-10-23; local Markdown links and git diff whitespace checked. Current-head CI and
+independent review must pass before this documentation branch merges. No runtime code changed.
+
+Next required input: export one Finviz screener CSV to ignored data/finviz/inbox/screener.csv and
+provide its local path, actual timezone-aware export time and filters/column notes. No credentials
+are needed for that input. Inspect its actual schema before implementing a current-snapshot import.
+Do not treat current screens as archived historical membership or today's statements as old vintages.
+
+## Archived historical staging handoff
 
 ## Sequencing checkpoint
 

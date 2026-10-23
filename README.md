@@ -50,7 +50,7 @@ npm --prefix apps/web run test:e2e
 servers already occupy those addresses. For GNU Make users, equivalent `make` targets exist.
 
 `ingest-demo`, `study-demo` and `backtest-demo` are aliases that rebuild the same complete slice.
-There is no incremental refresh, configurable universe or imported manifest CLI yet. CLI `--help`
+There is no incremental refresh or configurable research universe yet. CLI `--help`
 lists implemented arguments only. Outputs are published as immutable runs below
 `data/fixture/latest/runs/<run-id>/`; `CURRENT` selects the active run atomically. Raw content is
 SHA-256 addressed in `data/fixture/raw/`. Silver, gold and hindsight Parquet tables are separate.
@@ -94,6 +94,9 @@ preserves its source bytes and writes quarantined Parquet plus a coverage report
 exports can use the same adapter, with explicit source authorization and checksums. They remain
 EXTERNAL_UNVERIFIED and never become candidates automatically. See the
 [historical import contract](docs/HISTORICAL_IMPORT.md) for formats, PIT rules and resource limits.
+
+The owner has Finviz Elite. Its current-screener export handoff and remaining historical-data gaps
+are documented in [Finviz setup](docs/FINVIZ.md). No Finviz importer is connected yet.
 
 ## Development workflow
 
