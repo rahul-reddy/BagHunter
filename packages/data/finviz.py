@@ -88,7 +88,9 @@ def _number(value: str, *, positive: bool = False, nonnegative: bool = False) ->
     if not re.fullmatch(r"[+-]?\d{1,25}(?:\.\d{1,8})?", value):
         raise ValueError("Unsupported numeric representation")
     number = Decimal(value)
-    if abs(number) > Decimal("1e24") or (positive and number <= 0):
+    if len(number.as_tuple().digits) > 28:
+        raise ValueError("Numeric precision exceeds exact arithmetic contract")
+    if number.copy_abs() > Decimal("1e24") or (positive and number <= 0):
         raise ValueError("Numeric value outside bounds")
     if nonnegative and number < 0:
         raise ValueError("Negative unsigned value")

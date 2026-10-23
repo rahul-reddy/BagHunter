@@ -158,6 +158,7 @@ def test_symlink_output_is_rejected(export, tmp_path):
         (6, "NaN"),
         (6, "123M"),
         (6, "-3"),
+        (6, "999999999999999999999999.12345678"),
         (7, "-1"),
         (8, "0"),
         (8, "Infinity"),
@@ -301,6 +302,14 @@ def test_snapshot_reader_is_read_only_and_preserves_decimals(export, monkeypatch
     checked, rows = finviz.read_snapshot(report["snapshot_id"], "FIXTURE")
     assert checked == report
     assert rows[0].market_cap_reported == Decimal("123.45")
+
+
+def test_large_percentage_keeps_all_supported_digits(export):
+    report = ingest(
+        export, edit_rows=lambda rows: rows[0].__setitem__(9, "12345678901234567890.12345678%")
+    )
+    _, rows = finviz.read_snapshot(report["snapshot_id"], "FIXTURE")
+    assert rows[0].change_fraction == Decimal("123456789012345678.9012345678")
 
 
 @pytest.mark.parametrize(

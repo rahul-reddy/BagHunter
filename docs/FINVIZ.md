@@ -84,6 +84,8 @@ normalization or capitalization-based eligibility. Missing markers (empty, -, N/
 Zero volume remains zero. Zero reported P/E is retained and counted, without valuation inference.
 Ticker duplicates, unexpected columns/ordinals, malformed percentages and nonfinite/invalid numbers
 fail closed. Security types remain unknown and permanent IDs remain null.
+Numeric inputs support at most eight fractional places and 28 significant digits; values beyond
+that precision are rejected before decimal arithmetic can silently round them.
 
 The actual local import has 11,783 observations; missing market cap 5,883, P/E 8,857, price 13 and
 change 21. Four reported P/E values are zero. All 11,783 permanent identities remain unresolved.
