@@ -24,7 +24,7 @@ at `656cc7e8906cf0ea3add52404da10eb455034cf9`. The tested/reviewed PR head was
 - Browser: profile factors/citations, case/control museum, evaluation/baselines, source ledger,
   search/empty state, missing backend, desktop/mobile axe scans and no page overflow. Screenshots
   inspected at artifacts/screenshots/command-center.png and mobile.png.
-- Saved logs and JUnit: artifacts/test_results/. Coverage XML: coverage.xml; last measured total 89%.
+- Saved logs and JUnit: artifacts/test_results/. Local coverage.xml measured 89% on the initial 20-test suite; final CI includes its own coverage XML.
 - Demo: 3 profiles, 12 horizon labels, 1 matched pair, 13 sequential screening windows.
 - Historical anchor 2020-01-01; candidate clock 2022-01-03T23:00:00+00:00; toy period
   2019-12-31–2022-01-05.
