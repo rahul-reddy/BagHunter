@@ -3,10 +3,11 @@
 The BagHunter branding checkpoint is merged in PR #15 (389db89), before historical adapter work.
 
 The historical staging adapter is merged in PR #16 (b0c205b). The owner has Finviz Elite.
-Exactly one next implementation step: inspect one owner-exported Finviz screener CSV, then build a
-tested current-snapshot importer using its actual columns and units. Save the CSV under ignored
-`data/finviz/inbox/screener.csv` and provide its local path plus export time/filter notes.
-See [Finviz handoff](docs/FINVIZ.md). No Finviz importer or authenticated access exists yet.
+Authorized API export completed: ignored `data/finviz/inbox/screener.csv` and manifest.json;
+immutable timestamped source copy in data/finviz/inbox/20261023T175717Z/. Exactly one next
+implementation step: inspect units/security types in this CSV, then build a tested current-snapshot
+importer using its actual columns. See [Finviz handoff](docs/FINVIZ.md) for verified shape/hash/time.
+No supported Finviz importer exists yet. No more manual export input is needed for that step.
 Never put credentials in chat, manifests, commits or logs. Finviz historical PIT/delisting coverage
 remains unverified; current screens cannot fill historical universe or original filing-vintage gaps.
 

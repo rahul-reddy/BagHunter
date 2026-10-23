@@ -1,7 +1,24 @@
 # Finviz Elite data handoff — checked 2026-10-23
 
-The owner has an existing Finviz Elite subscription. No export, API token or authenticated
-documentation has been supplied to BagHunter. No subscription purchase is needed for this handoff.
+The owner has an existing Finviz Elite subscription and authorized a local API export using
+FINVIZ_TOKEN from the ignored .env. The export succeeded on 2026-10-23. No purchase occurred.
+
+## Completed local export
+
+An unfiltered overview request (view 111) to the official Elite export endpoint redirected from
+/export.ashx to /export on the same HTTPS host and returned HTTP 200 text/csv. Redirects were limited
+to Finviz HTTPS hosts; authenticated URLs and response rows were not printed or committed.
+
+The original CSV and credential-free manifest are in ignored data/finviz/inbox/20261023T175717Z/;
+convenience copies are data/finviz/inbox/screener.csv and manifest.json. Retrieval time was
+2026-10-23T17:57:17.673674+00:00. The 1,320,890-byte CSV has 11,783 unique, nonempty tickers and
+11 columns: No., Ticker, Company, Sector, Industry, Country, Market Cap, P/E, Price, Change, Volume.
+SHA-256: 148ad7a687652508a6c5425df40def965ad90d76ea3ccf02a65b56ca850a9c05.
+These counts describe the export, not a verified common-stock research universe.
+
+CSV shape and archived-byte checksum were checked. Units, security types, provider observation
+timestamps and historical coverage remain unverified. No typed importer or dashboard activation
+has occurred. The export procedure remains a local operational script, not a supported CLI command.
 
 ## Verified capabilities and remaining evidence
 
@@ -23,7 +40,7 @@ Historical research eligibility remains unverified. Historical fiscal periods in
 statements must not be interpreted as facts known at those past dates. A ticker is not a permanent
 security ID, and today's selected screen is not the past investable universe.
 
-## Next input: one local CSV export
+## Manual alternative for later exports
 
 1. In the owner's existing Finviz Elite session, open the desired stock screen and export CSV.
    Include ticker/company and, where offered, sector, industry, capitalization, price and volume.
@@ -35,11 +52,11 @@ security ID, and today's selected screen is not the past investable universe.
    Exclude token-bearing links, passwords, account identifiers and cookies from notes.
 4. Tell the agent the local file path. No password or API key is required for CSV inspection.
 
-This is an input handoff, **not an implemented Finviz importer**. Do not pass CSV directly to
+This is an export handoff, **not an implemented Finviz importer**. Do not pass CSV directly to
 `audit-history`: that command accepts the normalized seven-table JSON bundle described in
 [HISTORICAL_IMPORT.md](HISTORICAL_IMPORT.md).
 
-## Implementation after the export arrives
+## Next implementation using the saved export
 
 Inspect headers and units before writing the converter. Preserve original bytes and their hash,
 record ingestion time separately from provider observation time, validate finite numbers and missing
@@ -51,8 +68,8 @@ historical research bundles. Do not manufacture membership intervals, accepted f
 calendars or historical OHLCV from screener fields. Owner subscription confirmation is not independent
 verification of redistribution rights or complete research coverage.
 
-Automated API access is a later step. Verify account-specific documentation and read credentials
+Repeatable supported API ingestion is a later step. Verify account-specific documentation and read credentials
 from the local environment without logging authenticated URLs. The official API announcement states
 a shared account limit of 10 requests per rolling five seconds across Export/API endpoints and
 HTTP 429 with `Retry-After: 5`; any client must respect concurrent account usage and bounded retries.
-No API access or credential storage is implemented by this documentation change.
+No supported API client or credential storage is implemented by this documentation change.
