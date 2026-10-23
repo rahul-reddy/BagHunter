@@ -7,8 +7,11 @@ Authorized API export completed: ignored `data/finviz/inbox/screener.csv` and ma
 immutable timestamped source copy in data/finviz/inbox/20261023T175717Z/. A typed local snapshot
 importer is implemented and has staged all 11,783 rows under data/finviz/snapshots/external_unverified/.
 See [Finviz handoff](docs/FINVIZ.md) for the ingest-finviz command, format and coverage report.
-Exactly one next implementation step: verify export-unit and security-type/identity evidence before
-adding a separately labeled current-data browser. No additional manual export input is needed.
+The separate Finviz Observations browser now supports read-only search/pagination of an explicitly
+selected saved snapshot. Unknown units/types/IDs are shown without currency conversion or ranking.
+Exactly one next implementation step: obtain authoritative export-unit and security master evidence
+before adding currency-aware filters or common-share eligibility. No additional manual CSV input
+is needed. See docs/FINVIZ.md for local environment selection and the browser boundary.
 Never put credentials in chat, manifests, commits or logs. Finviz historical PIT/delisting coverage
 remains unverified; current screens cannot fill historical universe or original filing-vintage gaps.
 

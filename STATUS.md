@@ -1,6 +1,59 @@
-# Current handoff — Finviz current snapshot importer / 2026-10-23
+# Current handoff — Finviz observation browser / 2026-10-23
 
-## Implemented and locally executed
+## Implemented increment
+
+Finviz Observations is a separate read-only snapshot explorer with alphabetical search/pagination,
+retrieval age, missing values, reported units, unknown type/identity labels and source lineage.
+It works independently of the fixture research run. No score, common-share eligibility or historical
+research promotion was added. The official screener help was checked again; it does not resolve
+this CSV's market-cap scale or permanent security identity. Those gaps remain explicit.
+
+GET /finviz/observations serves only a SHA-selected local archive via BAGHUNTER_FINVIZ_SNAPSHOT and
+BAGHUNTER_FINVIZ_MODE. It verifies raw/derived integrity without writes, vendor calls or fallback.
+Query/offset/page-size limits are enforced. Prices/cap retain provider scale; share volumes and
+percentage display text avoid browser numeric rounding. Search/reload errors remove prior rows.
+Fixture snapshots always show a synthetic label. The existing research pages still use fixtures.
+
+## Validation and delivery
+
+On the final runtime worktree, ruff lint/format and mypy passed; pytest with coverage/JUnit passed
+108 tests plus one Windows symlink skip. The Linux CI gate must exercise the symlink boundary.
+Frontend lint/types/build and all five browser tests passed before the final metadata-type fix;
+UI code is unchanged by that fix. Browser acceptance covers search, pagination, error/empty states,
+separation when fixture data is unavailable, exact large numbers, escaped text, keyboard scrolling,
+desktop/mobile axe scans and viewport overflow. Browser final results are recorded in the PR.
+The first browser run exposed a nonfocusable scroll region; it was made keyboard accessible and
+retested without relaxing the accessibility assertions. No vendor rows are committed or captured in
+browser test screenshots; fixtures shape the UI tests. Evidence: artifacts/test_results/
+finviz-browser-pytest.xml and artifacts/screenshots/finviz-desktop.png, finviz-mobile.png.
+A final precision audit added rejection above 28 significant digits before decimal arithmetic, plus
+two regressions for unsupported precision and exact supported large percentages. Head b61595b
+passed CI (104 backend/5 browser) and Claude review with zero blockers. Before merge, addressed its
+scalar-coverage advisory with an object-type guard and five regression cases (generic 503 without
+raw values). All 108 local backend tests passed again, plus the Windows symlink skip. Current-head
+CI and the same independent reviewer are required again before guarded merge.
+
+The real local API smoke check returned HTTP 200, total 11,783, mode EXTERNAL_UNVERIFIED, unknown
+permanent identity and unverified cap units from the existing immutable snapshot. Source data and
+.env remain ignored. The preview API was restarted with an explicit snapshot selection; no deploy.
+
+## Limitations and next action
+
+No historical PIT membership, original filing vintages, security master, currency/adjustment or
+market-cap export-scale evidence was established. The browser is observational; empirical research
+and verified theses remain blocked. Provider observation time is unknown even for a recent export;
+the 24-hour stale threshold measures retrieval age only. Local browser setup is in docs/FINVIZ.md.
+
+Next: obtain authoritative export-unit and security master evidence before adding currency-aware
+filters, common-share eligibility or candidate research. No new manual CSV input is needed.
+Prior importer PR #19 was fully squash-merged as eebfb42 before this branch began; its reviewed and
+merged trees matched. It passed 92 backend/3 browser CI tests and Claude approval with zero blockers.
+
+## Prior importer handoff
+
+### Current handoff — Finviz current snapshot importer / 2026-10-23
+
+#### Implemented and locally executed
 
 packages/data/finviz.py and CLI ingest-finviz now validate the exact unfiltered overview CSV and
 its credential-free export manifest. Local ingestion of all 11,783 saved observations succeeded.
@@ -15,7 +68,7 @@ retained and counted. All permanent IDs are null and security types unknown. Mar
 scale is preserved without an unverified USD multiplier. Explicit percentages become fractions;
 volume uses reported shares for the current/last session, not historical session bars.
 
-## Validation and delivery
+#### Validation and delivery
 
 Final runtime worktree: ruff check/format and mypy passed; pytest with coverage/JUnit passed
 91 tests with one Windows skip (symlink creation unavailable). The Linux CI run must exercise that
@@ -33,7 +86,7 @@ The full local suite and real-source repeat import passed again after this fix. 
 the same independent reviewer are required again. Empty/corrupt archives intentionally fail closed;
 remaining advisory comments are preserved in PR #19.
 
-## Remaining boundaries and next action
+#### Remaining boundaries and next action
 
 No PIT history, archived universe, original fundamental vintages or delisting evidence is established.
 No real candidates or empirical findings are activated. Market-cap scale, currency/adjustments and
@@ -46,7 +99,7 @@ current-data browser. No further manual export is needed. See docs/FINVIZ.md for
 Branding PR #15, historical staging PR #16 and Finviz handoff/export PRs #17–18 were fully merged
 before this implementation branch. No deployment, subscription purchase or trading occurred.
 
-## Prior handoffs
+#### Prior handoffs
 
 ### Current handoff — Finviz Elite input identified / 2026-10-23
 

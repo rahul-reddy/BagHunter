@@ -88,7 +88,9 @@ def _number(value: str, *, positive: bool = False, nonnegative: bool = False) ->
     if not re.fullmatch(r"[+-]?\d{1,25}(?:\.\d{1,8})?", value):
         raise ValueError("Unsupported numeric representation")
     number = Decimal(value)
-    if abs(number) > Decimal("1e24") or (positive and number <= 0):
+    if len(number.as_tuple().digits) > 28:
+        raise ValueError("Numeric precision exceeds exact arithmetic contract")
+    if number.copy_abs() > Decimal("1e24") or (positive and number <= 0):
         raise ValueError("Numeric value outside bounds")
     if nonnegative and number < 0:
         raise ValueError("Negative unsigned value")
@@ -219,6 +221,33 @@ def ingest_snapshot(
     if destination.is_symlink():
         raise ValueError("Snapshot must not be a symlink")
     data = _json([row.model_dump(mode="json") for row in rows])
+    report = _coverage(manifest, rows, mode, snapshot_id)
+    files = {"raw.csv": body, "source-manifest.json": manifest_bytes, "observations.json": data}
+    if destination.exists():
+        return _validate_archive(destination, files, rows, report, manifest)
+    report["ingested_at"] = datetime.now(UTC).isoformat()
+    with tempfile.TemporaryDirectory(prefix=".staging-", dir=root) as temporary:
+        stage = Path(temporary) / "snapshot"
+        stage.mkdir()
+        for name, value in files.items():
+            (stage / name).write_bytes(value)
+        _parquet(rows, stage / "observations.parquet")
+        (stage / "coverage.json").write_bytes(_json(report))
+        # The archive is published in one rename; no partial run or CURRENT pointer is exposed.
+        for attempt in range(6):
+            try:
+                stage.rename(destination)
+                break
+            except PermissionError:
+                if attempt == 5:
+                    raise
+                time.sleep(0.05 * (attempt + 1))
+    return report
+
+
+def _coverage(
+    manifest: ExportManifest, rows: list[Observation], mode: Mode, snapshot_id: str
+) -> dict[str, Any]:
     missing = {
         name: sum(getattr(row, name) is None for row in rows)
         for name in Observation.model_fields
@@ -253,41 +282,70 @@ def ingest_snapshot(
         ]
         + (["FIXTURE_ONLY"] if mode == "FIXTURE" else []),
     }
-    files = {"raw.csv": body, "source-manifest.json": manifest_bytes, "observations.json": data}
-    if destination.exists():
-        expected_names = {*files, "observations.parquet", "coverage.json"}
-        if {p.name for p in destination.iterdir()} != expected_names:
-            raise ValueError("Archive file set mismatch")
-        if any(p.is_symlink() or not p.is_file() for p in destination.iterdir()):
-            raise ValueError("Invalid archive member")
-        for name, value in files.items():
-            if _read(destination / name, len(value)) != value:
-                raise ValueError("Archive content mismatch")
-        if (destination / "observations.parquet").stat().st_size > 256 * 1024 * 1024:
-            raise ValueError("Archive Parquet exceeds size limit")
-        table = pq.read_table(destination / "observations.parquet")
-        if not table.equals(_table(rows), check_metadata=False):
-            raise ValueError("Archive Parquet mismatch")
-        previous: dict[str, Any] = json.loads(_read(destination / "coverage.json", 64 * 1024))
-        ingested_at = datetime.fromisoformat(previous.pop("ingested_at"))
-        if previous != report or not manifest.retrieved_at <= ingested_at <= datetime.now(UTC):
-            raise ValueError("Archive report mismatch")
-        return previous | {"ingested_at": ingested_at.isoformat()}
-    report["ingested_at"] = datetime.now(UTC).isoformat()
-    with tempfile.TemporaryDirectory(prefix=".staging-", dir=root) as temporary:
-        stage = Path(temporary) / "snapshot"
-        stage.mkdir()
-        for name, value in files.items():
-            (stage / name).write_bytes(value)
-        _parquet(rows, stage / "observations.parquet")
-        (stage / "coverage.json").write_bytes(_json(report))
-        # The archive is published in one rename; no partial run or CURRENT pointer is exposed.
-        for attempt in range(6):
-            try:
-                stage.rename(destination)
-                break
-            except PermissionError:
-                if attempt == 5:
-                    raise
-                time.sleep(0.05 * (attempt + 1))
     return report
+
+
+def _validate_archive(
+    destination: Path,
+    files: dict[str, bytes],
+    rows: list[Observation],
+    report: dict[str, Any],
+    manifest: ExportManifest,
+) -> dict[str, Any]:
+    expected_names = {*files, "observations.parquet", "coverage.json"}
+    if {p.name for p in destination.iterdir()} != expected_names:
+        raise ValueError("Archive file set mismatch")
+    if any(p.is_symlink() or not p.is_file() for p in destination.iterdir()):
+        raise ValueError("Invalid archive member")
+    for name, value in files.items():
+        if _read(destination / name, len(value)) != value:
+            raise ValueError("Archive content mismatch")
+    if (destination / "observations.parquet").stat().st_size > 256 * 1024 * 1024:
+        raise ValueError("Archive Parquet exceeds size limit")
+    table = pq.read_table(destination / "observations.parquet")
+    if not table.equals(_table(rows), check_metadata=False):
+        raise ValueError("Archive Parquet mismatch")
+    previous: dict[str, Any] = json.loads(_read(destination / "coverage.json", 64 * 1024))
+    if not isinstance(previous, dict):
+        raise ValueError("Archive coverage must be an object")
+    ingested_at = datetime.fromisoformat(previous.pop("ingested_at"))
+    if previous != report or not manifest.retrieved_at <= ingested_at <= datetime.now(UTC):
+        raise ValueError("Archive report mismatch")
+    return previous | {"ingested_at": ingested_at.isoformat()}
+
+
+def read_snapshot(snapshot_id: str, mode: Mode) -> tuple[dict[str, Any], list[Observation]]:
+    """Verify an explicitly selected archive without creating directories or modifying files."""
+    if not re.fullmatch(r"[a-f0-9]{64}", snapshot_id) or mode not in (
+        "FIXTURE",
+        "EXTERNAL_UNVERIFIED",
+    ):
+        raise ValueError("Invalid snapshot selection")
+    root = Path.cwd().resolve() / "data" / "finviz" / "snapshots" / mode.lower()
+    destination = root / snapshot_id
+    if destination.resolve() != destination:
+        raise ValueError("Snapshot must not traverse symlinks")
+    expected_names = {
+        "raw.csv",
+        "source-manifest.json",
+        "observations.json",
+        "observations.parquet",
+        "coverage.json",
+    }
+    if {p.name for p in destination.iterdir()} != expected_names or any(
+        p.is_symlink() or not p.is_file() for p in destination.iterdir()
+    ):
+        raise ValueError("Invalid archive members")
+    manifest, rows, body, manifest_bytes = load_export(
+        destination / "raw.csv", destination / "source-manifest.json"
+    )
+    actual_id = hashlib.sha256(VERSION.encode() + mode.encode() + body + manifest_bytes).hexdigest()
+    if actual_id != snapshot_id:
+        raise ValueError("Snapshot content identity mismatch")
+    files = {
+        "raw.csv": body,
+        "source-manifest.json": manifest_bytes,
+        "observations.json": _json([row.model_dump(mode="json") for row in rows]),
+    }
+    report = _coverage(manifest, rows, mode, snapshot_id)
+    return _validate_archive(destination, files, rows, report, manifest), rows

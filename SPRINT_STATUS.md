@@ -1,10 +1,11 @@
 # Sprint status — 2026-10-23
 
-Current increment: normalized historical export adapter and coverage audit implemented after branding
-PR #15 was fully merged. Local suite: 49 backend tests; audit/ingest CLI executed on labeled fixtures.
+Current increment: separate read-only Finviz observation browser after importer PR #19 merged.
+Local backend suite: 108 passed, one Windows symlink skip. Historical staging remains isolated.
 Owner authorized a Finviz Elite API export; 11,783 screener rows are saved locally, separate from
 the synthetic dashboard. The ingest-finviz CLI stages typed JSON/Parquet observations with source
-checksums, missingness and unknown identity/unit flags. Historical
+checksums, missingness and unknown identity/unit flags. Finviz Observations now provides a separate,
+explicitly selected read-only snapshot browser; field units/types/IDs remain unverified. Historical
 PIT/delisting coverage remains unverified. External imports stay quarantined. See docs/FINVIZ.md.
 The Sprint 4 empirical gates remain BLOCKED. See docs/HISTORICAL_IMPORT.md and STATUS.md.
 

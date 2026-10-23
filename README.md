@@ -98,6 +98,9 @@ EXTERNAL_UNVERIFIED and never become candidates automatically. See the
 The owner has Finviz Elite. Its current-screener export handoff and remaining historical-data gaps
 are documented in [Finviz setup](docs/FINVIZ.md). `ingest-finviz` imports the saved overview CSV into
 an immutable, quarantined current snapshot. It does not activate candidates or the fixture dashboard.
+The separate **Finviz Observations** view can browse that snapshot after local API selection; see
+[local browser setup](docs/FINVIZ.md#local-observations-browser). Unknown units/types and missing fields
+remain visible. This saved snapshot supplies no historical research evidence or validated candidates.
 
 ## Development workflow
 

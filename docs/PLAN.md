@@ -42,3 +42,8 @@ do not guess the authenticated export schema or backdate today's fundamentals. S
 overview shape as a bounded local ingest-finviz command with typed snapshots and coverage flags.
 Market-cap export scale, security types and permanent identities remain unresolved; do not guess
 USD conversions, promote historical research inputs or replace the fixture dashboard automatically.
+
+2026-10-23 observation browser decision: the official help does not settle export scale or permanent
+security IDs. Keep them unresolved. Allow a separate informational browser with reported values,
+explicit snapshot selection, provenance/gap labels and no scoring, common-share eligibility or PIT
+promotion. Reader must validate the immutable archive and perform no writes or vendor requests.
