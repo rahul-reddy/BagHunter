@@ -17,8 +17,9 @@ Fixture snapshots always show a synthetic label. The existing research pages sti
 ## Validation and delivery
 
 On the final runtime worktree, ruff lint/format and mypy passed; pytest with coverage/JUnit passed
-103 tests plus one Windows symlink skip. The Linux CI gate must exercise the symlink boundary.
-Frontend lint/types/build and all five browser tests passed. Browser acceptance covers search, pagination, error/empty states,
+108 tests plus one Windows symlink skip. The Linux CI gate must exercise the symlink boundary.
+Frontend lint/types/build and all five browser tests passed before the final metadata-type fix;
+UI code is unchanged by that fix. Browser acceptance covers search, pagination, error/empty states,
 separation when fixture data is unavailable, exact large numbers, escaped text, keyboard scrolling,
 desktop/mobile axe scans and viewport overflow. Browser final results are recorded in the PR.
 The first browser run exposed a nonfocusable scroll region; it was made keyboard accessible and
@@ -26,8 +27,11 @@ retested without relaxing the accessibility assertions. No vendor rows are commi
 browser test screenshots; fixtures shape the UI tests. Evidence: artifacts/test_results/
 finviz-browser-pytest.xml and artifacts/screenshots/finviz-desktop.png, finviz-mobile.png.
 A final precision audit added rejection above 28 significant digits before decimal arithmetic, plus
-two regressions for unsupported precision and exact supported large percentages. The full backend
-suite passed again. Current-head CI and independent review remain required before guarded merge.
+two regressions for unsupported precision and exact supported large percentages. Head b61595b
+passed CI (104 backend/5 browser) and Claude review with zero blockers. Before merge, addressed its
+scalar-coverage advisory with an object-type guard and five regression cases (generic 503 without
+raw values). All 108 local backend tests passed again, plus the Windows symlink skip. Current-head
+CI and the same independent reviewer are required again before guarded merge.
 
 The real local API smoke check returned HTTP 200, total 11,783, mode EXTERNAL_UNVERIFIED, unknown
 permanent identity and unverified cap units from the existing immutable snapshot. Source data and

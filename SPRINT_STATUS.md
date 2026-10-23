@@ -1,7 +1,7 @@
 # Sprint status — 2026-10-23
 
 Current increment: separate read-only Finviz observation browser after importer PR #19 merged.
-Local backend suite: 103 passed, one Windows symlink skip. Historical staging remains isolated.
+Local backend suite: 108 passed, one Windows symlink skip. Historical staging remains isolated.
 Owner authorized a Finviz Elite API export; 11,783 screener rows are saved locally, separate from
 the synthetic dashboard. The ingest-finviz CLI stages typed JSON/Parquet observations with source
 checksums, missingness and unknown identity/unit flags. Finviz Observations now provides a separate,

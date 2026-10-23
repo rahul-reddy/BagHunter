@@ -380,3 +380,20 @@ def test_finviz_api_rejects_invalid_selection_without_creating_files(
     monkeypatch.setenv("BAGHUNTER_FINVIZ_MODE", mode)
     assert TestClient(app).get("/finviz/observations").status_code == 503
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("value", [None, "PRIVATE_SCALAR", 3, True, []])
+def test_scalar_coverage_report_is_rejected_with_generic_unavailable(export, monkeypatch, value):
+    from fastapi.testclient import TestClient
+
+    from apps.api.main import app
+
+    report = ingest(export)
+    (archive(report) / "coverage.json").write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(ValueError, match="must be an object"):
+        finviz.read_snapshot(report["snapshot_id"], "FIXTURE")
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_SNAPSHOT", report["snapshot_id"])
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_MODE", "FIXTURE")
+    response = TestClient(app).get("/finviz/observations")
+    assert response.status_code == 503
+    assert "PRIVATE_SCALAR" not in response.text

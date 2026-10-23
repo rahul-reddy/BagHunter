@@ -306,6 +306,8 @@ def _validate_archive(
     if not table.equals(_table(rows), check_metadata=False):
         raise ValueError("Archive Parquet mismatch")
     previous: dict[str, Any] = json.loads(_read(destination / "coverage.json", 64 * 1024))
+    if not isinstance(previous, dict):
+        raise ValueError("Archive coverage must be an object")
     ingested_at = datetime.fromisoformat(previous.pop("ingested_at"))
     if previous != report or not manifest.retrieved_at <= ingested_at <= datetime.now(UTC):
         raise ValueError("Archive report mismatch")

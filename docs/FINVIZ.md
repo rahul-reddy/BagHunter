@@ -142,6 +142,8 @@ not proof of provider quote freshness: provider observation time remains unknown
 Responses are paginated, and changing a query or failing a reload removes old displayed rows.
 Reported decimals, exact percentage text and share volumes are sent as strings to avoid browser
 rounding of large integers; counts and retrieval ages remain numeric.
+Percentage values are numerically exact; insignificant trailing zeros may be normalized for display.
+Original lexical formatting is retained in the raw CSV, not guaranteed in the displayed percentage.
 The licensed dataset stays under Git-ignored data/ and is served only by the configured local API.
 Bind to localhost; no public hosting or redistribution is configured or authorized by this feature.
 
