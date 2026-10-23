@@ -16,7 +16,8 @@
 - **Score**: fixed placeholder weighted sum with missing factors retaining null. Available weights are
   not rescaled. Coverage measures available factor weight, not confidence or calibrated probability.
 - **Walk-forward toy**: fixed 63-session momentum, no learning/tuning, disjoint holding windows and
-  explicit next-open fills. Costs are 20 bps entry + 20 bps exit, subtracted as 0.004 of entry notional.
+  explicit next-open fills. Incomplete selector/peer/benchmark coverage aborts the comparison rather than retaining numeric wealth.
+  Costs are 20 bps entry + 20 bps exit, subtracted as 0.004 of entry notional.
   Unresolved exits are flagged. Fixture universe capacity and sector diversification are not modeled.
 
 Features implement 1/5/21/63-session momentum, 8/21 EMA, 60-session base width, relative volume,

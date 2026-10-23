@@ -3,12 +3,12 @@
 | Gate | Status | Evidence |
 | --- | --- | --- |
 | Locked installs / lint / types / frontend build | PASS locally | scripts/qa.ps1; artifacts/test_results |
-| PIT / amendments / identity / actions / missing outcomes | PASS fixture scope | 20 pytest tests; pytest.xml |
-| Deterministic CLI / separated Parquet / checksums | PASS fixture scope | run 06347fc57b51ea87; manifest and repeat-run tests |
+| PIT / amendments / identity / actions / missing outcomes | PASS fixture scope | 23 pytest tests; pytest.xml |
+| Deterministic CLI / separated Parquet / checksums | PASS fixture scope | run e0280e146da378f5; manifest and repeat-run tests |
 | API → browser / source citations / stale and missing states | PASS locally | 3 Playwright tests; apps/web/playwright-report |
 | Desktop/mobile accessibility and layout | PASS scanned views | axe: command center desktop/mobile, data ledger; screenshots inspected |
 | Copied review harness / repository skill | PASS locally | cross-review-selftest.ps1; validate_skills.py |
-| GitHub exact-head CI / independent PR review / guarded merge | PENDING | must finish before merge; no approval claimed |
+| GitHub exact-head CI / independent PR review / guarded merge | PENDING revised head | initial dc64336 passed CI and Gemini; PR #1 records revised-head gates |
 | Real historical provider / delisted coverage | BLOCKED | no licensed entitlement configured |
 | Real SEC PIT-normalized sample | BLOCKED | identifying contact not supplied; historical fact parser pending |
 | Empirical OOS findings / verified theses | BLOCKED | no real evidence; zero verified theses |

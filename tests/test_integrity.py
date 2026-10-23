@@ -219,6 +219,40 @@ def test_toy_next_open_costs_and_nonoverlapping_windows(dataset):
         previous_exit = row["exit"]
 
 
+def test_missing_evaluation_exit_cannot_be_reported_as_flat_wealth(dataset):
+    first_exit = evaluate(dataset, 7)["rows"][0]["exit"]
+    incomplete = dataset.model_copy(
+        update={
+            "bars": [
+                b
+                for b in dataset.bars
+                if not (b.security_id == "fx-market" and str(b.session) == first_exit)
+            ]
+        }
+    )
+    with pytest.raises(ValueError, match="Incomplete evaluation coverage"):
+        evaluate(incomplete, 7)
+
+
+def test_same_day_dividend_precedes_delisting_regardless_of_input_order():
+    start, end = date(2020, 1, 1), date(2020, 1, 2)
+    events = [
+        Action(security_id="unit", effective_date=end, kind="delist", value=20, source_id="unit"),
+        Action(security_id="unit", effective_date=end, kind="dividend", value=3, source_id="unit"),
+    ]
+    assert wealth_path([raw_bar(start, 100)], events, start, end)[-1][1] == 23
+    assert wealth_path([raw_bar(start, 100)], list(reversed(events)), start, end)[-1][1] == 23
+
+
+def test_equivalent_timezone_clocks_produce_identical_snapshots(dataset):
+    # A positive offset changes the calendar date but not the instant of observation.
+    utc = datetime.fromisoformat(DEFAULT_ASOF)
+    offset = datetime.fromisoformat("2022-01-04T01:00:00+02:00")
+    assert snapshot(dataset.instruments[0], dataset.bars, dataset.facts, utc) == snapshot(
+        dataset.instruments[0], dataset.bars, dataset.facts, offset
+    )
+
+
 def test_pipeline_reproducible_manifest_and_separate_tables(published):
     root, folder, data = published
     first = hashlib.sha256((folder / "run.json").read_bytes()).hexdigest()

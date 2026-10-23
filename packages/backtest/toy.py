@@ -47,6 +47,8 @@ def evaluate(dataset: Dataset, seed: int) -> dict[str, Any]:
         peer_returns = [
             realized[c["security_id"]] for c in candidates if c["security_id"] in realized
         ]
+        if net is None or len(peer_returns) != len(candidates) or "fx-market" not in realized:
+            raise ValueError("Incomplete evaluation coverage; cannot summarize comparable wealth")
         rows.append(
             {
                 "decision": str(decision),

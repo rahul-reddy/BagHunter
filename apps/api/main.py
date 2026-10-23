@@ -15,10 +15,12 @@ app = FastAPI(title="Alpha Hunter — research only", version="0.1.0")
 def current() -> dict[str, Any]:
     root = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest"))
     try:
-        run_id = (root / "CURRENT").read_text().strip()
+        run_id = (root / "CURRENT").read_text(encoding="utf-8").strip()
         if not re.fullmatch(r"[0-9a-f]{16}", run_id):
             raise ValueError("invalid run pointer")
-        data: dict[str, Any] = json.loads((root / "runs" / run_id / "run.json").read_text())
+        data: dict[str, Any] = json.loads(
+            (root / "runs" / run_id / "run.json").read_text(encoding="utf-8")
+        )
         return data
     except (OSError, ValueError) as exc:
         raise HTTPException(503, "No valid local run. Execute: uv run baghunter demo") from exc

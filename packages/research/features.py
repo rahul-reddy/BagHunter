@@ -1,6 +1,6 @@
 """Predictors accept only prices, facts and dated identity; no outcome-label argument."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from statistics import mean
 from typing import Any
 
@@ -9,7 +9,14 @@ from packages.shared.models import Bar, Fact, Instrument, Symbol
 VERSION = "heuristic-v0-unvalidated"
 
 
+def utc_asof(asof: datetime) -> datetime:
+    if asof.utcoffset() is None:
+        raise ValueError("asof must include timezone")
+    return asof.astimezone(UTC)
+
+
 def symbol_at(symbols: list[Symbol], security_id: str, asof: datetime) -> str:
+    asof = utc_asof(asof)
     found = [
         s.ticker
         for s in symbols
@@ -23,6 +30,7 @@ def symbol_at(symbols: list[Symbol], security_id: str, asof: datetime) -> str:
 
 
 def eligible(instrument: Instrument, asof: datetime) -> bool:
+    asof = utc_asof(asof)
     return (
         instrument.security_type == "common"
         and instrument.first_seen <= asof.date()
@@ -54,8 +62,7 @@ def assert_pit(publications: list[datetime], asof: datetime) -> None:
 def snapshot(
     instrument: Instrument, bars: list[Bar], facts: list[Fact], asof: datetime
 ) -> dict[str, Any]:
-    if asof.utcoffset() is None:
-        raise ValueError("asof must include timezone")
+    asof = utc_asof(asof)
     history = sorted(
         [
             b

@@ -37,6 +37,7 @@ def table(path: Path, rows: list[dict[str, Any]]) -> None:
 def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
     if asof.utcoffset() is None:
         raise ValueError("asof must include timezone")
+    asof = asof.astimezone(UTC)
     # Restrict fixture publishing to a fixture directory. Never overwrite real results.
     output = output.resolve()
     if "fixture" not in output.parts:

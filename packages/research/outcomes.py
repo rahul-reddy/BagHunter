@@ -13,11 +13,12 @@ def wealth_path(
 ) -> list[tuple[date, float]]:
     """Wealth per initial share, cash dividends held without reinvestment.
 
-    Splits apply before cash dividends on the same date. Delist value is per held share.
+    Same-date order: split, dividend, delisting. Delist value is per held share.
     Input is one instrument only, raw prices; post-delist observations are rejected.
     """
     bars = sorted(bars, key=lambda b: b.session)
-    actions = sorted(actions, key=lambda a: (a.effective_date, a.kind != "split"))
+    precedence = {"split": 0, "dividend": 1, "delist": 2}
+    actions = sorted(actions, key=lambda a: (a.effective_date, precedence[a.kind]))
     ids = {b.security_id for b in bars} | {a.security_id for a in actions}
     if len(ids) > 1:
         raise ValueError("wealth_path requires one security")

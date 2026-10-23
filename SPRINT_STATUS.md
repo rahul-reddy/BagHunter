@@ -8,10 +8,10 @@
 | 3 | PASS local P0 fixture path | CLI → storage → API → browser, candidate charts/evidence, failed peer, 13-window toy baseline comparison |
 | 4–9 empirical research | BLOCKED / deferred | no licensed historical PIT universe, real actions/delist coverage or substantiated candidates |
 
-Executed `scripts/qa.ps1`: 20 pytest tests; 3 Playwright tests; desktop/mobile accessibility;
+Executed `scripts/qa.ps1`: 23 pytest tests; 3 Playwright tests; desktop/mobile accessibility;
 ruff, mypy, TypeScript, ESLint, Vite build; review harness self-test and skill validation.
 Evidence: artifacts/test_results/, coverage.xml, apps/web/playwright-report/, artifacts/screenshots/.
-Fixture run `06347fc57b51ea87`; latest source `2023-03-30T22:00:00+00:00`.
+Fixture run `e0280e146da378f5`; latest source `2023-03-30T22:00:00+00:00`.
 Raw lineage SHA: `7d8ee2fcb1af8c890f9eb5b7991926f5162d9615a0a79fb6ccc7c0071a2b2be7`.
 
 Scope: 3 fictional common shares + market baseline, weekday observations 2019-01-01–2023-03-30;
@@ -21,3 +21,7 @@ No real SEC ingestion without contact identity; no historical financial parser y
 
 Initial observed failures and fixes are recorded in STATUS.md. Next priority: exact-head CI and
 independent PR review, followed by licensed real data rather than additional fixture sophistication.
+
+Review: dc64336 passed Linux/Windows CI and Gemini review (zero blockers). Advisories fixed;
+23 backend regression tests now include fail-closed incomplete evaluations, same-day actions and
+UTC clock equivalence. Revised exact-head CI/review are required by the merge gate.
