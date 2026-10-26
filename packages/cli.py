@@ -11,6 +11,7 @@ import httpx
 from packages.data.finviz import ingest_snapshot
 from packages.data.history import LocalHistoryProvider, ingest
 from packages.data.providers import SecClient
+from packages.data.reconciliation import inspect_reference
 from packages.data.reference import fetch_reference
 from packages.pipeline import DEFAULT_ASOF, run
 
@@ -44,8 +45,25 @@ def main() -> None:
     reference.add_argument("--snapshot", required=True)
     reference.add_argument("--offset", type=int, default=0)
     reference.add_argument("--limit", type=int, default=10)
+    reconcile = sub.add_parser(
+        "reconcile-reference", help="Compare saved company/class evidence offline"
+    )
+    reconcile.add_argument("--snapshot", required=True)
+    reconcile.add_argument("--reference", required=True)
+    reconcile.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
     args = parser.parse_args()
-    if args.command == "fetch-reference":
+    if args.command == "reconcile-reference":
+        try:
+            report = inspect_reference(args.reference, args.snapshot, args.mode)["reconciliation"]
+            result = {key: value for key, value in report.items() if key != "records"}
+        except (ValueError, OSError, TypeError, KeyError, csv.Error) as exc:
+            print(
+                f"Reference comparison rejected ({type(exc).__name__}); raw details suppressed. "
+                "See docs/REFERENCE.md.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
+    elif args.command == "fetch-reference":
         try:
             evidence = fetch_reference(args.snapshot, args.offset, args.limit)
             result = {

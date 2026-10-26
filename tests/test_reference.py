@@ -242,7 +242,9 @@ def test_reference_api_generic_errors_and_no_network(batch, monkeypatch):
 
     monkeypatch.setattr(reference.OpenFigiClient, "mapping", fail)
     client = TestClient(app)
-    assert client.get("/finviz/reference").json() == evidence
+    result = client.get("/finviz/reference").json()
+    assert result.pop("reconciliation")["identity_promotions"] == 0
+    assert result == evidence
     assert client.post("/finviz/reference").status_code == 405
     monkeypatch.setenv("BAGHUNTER_FINVIZ_SNAPSHOT", "0" * 64)
     assert client.get("/finviz/reference").status_code == 503

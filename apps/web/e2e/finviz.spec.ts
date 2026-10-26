@@ -21,7 +21,15 @@ const referenceEvidence = { reference_id: 'd'.repeat(64), base_snapshot_id: cove
   mode: 'FIXTURE', retrieved_at: '2020-01-02T12:00:01Z', response_sha256: 'e'.repeat(64),
   queried: 2, population: 51, offset: 0, flags: ['FIXTURE_ONLY', 'CURRENT_REFERENCE_ONLY_NOT_PIT', 'NOT_IDENTITY_PROMOTION'],
   records: [{ ticker: 'DEMO-X', status: 'AMBIGUOUS', candidates: [referenceCandidate(), referenceCandidate('BBG000TST003')], identity_promoted: false },
-    { ticker: 'DEMO-Y', status: 'NO_MATCH_REPORTED', candidates: [], identity_promoted: false }] };
+    { ticker: 'DEMO-Y', status: 'NO_MATCH_REPORTED', candidates: [], identity_promoted: false }],
+  reconciliation: { policy_version: 'company-share-class-comparison-v1', report_sha256: 'f'.repeat(64),
+    reference_id: 'd'.repeat(64), base_snapshot_id: coverage.snapshot_id, mode: 'FIXTURE',
+    flags: ['TEXT_COMPARISON_NOT_IDENTITY_PROOF'], records: [
+      { ticker: 'DEMO-X', source_company: '<script>fictional company</script>', disposition: 'REVIEW_REQUIRED',
+        candidates: ['BBG000TST001', 'BBG000TST003'].map(figi => ({ figi, name_comparison: 'DIFFERENT_TEXT',
+          issues: ['COMPANY_NAME_DIFFERS', 'MISSING_SHARECLASSFIGI'], shared_identifiers: {} })) },
+      { ticker: 'DEMO-Y', source_company: 'Imaginary company', disposition: 'NO_CANDIDATE_EVIDENCE', candidates: [] },
+    ] } };
 
 test('Finviz browsing, search, pagination and failure never mix with fixture rankings', async ({ page }) => {
   await page.route('**/api/runs/current', route => route.fulfill({ status: 503, body: '{}' }));
@@ -71,6 +79,10 @@ test('Finviz mobile accessibility, lineage and snapshot label', async ({ page })
   await expect(page.getByText('SYNTHETIC REFERENCE FIXTURE')).toBeVisible();
   await page.getByText('DEMO-X · AMBIGUOUS · 2 candidates', { exact: true }).click();
   await expect(page.getByText('Fictional reference candidate', { exact: false }).first()).toBeVisible();
+  await expect(page.getByText('Finviz company: <script>fictional company</script>', { exact: true })).toBeVisible();
+  await expect(page.getByText('Name comparison: DIFFERENT TEXT.', { exact: false }).first()).toBeVisible();
+  await expect(page.getByText('MISSING SHARECLASSFIGI', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Disposition: REVIEW REQUIRED.', { exact: false })).toBeVisible();
   await page.getByRole('region', { name: 'Scrollable Finviz observations' }).focus();
   await expect(page.getByRole('region', { name: 'Scrollable Finviz observations' })).toBeFocused();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -98,9 +110,17 @@ test('reference evidence rejects cross-source data, labels external mode and cle
   await expect(page.getByText('DEMO-X · AMBIGUOUS · 2 candidates', { exact: true })).toHaveCount(0);
   await page.route('**/api/finviz/reference', route => route.fulfill({ json: {
     ...referenceEvidence, mode: 'EXTERNAL_UNVERIFIED',
+    reconciliation: { ...referenceEvidence.reconciliation, mode: 'EXTERNAL_UNVERIFIED' },
   } }));
   await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
   await expect(page.getByText('OPENFIGI · CURRENT CANDIDATES', { exact: true })).toBeVisible();
+  await page.route('**/api/finviz/reference', route => route.fulfill({ json: {
+    ...referenceEvidence, mode: 'EXTERNAL_UNVERIFIED',
+    reconciliation: { ...referenceEvidence.reconciliation, mode: 'EXTERNAL_UNVERIFIED', reference_id: '0'.repeat(64) },
+  } }));
+  await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
+  await expect(page.getByRole('alert')).toContainText('Comparison evidence does not match');
+  await expect(page.getByText('OPENFIGI · CURRENT CANDIDATES', { exact: true })).toHaveCount(0);
   await page.route('**/api/finviz/reference', route => route.fulfill({ status: 503, body: '{}' }));
   await page.getByRole('button', { name: 'Inspect reference evidence' }).click();
   await expect(page.getByRole('alert')).toContainText('No valid local reference batch');

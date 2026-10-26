@@ -145,7 +145,7 @@ def _records(jobs: list[dict[str, Any]], raw: bytes) -> list[dict[str, Any]]:
 
 
 class OpenFigiClient:
-    """Unauthenticated, single-process maximum 20 requests/minute; no keys or .env reads."""
+    """Unauthenticated, per-client 3.1-second request spacing; no keys or .env reads."""
 
     def __init__(self, transport: httpx.BaseTransport | None = None) -> None:
         self.transport = transport
