@@ -2,6 +2,22 @@
 
 The owner has an existing Finviz Elite subscription and authorized a local API export using
 FINVIZ_TOKEN from the ignored .env. The export succeeded on 2026-10-23. No purchase occurred.
+On 2026-10-26 the owner confirmed Finviz Elite is the only available provider.
+
+## Source-bound observation research
+
+Finviz Observations supports exact reported-sector/country filters, reported-price availability,
+minimum current/last-session share volume and maximum positive reported P/E. Filters operate over
+the entire verified selected archive before pagination. Missing numeric fields are excluded when
+their numeric filter is active; zero P/E is unresolved and excluded from the positive P/E filter.
+No market-cap conversion, candidate score, identity decision or eligibility inference is added.
+
+Click a ticker to open its observation research desk. Save/load hypotheses, sources/questions,
+falsification conditions, bear arguments and a review date in this browser. Draft keys bind mode,
+snapshot and ticker; loading also checks the original CSV checksum. Different snapshots do not
+share notes implicitly. JSON dossier export includes the original reported fields, source binding,
+limitations and separately labeled user assertions. Source/filter/page changes clear the open desk.
+This does not make an observation a permanent security or a verified investment thesis.
 
 ## Completed local export
 

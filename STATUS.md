@@ -6,10 +6,12 @@ Owner correction: finish implementing the application. The full goal remains act
 PR #23 merged as d25d221; that evidence-only increment did not complete the product. Missing data
 gates do not justify leaving independent software undone. See docs/COMPLETION.md and WORKSPACE.md.
 
-## Delivered foundation and current branch: feat/daily-risk-catalyst
+## Delivered foundation and current branch: feat/observation-workspace
 
 PR #24 merged as 3df7113 after Linux CI (245 backend / 11 browser tests) and independent
 Gemini approval with zero blockers. Its reviewed tree matches the squash merge.
+PR #25 merged as 5922443 after Linux CI (254 backend / 13 browser tests) and independent
+Gemini approval with no findings. Identical reviewed/merged tree 13896cf5aff41d50922e4e45052ccb534b4842eb.
 
 Nine functional views; configurable six-stage discovery and dated history; technical/financial
 diagnostics; persistent watchlists and expanded Radar filters; Thesis Studio scenario/draft/memo
@@ -25,21 +27,25 @@ identity approval, provider requests, original-vintage certification, purchases 
 
 ## Current increment and verification
 
-Daily close marked portfolio equity now includes held-session losses, cash gaps, distributions,
-splits, delisting cash and correctly dated exit costs. Missing marks reject and terminal equity
-must reconcile to cash. Drawdown/volatility/zero-risk-free Sharpe/zero-target Sortino assumptions
-are explicit; exhausted or zero-variance paths do not receive invented ratios. Turnover uses actual
-buy and sale notional. Window-end metrics stay separately labeled. Validation execution filters
-and pagination improve the ledger. Thesis Studio adds a persistent dated catalyst calendar with
-public HTTPS citations, falsification conditions, status/filter/remove/export; all remain operator
-assertions. Scenario results bind to their exact assumptions, preventing stale memo arithmetic.
-The prior review's empty legacy cohort CSV and redundant feature-computation advisories are fixed.
+PR #25 delivered daily marked portfolio risk, correctly dated costs/action cash and missing-mark
+rejection, explicit daily/window metric labels, filtered/paginated execution history, dated catalyst
+calendar and exact-assumption scenario memo binding. Full local QA passed 249 backend tests with
+five Windows skips and 13 browser tests; Linux CI executed all 254 backend / 13 browser tests.
 
-Full scripts/qa.ps1 passed on this runtime worktree with isolated 8001/5174 ports, preserving
-the main preview: locked installs, harness/skills, lint/format/types, 249 backend tests (five
-Windows symlink skips), demo, frontend lint/types/build and all 13 real-browser tests including
-accessibility/mobile checks. Evidence: artifacts/test_results/ and apps/web/playwright-report/.
-Exact-head Linux CI and independent review remain required before guarded merge.
+Current work adds server-side reported-sector/country/price-availability/volume/positive-P-E filters
+over the complete selected Finviz archive before pagination. Numeric missingness stays explicit.
+Clicking a ticker opens a source-bound research desk with hypothesis, sources/questions,
+falsification, bear case and review date. Save/load binds mode/snapshot/ticker and CSV checksum;
+JSON export retains reported values/provenance and separates user assertions. Source/filter/page
+changes clear the open desk. No scores, identities, conversions or provider requests are added.
+
+Focused Finviz boundary tests and a real-browser filter/draft/source-isolation/export/accessibility
+flow pass after correcting the test fixture's unsupported negative P/E input and making the new
+select labels explicit. Full current-worktree scripts/qa.ps1 passed on isolated 8002/5175 ports: locked installs,
+harness/skills, lint/format/types, 251 backend tests (five Windows symlink skips), demo,
+frontend lint/types/build and all 14 browser tests including source isolation and accessibility.
+Evidence: artifacts/test_results/ and apps/web/playwright-report/. Exact-head Linux CI and
+independent review remain required before guarded merge.
 
 Owner confirms Finviz Elite only; no additional historical provider is available. Real SEC
 vintages, historical PIT universe/actions/delist coverage, verified identities and currency/scale

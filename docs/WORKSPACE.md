@@ -51,6 +51,10 @@ Services bind to loopback. No broker connection, spending, scheduler or deployme
 - Finviz Observations lists local snapshots for explicit selection without restarting the API.
   Selection revalidates original source bytes. Select a saved reference batch separately. Index
   metadata is not source verification. No provider request, new mapping or identity promotion runs.
+  Reported sector/country, price availability, volume and positive-P/E filters apply before
+  pagination. Click a ticker to write a snapshot-bound research draft with hypothesis, evidence
+  questions, falsification, bear case and review date; save/load locally and export a provenance
+  dossier. These assertions never become scored predictors or verified security identities.
 
 ## Reproducible policies and refresh
 

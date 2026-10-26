@@ -1,7 +1,7 @@
 # Next action
 
 Owner directive: finish the full application; keep the overall goal active across milestones.
-Use docs/COMPLETION.md. PR #24 is merged. Current work: feat/daily-risk-catalyst; see WORKSPACE.md.
+Use docs/COMPLETION.md. PRs #24–25 are merged. Current work: feat/observation-workspace; see WORKSPACE.md.
 Finish final acceptance, source-selection/browser tests, CI and independent review, then guarded
 merge and reassess every remaining requirement. Data gaps do not block independent software work.
 No purchases or deployment. Run `pwsh -NoProfile -File scripts/qa.ps1` after stopping workspace dev

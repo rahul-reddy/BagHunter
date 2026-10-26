@@ -9,7 +9,9 @@ documented in [Workspace](../docs/WORKSPACE.md) and [Completion audit](../docs/C
 | Final runtime lint/types/build/backend/browser | PASS locally | Full QA: 240 backend / five Windows skips / ten browser tests; final UI hardening: lint/types/build and eleven browser tests; screenshots inspected |
 | PR #24 exact-head CI / independent review / guarded merge | PASS | 245 backend / 11 browser in Linux CI; Gemini approval; identical-tree merge 3df7113 |
 | Daily risk / structured calendar local QA | PASS | Full scripts/qa.ps1: 249 backend, five Windows skips, 13 browser; lint/types/build/demo/harness |
-| Daily risk / structured calendar CI and independent review | PENDING | Required on final PR head |
+| PR #25 CI / independent review / guarded merge | PASS | 254 backend / 13 browser in Linux CI; Gemini approval, no findings; identical-tree merge 5922443 |
+| Source-bound Finviz desk / filters local acceptance | PASS | Full QA: 251 backend / five Windows skips / 14 browser; lint/types/build/demo/harness |
+| Source-bound Finviz desk / filters CI and review | REQUIRED | Exact-head CI, independent review and guarded merge |
 | Original SEC vintages / PIT universe / delist actions / real identity | BLOCKED | External evidence not established; outputs remain fixture or quarantined |
 | Empirical holdout findings / verified investment theses | BLOCKED | Fixed inspected fixture is not an untouched real holdout; zero verified theses |
 | Deployment | NOT REQUESTED | Manual confirmed deployment only, from main |
