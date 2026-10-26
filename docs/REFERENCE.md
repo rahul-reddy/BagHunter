@@ -1,5 +1,9 @@
 # Current reference evidence — OpenFIGI
 
+The single-candidate independent evidence follow-up is now executed and documented in
+[Issuer evidence dossiers](ISSUER_EVIDENCE.md). Its offline audit preserves unresolved FIGI
+assignment and temporal continuity; no identity promotion or sample expansion occurred.
+
 This increment gathers **current mapping candidates**, not a historical security master. A ticker
 can be reused; the provider's present name/type/FIGI does not establish identity at an older Finviz
 observation time. No Finviz security_id/security_type, research universe, score or historical table

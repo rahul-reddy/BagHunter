@@ -15,8 +15,12 @@ all ten returned a single candidate. No Finviz identity/type was promoted or his
 Company/share-class comparison is now implemented: three case/whitespace agreements, seven text
 differences, no missing or reused composite/share-class IDs within the ten-record batch. Every
 candidate remains unverified. Reports retain both names, review flags and a reproducible digest.
-Exactly one next step: collect independent issuer/share-class evidence for one queried candidate
-before proposing any current identity decision or a larger sample. See docs/REFERENCE.md.
+Independent issuer/share-class evidence for one queried candidate is now archived and audited:
+the issuer-hosted annual-report cover associates ticker A with a registered common-equity class.
+Its first-public timestamp is unknown, and no independent FIGI assignment or continuity to saved
+source times is established. Exactly one next step: obtain independently attributable FIGI-to-class
+assignment evidence covering the saved source times before proposing any identity decision or a
+larger sample. See docs/ISSUER_EVIDENCE.md for the executed assessment and audit-issuer command.
 Export-scale/currency and historical master evidence remain unmet gates. No manual CSV input needed.
 Never put credentials in chat, manifests, commits or logs. Finviz historical PIT/delisting coverage
 remains unverified; current screens cannot fill historical universe or original filing-vintage gaps.

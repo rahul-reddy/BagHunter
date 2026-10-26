@@ -108,6 +108,11 @@ The panel compares both company names and flags missing/shared identifiers. Offl
 `reconcile-reference` reproduces the source-bound comparison digest and prints summary counts;
 text agreement never approves an identity or share class. See the reference adapter guide above.
 
+`audit-issuer` checks a local issuer-document dossier against one saved reference candidate, with
+checksums, attributed transcriptions and unresolved identity gaps. The first executed investigation
+and reproducible command are in [Issuer evidence dossiers](docs/ISSUER_EVIDENCE.md). This offline
+audit keeps identity decisions subject to review and never activates research inputs.
+
 ## Development workflow
 
 Read [AGENTS.md](AGENTS.md). Short branches, lockfile installs, exact-head CI and independent model

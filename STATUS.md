@@ -1,4 +1,51 @@
-# Current handoff — company/share-class comparison / 2026-10-26
+# Current handoff — independent issuer-evidence dossier / 2026-10-26
+
+## Implemented and executed
+
+Comparison PR #22 is merged as 92fd42f. This increment adds packages/data/issuer.py and the
+offline audit-issuer CLI. A strict bounded local dossier binds one candidate to its original
+verified Finviz/reference archives, checks document bytes/chronology/provenance URL shape,
+and produces a deterministic report with attributed operator transcriptions. Source-name,
+candidate-name and ticker text comparisons never become identity approval. All dossiers remain
+REVIEW_REQUIRED, including conflicting transcriptions or complete text agreement. CLI output
+contains digests/counts/flags only; raw validation details are suppressed.
+
+Executed one investigation for the first already queried ticker, A, using the issuer-hosted
+2025 annual report linked by its official annual-report index. HTTP 200, 774,535 bytes; the cover
+table supplies independent filing-era issuer/class/ticker evidence. Direct issuer overview/SEC
+downloads returned 403; no bypass/retry or false successful archive. Public web access corroborated
+the SEC cover. No invented SEC contact. Exact publication time is unknown and explicitly null.
+Provider/legal-name differences, absent independent FIGI assignment and temporal continuity gaps
+are retained. Assessment: no current identity decision can yet be proposed; zero promotions.
+See docs/ISSUER_EVIDENCE.md for citations, archive locations, checksums and reproduction command.
+The saved audit digest is 97d2124719a0129f4d6533ac85e0d96e7986a9e9636d40e589bef71b81d2196f.
+
+## Verification on this runtime revision
+
+Full scripts/qa.ps1 passed on the final runtime worktree: locked Python/npm installs, harness
+self-tests, skill validation, ruff lint/format, mypy, 198 backend tests and six Playwright tests,
+frontend lint/types/build and CLI demo. Five Windows symlink skips require Linux CI.
+New dossier tests cover source/candidate binding, tampered/missing
+documents, bounds, strict schema, dates, credentials/query rejection, conflicts, read-only behavior,
+digest reproducibility, privacy-safe CLI errors and zero promotions. Evidence:
+artifacts/test_results/issuer-pytest.xml, pytest.xml, QA logs and coverage.xml. The real dossier
+audit CLI was executed and reproduced the saved report digest. git diff --check passed.
+Two initial acceptance runs stopped at npm ci because the existing preview locked esbuild/Rollup;
+only this workspace's identified Vite/build processes were stopped to restore locked dependencies.
+Current-head CI and independent review remain required before guarded squash merge.
+
+## Limits and next action
+
+No new mapping requests or sample expansion. Raw vendor/issuer archives remain ignored. The dossier
+checks byte integrity and attributed assertions, not publisher authenticity, extraction accuracy or
+FIGI assignment. No UI/API flow was added. Historical PIT universe/bars/actions/delist entitlements,
+price currency and market-cap scale remain blocked; fixture research and zero verified theses persist.
+No deployment. Exactly one next step: obtain independently attributable FIGI-to-class assignment
+evidence covering the saved source times before proposing a current identity decision.
+
+---
+
+# Archived handoff — company/share-class comparison / 2026-10-26
 
 ## Implemented and executed
 

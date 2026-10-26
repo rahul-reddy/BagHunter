@@ -10,6 +10,7 @@ import httpx
 
 from packages.data.finviz import ingest_snapshot
 from packages.data.history import LocalHistoryProvider, ingest
+from packages.data.issuer import audit_issuer
 from packages.data.providers import SecClient
 from packages.data.reconciliation import inspect_reference
 from packages.data.reference import fetch_reference
@@ -51,8 +52,38 @@ def main() -> None:
     reconcile.add_argument("--snapshot", required=True)
     reconcile.add_argument("--reference", required=True)
     reconcile.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
+    issuer = sub.add_parser("audit-issuer", help="Audit one local issuer evidence dossier offline")
+    issuer.add_argument("--bundle", type=Path, required=True)
+    issuer.add_argument("--snapshot", required=True)
+    issuer.add_argument("--reference", required=True)
+    issuer.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
     args = parser.parse_args()
-    if args.command == "reconcile-reference":
+    if args.command == "audit-issuer":
+        try:
+            report = audit_issuer(args.bundle, args.snapshot, args.reference, args.mode)
+            result = {
+                key: report[key]
+                for key in (
+                    "policy_version",
+                    "mode",
+                    "base_snapshot_id",
+                    "reference_id",
+                    "reconciliation_sha256",
+                    "dossier_sha256",
+                    "report_sha256",
+                    "disposition",
+                    "identity_promotions",
+                    "flags",
+                )
+            } | {"document_count": len(report["documents"])}
+        except (ValueError, OSError, TypeError, KeyError, csv.Error) as exc:
+            print(
+                f"Issuer dossier rejected ({type(exc).__name__}); raw details suppressed. "
+                "See docs/ISSUER_EVIDENCE.md.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
+    elif args.command == "reconcile-reference":
         try:
             report = inspect_reference(args.reference, args.snapshot, args.mode)["reconciliation"]
             result = {key: value for key, value in report.items() if key != "records"}

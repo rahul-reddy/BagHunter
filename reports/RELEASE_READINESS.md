@@ -1,4 +1,26 @@
-# Release readiness — fixture MVP / 2026-10-23
+# Release readiness — issuer-evidence increment / 2026-10-26
+
+Current runtime worktree: offline issuer-dossier audit plus the existing fixture application.
+Detailed evidence and reproducible dossier command: [Issuer evidence](../docs/ISSUER_EVIDENCE.md).
+
+| Current gate | Status | Evidence / limit |
+| --- | --- | --- |
+| Local full acceptance | PASS | scripts/qa.ps1; 198 backend / six browser tests, lint/types/build/demo/harness |
+| Dossier binding, integrity and untrusted assertions | PASS tests | tests/test_issuer.py; 30 pass, three Windows symlink skips |
+| Real single-candidate archive and reproducible audit | PASS bounded scope | One issuer-hosted PDF; saved dossier/audit digests; no promotion |
+| Symlink boundaries on Linux | PENDING CI | Five skips in full local suite; CI must execute these |
+| Exact-head CI, independent review and guarded merge | PENDING | Required before merging this increment |
+| Independent FIGI assignment / temporal continuity | BLOCKED | Filing-era class evidence does not resolve the saved mapping |
+| Empirical historical research / substantiated theses | BLOCKED | No licensed PIT/delist coverage; zero verified theses |
+| Deployment | NOT REQUESTED | Local application; no automatic deployment |
+
+The new audit is offline CLI/library functionality; no new API/UI flow. The dashboard research
+period remains the fictional 2019-12-31–2022-01-05 evaluation. No empirical alpha result follows.
+Next: obtain independent FIGI-to-class assignment evidence covering the saved source times.
+
+---
+
+# Archived release readiness — fixture MVP / 2026-10-23
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
