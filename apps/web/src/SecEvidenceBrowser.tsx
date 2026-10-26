@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { download } from './downloads';
 import { SecFinancialProfile, type FinancialProfile } from './SecFinancialProfile';
+import { SecStatements } from './SecStatements';
 
 type Entry = {bundle_id: string; cik: string; asof: string};
 type Page = {bundle_id: string; total: number; offset: number; limit: number; source_facts: number;
@@ -45,6 +46,7 @@ export function SecEvidenceBrowser() {
       <p>Publication upper bound: later of acceptance and following UTC midnight of the filing day. Processing lag: {data.manifest.lag_hours} hours after that bound. Period end is not a publication date.</p>
       {data.normalized.submission_history && <p>Historical metadata: {data.normalized.submission_history.parts} archived parts · {data.normalized.submission_history.metadata_rows} accession rows · {data.normalized.submission_history.usable_metadata_rows} with document citations · {data.normalized.submission_history.missing_primary_document_rows} missing primary documents. Current downloads do not certify original extraction vintages.</p>}
       {data.financial_profile && <SecFinancialProfile key={data.bundle_id} profile={data.financial_profile} cik={data.manifest.cik} bundleId={data.bundle_id} />}
+      <SecStatements key={data.bundle_id} bundleId={data.bundle_id} />
       <label>SEC annual metric<select aria-label="SEC annual metric" value={metric} onChange={e => {setMetric(e.target.value); setOffset(0);}}><option value="">All supported annual metrics</option>{['annual_revenue', 'annual_net_income', 'annual_operating_income', 'annual_operating_cashflow'].map(m => <option key={m}>{m}</option>)}</select></label>
       <p role="status">{data.total ? `Showing ${data.offset+1}–${Math.min(data.offset+data.limit, data.total)} of ${data.total} SEC facts` : 'No facts match this metric.'}</p>
       <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable SEC filing facts"><table><caption className="sr-only">Quarantined real SEC annual filing facts</caption><thead><tr><th>Metric / period end</th><th>Reported amount</th><th>Accepted / publication upper bound</th><th>Filing source</th></tr></thead><tbody>{data.normalized.facts.map(f => <tr key={`${f.accession}-${f.metric}-${f.period_end}`}><td>{f.metric}<small>{f.period_end}</small></td><td>{f.value.toLocaleString('en-US')} {f.unit}</td><td>{f.accepted_at}<small>{f.published_at}</small></td><td><a href={f.source_url} target="_blank" rel="noreferrer">{f.accession} ↗</a>{f.amended && ' · amendment'}</td></tr>)}</tbody></table></div>

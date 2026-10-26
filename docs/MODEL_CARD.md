@@ -57,7 +57,11 @@ SEC synchronization now fetches bounded real source pairs and normalizes accessi
 USD facts. Publication uses the later of acceptance and following UTC midnight of official filing
 day, followed by processing lag; after-hours acceptance does not publish Monday facts over a
 weekend. Data Quality inspects independently source-verified bundles; output remains quarantined. Original extraction vintages, real identity verification,
-quarterly/YTD interpretation and custom taxonomies are not certified. No contact is invented.
+unreported-quarter reconstruction and custom taxonomies are not certified. No contact is invented.
+The separate sec-statements-v1 adapter supports direct quarterly/annual/cumulative and instant
+entity facts with exact periods and units. EPS and weighted diluted shares are reported concepts;
+YoY changes do not certify ownership dilution. CFO less PPE is a narrow same-filing arithmetic
+proxy, not standardized FCF. Components of debt remain separate. See SEC_STATEMENTS.md.
 
 Thesis scenarios are explicit user arithmetic with no probabilities or forecasts. Notes, source
 citations, catalysts and bear arguments are operator assertions. Calendar status changes do not

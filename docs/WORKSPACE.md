@@ -120,6 +120,10 @@ keep loopback binding. Defaults remain 8000/5173. Its Python environment and dat
 
 ## Accession-bound SEC normalization
 
+For saved-bundle quarterly/annual/cumulative results, balance-sheet evidence, EPS, weighted shares
+and source-bound arithmetic, see [SEC statements](SEC_STATEMENTS.md). Expand the statement section
+within Data Quality after choosing an archive; browsing does not make provider requests.
+
 The [SEC APIs](https://www.sec.gov/search-filings/edgar-application-programming-interfaces) expose
 submissions and aggregate companyfacts. Use an existing local raw pair:
 

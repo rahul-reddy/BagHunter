@@ -37,37 +37,7 @@ def normalize_sec(
     cik = str(submissions["cik"])
     if not cik.isdigit() or len(cik) > 10 or int(cik) != int(companyfacts["cik"]):
         raise ValueError("SEC CIK binding mismatch")
-    index = submissions["filings"]["recent"]
-    fields = ("accessionNumber", "acceptanceDateTime", "form", "primaryDocument")
-    if any(not isinstance(index.get(k), list) for k in fields):
-        raise ValueError("SEC accession metadata required")
-    count = len(index["accessionNumber"])
-    if count > 10_000 or any(len(index[k]) != count for k in fields):
-        raise ValueError("SEC accession column cardinality mismatch")
-    if "filingDate" in index and (
-        not isinstance(index["filingDate"], list) or len(index["filingDate"]) != count
-    ):
-        raise ValueError("SEC filing-date cardinality mismatch")
-    accessions = {}
-    for n in range(count):
-        accession = index["accessionNumber"][n]
-        if not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accession) or accession in accessions:
-            raise ValueError("Invalid or duplicate accession")
-        accepted = datetime.fromisoformat(index["acceptanceDateTime"][n].replace("Z", "+00:00"))
-        if accepted.utcoffset() is None:
-            raise ValueError("Ambiguous SEC acceptance timezone")
-        primary = index["primaryDocument"][n]
-        if not re.fullmatch(
-            r"(?:[A-Za-z0-9][A-Za-z0-9_.-]{0,199}/){0,3}[A-Za-z0-9][A-Za-z0-9_.-]{0,199}",
-            primary,
-        ):
-            raise ValueError("Invalid SEC primary document path")
-        accessions[accession] = {
-            "accepted": accepted.astimezone(UTC),
-            "form": index["form"][n],
-            "primary": primary,
-            "filed": date.fromisoformat(index["filingDate"][n]) if "filingDate" in index else None,
-        }
+    accessions = accession_metadata(submissions)
     rows: dict[tuple[str, str, str], Fact] = {}
     unresolved = {
         "missing_accession_metadata": 0,
@@ -159,3 +129,39 @@ def normalize_sec(
             "No automatic identity assignment, vintage certification or research activation",
         ],
     }
+
+
+def accession_metadata(submissions: dict[str, Any]) -> dict[str, Any]:
+    """Validate the exact original accession metadata for all supported statement adapters."""
+    index = submissions["filings"]["recent"]
+    fields = ("accessionNumber", "acceptanceDateTime", "form", "primaryDocument")
+    if any(not isinstance(index.get(k), list) for k in fields):
+        raise ValueError("SEC accession metadata required")
+    count = len(index["accessionNumber"])
+    if count > 10_000 or any(len(index[k]) != count for k in fields):
+        raise ValueError("SEC accession column cardinality mismatch")
+    if "filingDate" in index and (
+        not isinstance(index["filingDate"], list) or len(index["filingDate"]) != count
+    ):
+        raise ValueError("SEC filing-date cardinality mismatch")
+    accessions = {}
+    for n in range(count):
+        accession = index["accessionNumber"][n]
+        if not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accession) or accession in accessions:
+            raise ValueError("Invalid or duplicate accession")
+        accepted = datetime.fromisoformat(index["acceptanceDateTime"][n].replace("Z", "+00:00"))
+        if accepted.utcoffset() is None:
+            raise ValueError("Ambiguous SEC acceptance timezone")
+        primary = index["primaryDocument"][n]
+        if not re.fullmatch(
+            r"(?:[A-Za-z0-9][A-Za-z0-9_.-]{0,199}/){0,3}[A-Za-z0-9][A-Za-z0-9_.-]{0,199}",
+            primary,
+        ):
+            raise ValueError("Invalid SEC primary document path")
+        accessions[accession] = {
+            "accepted": accepted.astimezone(UTC),
+            "form": index["form"][n],
+            "primary": primary,
+            "filed": date.fromisoformat(index["filingDate"][n]) if "filingDate" in index else None,
+        }
+    return accessions

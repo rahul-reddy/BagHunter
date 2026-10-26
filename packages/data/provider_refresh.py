@@ -198,7 +198,7 @@ def sync_sec(
     }
 
 
-def read_sec_bundle(bundle_id: str) -> dict[str, Any]:
+def read_sec_bundle(bundle_id: str, *, include_statements: bool = False) -> dict[str, Any]:
     if not re.fullmatch(r"[a-f0-9]{64}", bundle_id):
         raise ValueError("Invalid SEC bundle ID")
     folder = Path.cwd() / "data/real/sec/bundles" / bundle_id
@@ -298,7 +298,17 @@ def read_sec_bundle(bundle_id: str) -> dict[str, Any]:
         )
     if _read(folder / "normalized.json", MAX_BYTES) != _json(normalized):
         raise ValueError("SEC normalized integrity mismatch")
-    return {"bundle_id": bundle_id, "manifest": manifest, "normalized": normalized}
+    report = {"bundle_id": bundle_id, "manifest": manifest, "normalized": normalized}
+    if include_statements:
+        from packages.data.sec_statements import normalize_statements
+
+        report["statements"] = normalize_statements(
+            derived if history_mode else raw["submissions"],
+            raw["companyfacts"],
+            manifest["security_id"],
+            asof,
+        )
+    return report
 
 
 def _verify_sec_metadata(metadata: dict[str, Any], url: str, body: bytes) -> None:

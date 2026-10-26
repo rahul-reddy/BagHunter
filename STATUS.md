@@ -1,4 +1,28 @@
-# Current handoff — SEC history and financial profile / 2026-10-26
+# Current handoff — quarterly statements and dilution / 2026-10-26
+
+Full application goal remains active. PR #29 is merged as 28a2fda58b46; exact-head Linux CI passed
+324 backend / 17 browser tests, Gemini approved with zero blockers, and the main preview passed
+real-data export, citation, desktop/mobile accessibility and original-archive preservation checks.
+Finviz + existing SEC configuration remain the available stack; no additional subscription needed.
+
+Current feat/sec-statements in BagHunter-risk adds a separate source-verified statement adapter
+and browser for direct quarters, annual results, six/nine-month cumulative results and balance
+sheet facts. EPS, weighted diluted shares, YoY changes, operating margins, cashflow/PPE and narrow
+CFO-less-PPE arithmetic retain citations, exact periods and explicit missingness. Original bundles
+are unchanged. Saved real sources yielded 2,172 statement facts and 55 directly reported quarters;
+no identity promotion, empirical ranking or backtest activation. See docs/SEC_STATEMENTS.md.
+
+Full current-revision local QA passed: 338 backend tests (seven Windows skips), 18 browser tests,
+locked installs, harness/skill checks, lint/types/build and demo. The new browser test exercises
+basis selection, missing values, dated citations, pagination, source-bound exports and failure
+clearing. Both original real bundles revalidate byte-for-byte. Shared fact ordering now resolves
+publication-bound ties using acceptance time, with a regression test. Next exact-head CI and
+independent review; guarded merge and final main real-data smoke.
+Zero real verified investment theses. Full specification acceptance remains unproven.
+
+---
+
+# Previous handoff — SEC history and financial profile / 2026-10-26
 
 Full application goal remains active. Finviz Elite and the owner's existing SEC contact in .env
 are the configured sources; no additional subscription is required for this implementation.
