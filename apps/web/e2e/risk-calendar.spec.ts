@@ -44,3 +44,21 @@ test('dated catalysts persist, filter and export without becoming verified evide
   await page.getByRole('button', {name: 'Remove Fictional product review'}).click();
   await expect(page.getByText('No catalyst events saved.', {exact: false})).toBeVisible();
 });
+
+test('ranking sensitivity exposes weights, exclusions and downloadable frozen-factor diagnostics', async ({page}) => {
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Validation Lab', exact: true}).click();
+  await expect(page.getByRole('heading', {name: 'Weight & liquidity sensitivity'})).toBeVisible();
+  const variant = page.getByRole('combobox', {name: 'Ranking sensitivity variant', exact: true});
+  await variant.selectOption('price_volume_only');
+  await page.getByText('Exact variant weights and interpretation').click();
+  await expect(page.getByText('Missing components contribute no score or covered weight; no renormalization')).toBeVisible();
+  await expect(page.getByRole('table', {name: 'As-of ranking sensitivity comparison'})).toContainText('fx-compound');
+  await variant.selectOption('liquidity_floor_10x');
+  await expect(page.getByRole('table', {name: 'As-of ranking sensitivity comparison'})).not.toContainText('fx-steady');
+  await expect(page.getByRole('table', {name: 'As-of ranking sensitivity comparison'})).toContainText('fx-compound');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('link', {name: 'Download ranking sensitivity', exact: true}).click();
+  expect((await pending).suggestedFilename()).toBe('discovery_sensitivity.json');
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+});

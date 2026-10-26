@@ -25,6 +25,7 @@ from packages.research.discovery import DiscoveryPolicy, discover
 from packages.research.features import VERSION, eligible, snapshot
 from packages.research.outcomes import matched_pairs, outcome
 from packages.research.reports import candidate_memo, case_report, discovery_digest
+from packages.research.sensitivity import ranking_sensitivity
 
 DEFAULT_ASOF = "2022-01-03T23:00:00+00:00"
 
@@ -111,6 +112,7 @@ def run(
     features = discovery["signals"]
     if not features:
         raise ValueError("No eligible fixture instruments at requested asof")
+    discovery["sensitivity"] = ranking_sensitivity(features, policy or DiscoveryPolicy())
     # Labels never passed to feature assembly. Separate on-disk hindsight namespace.
     anchor = datetime(2020, 1, 1, 23, tzinfo=UTC)
     labels = [
@@ -214,6 +216,7 @@ def run(
             path.write_text(candidate_memo(payload, feature["security_id"]), encoding="utf-8")
         table(staging / "hindsight" / "multi_anchor_labels.parquet", study["cohorts"]["labels"])
         dump(staging / "reports" / "discovery_policy.json", discovery["policy"])
+        dump(staging / "reports" / "discovery_sensitivity.json", discovery["sensitivity"])
         with (staging / "reports" / "historical_cohorts.csv").open(
             "w", newline="", encoding="utf-8"
         ) as stream:

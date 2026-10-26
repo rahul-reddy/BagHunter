@@ -54,8 +54,9 @@ npm --prefix apps/web run test:e2e
 servers already occupy those addresses. For GNU Make users, equivalent `make` targets exist.
 
 `ingest-demo`, `study-demo` and `backtest-demo` are aliases that rebuild the same complete slice.
-There is no incremental refresh or configurable research universe yet. CLI `--help`
-lists implemented arguments only. Outputs are published as immutable runs below
+Identical refreshes verify and reuse cached runs; policy changes create new immutable output.
+Discovery and portfolio policies are configurable, while the research universe remains the
+explicit fixture. CLI `--help` lists implemented arguments only. Outputs are published below
 `data/fixture/latest/runs/<run-id>/`; `CURRENT` selects the active run atomically. Raw content is
 SHA-256 addressed in `data/fixture/raw/`. Silver, gold and hindsight Parquet tables are separate.
 CSV and Markdown exports live inside each run's `reports/` folder. These generated files are ignored.
@@ -72,11 +73,15 @@ after the close, enters next weekday open, exits 21 sessions later, charges 40 b
 compares with equal-weight eligible peers and the artificial market. It does not fit a model or
 claim an untouched holdout. It has cash gaps and lacks production capacity/sector constraints.
 Scores are explicitly unvalidated placeholder weights; missing components remain null and reduce
-the attainable score. The current stage implementation covers WATCH, IGNITION and EXTENDED/AGING.
+the attainable score. Configurable dated stages cover WATCH, IGNITION, EMERGING, CONFIRMED,
+EXTENDED/AGING and INVALIDATED. The separate constrained simulator adds whole shares, cash,
+position/sector/participation caps and daily marked risk. Validation Lab also exposes dated-factor
+weight/liquidity sensitivity; none of these fixture calculations validate investment performance.
 
 See [research method](docs/METHOD.md), [schemas](docs/SCHEMAS.md), [sources](docs/SOURCES.md),
 [operations](docs/OPERATIONS.md), [release matrix](reports/RELEASE_READINESS.md), and
-[current status](STATUS.md). The original numbered Markdown files remain the product contract.
+[current status](STATUS.md) and [model card](docs/MODEL_CARD.md). The original numbered Markdown
+files remain the product contract.
 
 ## Optional real SEC raw download
 
@@ -87,7 +92,9 @@ uv run baghunter sec-fetch --cik 320193 --output data/real/sec/raw
 ```
 
 This makes a public SEC request and saves raw submissions plus a checksum manifest. It does not
-parse historical financial facts or make the synthetic sample real. No contact identity is inferred.
+normalize facts or make the synthetic sample real. The separate offline `normalize-sec` command
+accepts accession-bound annual USD facts from local raw inputs and keeps them quarantined; see
+the workspace guide. No original-vintage or identity certification is inferred.
 The CLI does not auto-load `.env`; inject environment variables explicitly. No paid requests occur.
 
 ## Historical export staging

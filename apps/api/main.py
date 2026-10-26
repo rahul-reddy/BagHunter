@@ -296,7 +296,8 @@ def report_download(run_id: str, report_name: str) -> Response:
     reports = {
         "source_manifest.json": data["sources"],
         "validation.json": data.get("validation", {}),
-        "discovery_policy.json": data.get("discovery", {}),
+        "discovery_policy.json": data.get("discovery", {}).get("policy", {}),
+        "discovery_sensitivity.json": data.get("discovery", {}).get("sensitivity", {}),
         "toy_backtest.json": data["backtest"],
         "portfolio.json": data.get("portfolio", {}),
         "portfolio_policy.json": data.get("portfolio", {}).get("policy", {}),

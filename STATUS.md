@@ -6,12 +6,15 @@ Owner correction: finish implementing the application. The full goal remains act
 PR #23 merged as d25d221; that evidence-only increment did not complete the product. Missing data
 gates do not justify leaving independent software undone. See docs/COMPLETION.md and WORKSPACE.md.
 
-## Delivered foundation and current branch: feat/observation-workspace
+## Delivered foundation and current branch: feat/policy-sensitivity
 
 PR #24 merged as 3df7113 after Linux CI (245 backend / 11 browser tests) and independent
 Gemini approval with zero blockers. Its reviewed tree matches the squash merge.
-PR #25 merged as 5922443 after Linux CI (254 backend / 13 browser tests) and independent
-Gemini approval with no findings. Identical reviewed/merged tree 13896cf5aff41d50922e4e45052ccb534b4842eb.
+PR #25 merged as 5922443 after Linux CI (254 backend / 13 browser) and independent
+Gemini approval with no findings.
+PR #26 source-bound Finviz research/filters merged as 6cce117 after Linux CI (256 backend /
+14 browser) and independent Gemini approval with no findings. Full local QA passed 251 backend /
+14 browser with five Windows skips. Reviewed and squash-merged trees match.
 
 Nine functional views; configurable six-stage discovery and dated history; technical/financial
 diagnostics; persistent watchlists and expanded Radar filters; Thesis Studio scenario/draft/memo
@@ -27,30 +30,31 @@ identity approval, provider requests, original-vintage certification, purchases 
 
 ## Current increment and verification
 
-PR #25 delivered daily marked portfolio risk, correctly dated costs/action cash and missing-mark
-rejection, explicit daily/window metric labels, filtered/paginated execution history, dated catalyst
-calendar and exact-assumption scenario memo binding. Full local QA passed 249 backend tests with
-five Windows skips and 13 browser tests; Linux CI executed all 254 backend / 13 browser tests.
+Dated-factor sensitivity now compares frozen weights, equal-factor weights, price-volume only,
+fundamental-inflection only and 2x/10x liquidity floors. It reports ordinal rank changes, covered
+weight and exclusions, preserving missing factors without renormalization. No outcomes, refitting,
+chosen best policy or performance inference. Validation Lab exposes exact weights and downloads.
+The discovery-policy API report now returns the reusable validated policy object, matching the
+materialized policy file. Model card, full acceptance matrix, source-only package instructions
+and stale README/method/provider descriptions are updated.
 
-Current work adds server-side reported-sector/country/price-availability/volume/positive-P-E filters
-over the complete selected Finviz archive before pagination. Numeric missingness stays explicit.
-Clicking a ticker opens a source-bound research desk with hypothesis, sources/questions,
-falsification, bear case and review date. Save/load binds mode/snapshot/ticker and CSV checksum;
-JSON export retains reported values/provenance and separates user assertions. Source/filter/page
-changes clear the open desk. No scores, identities, conversions or provider requests are added.
+Full scripts/qa.ps1 passed on the combined runtime worktree based on main 6cce117, using isolated
+8001/5174 ports: locked installs, harness/skills, lint/format/types, 254 backend tests (five Windows
+symlink skips), demo, frontend lint/types/build and all 15 real-browser tests including source
+isolation, sensitivity, accessibility and mobile checks. Fixture run 3947e023f78eacb3 was verified
+and reused. Evidence: artifacts/test_results/, apps/web/playwright-report/ and screenshots/.
 
-Focused Finviz boundary tests and a real-browser filter/draft/source-isolation/export/accessibility
-flow pass after correcting the test fixture's unsupported negative P/E input and making the new
-select labels explicit. Full current-worktree scripts/qa.ps1 passed on isolated 8002/5175 ports: locked installs,
-harness/skills, lint/format/types, 251 backend tests (five Windows symlink skips), demo,
-frontend lint/types/build and all 14 browser tests including source isolation and accessibility.
-Evidence: artifacts/test_results/ and apps/web/playwright-report/. Exact-head Linux CI and
-independent review remain required before guarded merge.
+The unchanged Finviz path also ran against the actual 11,783-row saved archive on reviewed main
+6cce117: 24 local requests, zero errors, median 512.41 ms, p95 1142.17 ms; browser source selection,
+research desk and provenance-bound draft export passed. No provider request or identity promotion.
+Evidence: current-observation-load.json and real-observation-browser.json in artifacts/test_results/.
+The final exact-head CI/independent review and guarded merge remain separate gates. Final delivery
+packages reviewed main; the overall application goal is not declared complete by software passes.
 
 Owner confirms Finviz Elite only; no additional historical provider is available. Real SEC
 vintages, historical PIT universe/actions/delist coverage, verified identities and currency/scale
 remain externally unresolved. Zero real verified investment theses. Complete all independent
-software first; next audit source-bound current-observation research and policy sensitivity.
+software first; final delivery packages reviewed main and individually accounts for data gates.
 Do not close the overall goal merely because an individual PR lands.
 
 ---
