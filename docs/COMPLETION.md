@@ -46,6 +46,9 @@ Do not equate this assessment with full goal completion. After review/merge, rea
 specifications and keep any independent software gaps in the active queue. Empirical gates stay
 BLOCKED until their actual evidence exists; a polished fixture app does not open them.
 
+Next independent software work: daily mark-to-market portfolio risk (current diagnostics observe
+window-end equity) and a structured multi-event catalyst calendar beyond memo text/review dates.
+
 Externally blocked acceptance: licensed historical PIT membership/bars/actions/delist coverage;
 verified real security identities, field units/currencies, original filing vintages and enough
 observations for independent empirical validation. Zero real verified investment theses. Do not

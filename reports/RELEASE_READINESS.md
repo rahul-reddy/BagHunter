@@ -6,7 +6,7 @@ documented in [Workspace](../docs/WORKSPACE.md) and [Completion audit](../docs/C
 | Current gate | Status | Evidence / limitation |
 | --- | --- | --- |
 | Expanded product workflows | PASS locally | Nine views; discovery, cohorts, thesis, settings, constrained validation, sources and reports |
-| Final runtime lint/types/build/backend/browser | PASS locally | scripts/qa.ps1: 240 backend, five Windows symlink skips, ten browser tests; screenshots inspected |
+| Final runtime lint/types/build/backend/browser | PASS locally | Full QA: 240 backend / five Windows skips / ten browser tests; final UI hardening: lint/types/build and eleven browser tests; screenshots inspected |
 | Exact-head CI / independent review / guarded merge | PENDING | Required for the product PR |
 | Original SEC vintages / PIT universe / delist actions / real identity | BLOCKED | External evidence not established; outputs remain fixture or quarantined |
 | Empirical holdout findings / verified investment theses | BLOCKED | Fixed inspected fixture is not an untouched real holdout; zero verified theses |

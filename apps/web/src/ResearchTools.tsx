@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Run, Signal } from './main';
 
 export const percent = (v: number | null | undefined) => v == null ? 'Missing' : `${(v * 100).toFixed(2)}%`;
@@ -141,8 +141,21 @@ export function CohortExplorer({run}: {run: Run}) {
 export function RunTools({run, onSelect}: {run: Run; onSelect: (id: string) => void}) {
   const [runs, setRuns] = useState<{run_id: string; asof: string}[]>([]);
   const [error, setError] = useState('');
+  const comparisonRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => comparisonRequest.current?.abort(), []);
   const [comparison, setComparison] = useState<{policy_changed: boolean; changes: {security_id: string; change: string; before_stage: string | null; after_stage: string | null; score_change: number | null}[]} | null>(null);
   useEffect(() => {const controller = new AbortController(); fetch('/api/runs', {signal: controller.signal}).then(async r => {if (!r.ok) throw new Error('Saved run index unavailable.'); return r.json();}).then(setRuns).catch((e: Error) => {if (e.name !== 'AbortError') setError(e.message);}); return () => controller.abort();}, [run.run_id]);
-  const compare = async (id: string) => {setComparison(null); setError(''); if (!id) return; try {const r = await fetch(`/api/runs/${run.run_id}/compare/${id}`); if (!r.ok) throw new Error('Run comparison unavailable.'); setComparison(await r.json());} catch (e) {setError((e as Error).message);}};
+  const compare = async (id: string) => {
+    comparisonRequest.current?.abort();
+    const controller = new AbortController(); comparisonRequest.current = controller;
+    setComparison(null); setError(''); if (!id) return;
+    try {
+      const r = await fetch(`/api/runs/${run.run_id}/compare/${id}`, {signal: controller.signal});
+      if (!r.ok) throw new Error('Run comparison unavailable.');
+      const data = await r.json() as NonNullable<typeof comparison> & {run_id: string; previous_id: string};
+      if (data.run_id !== run.run_id || data.previous_id !== id) throw new Error('Comparison response belongs to a different run selection.');
+      if (!controller.signal.aborted) setComparison(data);
+    } catch (e) {if (!controller.signal.aborted) setError((e as Error).message);}
+  };
   return <section className="panel"><div className="filters"><label>Inspect saved run<select value={run.run_id} onChange={e => onSelect(e.target.value)}>{runs.map(r => <option key={r.run_id} value={r.run_id}>{r.asof} · {r.run_id}</option>)}</select></label><label>Compare against saved run<select defaultValue="" key={run.run_id} onChange={e => void compare(e.target.value)}><option value="">Choose comparison</option>{runs.filter(r => r.run_id !== run.run_id).map(r => <option key={r.run_id} value={r.run_id}>{r.asof} · {r.run_id}</option>)}</select></label><a href={`/api/runs/${run.run_id}/reports/baghunter_watchlist.csv`}>Download watchlist CSV</a></div>{error && <p role="alert">{error}</p>}{comparison && <><h3>Changes since comparison run</h3><p>{comparison.policy_changed ? 'Policy changed: score differences combine model and observation changes.' : 'Same discovery policy.'}</p><ul>{comparison.changes.map(c => <li key={c.security_id}>{c.security_id}: {c.change} · {c.before_stage ?? 'Absent'} → {c.after_stage ?? 'Absent'} · score Δ {c.score_change?.toFixed(2) ?? 'Missing'}</li>)}</ul></>}</section>;
 }

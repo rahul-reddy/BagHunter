@@ -30,6 +30,11 @@ skipped boundaries. Thesis desktop/mobile and Validation Lab screenshots were in
 artifacts/screenshots/. Manual refresh template revalidated/reused run 7902fa2b2409acbc. SEC
 normalization CLI ran on fictional raw inputs, producing two quarantined facts and no activation.
 Current-head CI and independent review remain required before guarded merge.
+Final comparison-request hardening then passed frontend lint/types/build and all eleven browser
+tests; backend source is unchanged from the 240-test full QA run. Rapid baseline switching now
+cancels stale requests and rejects cross-run response binding. Local load smoke: 30 successful
+health/current/signals requests, median 28.18 ms, p95 58.60 ms; saved-source selection read the
+11,783-row archive with zero provider requests. Evidence: artifacts/test_results/load-smoke.json.
 Browser defects found (watchlist accessible-name mismatch and textarea labeling) were fixed without
 weakening accessibility gates. The delisting test needed an explicitly permissive liquidity policy
 to hold that fictional instrument; its setup was corrected. Evidence: artifacts/test_results/.
