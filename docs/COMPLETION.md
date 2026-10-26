@@ -1,5 +1,10 @@
 # BagHunter implementation completion audit
 
+The granular open-work register is [REMAINING_REQUIREMENTS.md](REMAINING_REQUIREMENTS.md).
+Current company-research work connects Finviz notes to explicitly selected SEC evidence,
+assumption scenarios and cited saved/exported drafts. This does not approve identities or certify
+investment theses; final gates are tracked in STATUS.md and COMPANY_RESEARCH.md.
+
 Arithmetic/validation continuation: finite-input ratio overflow now retains explicit missing
 factors or rejects unrepresentable calculations before ranking/publication. Configured six-factor
 and momentum ranks have distinct mature-only negative-control reports with dated pools, policy

@@ -1,4 +1,28 @@
-# Current handoff — arithmetic integrity and negative controls / 2026-10-26
+# Current handoff — company research workflow / 2026-10-26
+
+Full application goal remains active. PR #31 merged as 993213b1f372: exact-head Linux CI passed
+372 backend / 20 browser tests, Gemini approved with zero blockers, main negative-control preview
+and keyboard/mobile accessibility passed. Main is runnable; provider archives remain unchanged.
+Finviz and the existing SEC configuration are the stack.
+
+Current feat/company-research connects the external Finviz desk to explicitly selected/reverified
+SEC entity evidence, annual/quarterly citations, assumption scenarios, saved source-bound drafts
+and Markdown/JSON memos. No automatic mapping, price/currency/share conversion, identity promotion,
+empirical score or real thesis approval. Source clocks stay separate. Current issuer metadata is
+bounded and linked to the verified original submissions hash/retrieval.
+
+Local acceptance passed 369 backend tests (seven Windows skips), 24 browser tests, locked installs,
+workflow/skill checks, lint/types/build and demo. A final save-validator/import-guidance UI follow-up
+then passed frontend lint/types/build and all 24 browser tests again. Source/malformed-input guards,
+late-response races, current-calculation invalidation and legacy note compatibility are covered.
+Exact-head CI and independent review remain required before guarded merge and real-data preview.
+See docs/COMPANY_RESEARCH.md. Open software gaps are recorded in
+docs/REMAINING_REQUIREMENTS.md; the broad matrix is not final completion proof. Next complete the
+dated technical-feature catalog after this workflow lands. Zero real verified investment theses.
+
+---
+
+# Previous handoff — arithmetic integrity and negative controls / 2026-10-26
 
 Full application goal remains active. PR #30 is merged as b1412c62f23b: exact-head Linux CI passed
 345 backend / 18 browser tests, Gemini approved with no blockers, and the main real statement

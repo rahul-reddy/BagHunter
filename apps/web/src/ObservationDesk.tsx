@@ -1,31 +1,57 @@
-import { useState } from 'react';
-import type { Observation } from './FinvizBrowser';
-import { download } from './downloads';
+import {useCallback, useState} from 'react';
+import type {Observation} from './FinvizBrowser';
+import {download} from './downloads';
+import {CompanyEvidencePicker, type CompanyEvidence} from './CompanyEvidence';
+import {ObservationScenarios} from './ObservationScenarios';
+import {emptyAssumptions, emptyNotes, observationMemo, restoreResearch, type CompanyScenario, type ObservationSource, type ObservationNotes} from './observationResearch';
 
-type Source = {mode: string; snapshot_id: string; source_sha256: string; retrieved_at: string};
-const blank = {hypothesis: '', evidence: '', falsification: '', bear: '', review_date: ''};
-type Draft = typeof blank;
-const labels: Record<keyof Draft, string> = {hypothesis: 'Observation research hypothesis', evidence: 'Sources and unresolved research questions', falsification: 'Observation falsification conditions', bear: 'Observation bear argument', review_date: 'Observation review date'};
+const labels: Record<keyof ObservationNotes, string> = {hypothesis: 'Observation research hypothesis', evidence: 'Sources and unresolved research questions', falsification: 'Observation falsification conditions', bear: 'Observation bear argument', review_date: 'Observation review date'};
 
-export function ObservationDesk({observation, source, onClose}: {observation: Observation; source: Source; onClose: () => void}) {
-  // A snapshot/ticker pair identifies an observation, never a permanent security.
+export function ObservationDesk({observation, source, onClose}: {observation: Observation; source: ObservationSource; onClose: () => void}) {
   const storageKey = `baghunter.observation.v1.${source.mode}.${source.snapshot_id}.${observation.ticker}`;
-  const [draft, setDraft] = useState<Draft>(blank);
+  const [draft, setDraft] = useState<ObservationNotes>({...emptyNotes});
+  const [inputs, setInputs] = useState({...emptyAssumptions});
+  const [bundleId, setBundleId] = useState('');
+  const [evidence, setEvidence] = useState<CompanyEvidence | null>(null);
+  const [evidenceRevision, setEvidenceRevision] = useState(0);
+  const [calculation, setCalculation] = useState<{key: string; scenarios: CompanyScenario[]} | null>(null);
   const [message, setMessage] = useState('');
-  const save = () => {try {localStorage.setItem(storageKey, JSON.stringify({source_sha256: source.source_sha256, draft})); setMessage('Observation draft saved for this exact snapshot and ticker.');} catch {setMessage('Browser storage unavailable. Export the dossier to preserve this draft.');}};
-  const load = () => {try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) ?? 'null');
-    if (!saved || saved.source_sha256 !== source.source_sha256 || !saved.draft || Object.keys(saved.draft).length !== Object.keys(blank).length || Object.keys(blank).some(k => typeof saved.draft[k] !== 'string' || saved.draft[k].length > 5000)) throw new Error();
-    const date = saved.draft.review_date;
-    if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date)) throw new Error();
-    setDraft(saved.draft); setMessage('Saved source-bound observation draft loaded.');
-  } catch {setMessage('No valid draft matches this observation and source checksum.');}};
-  return <section className="panel" aria-label={`Research workspace for observation ${observation.ticker}`}>
+  const onVerified = useCallback((value: CompanyEvidence | null) => {setEvidence(value); if (!value) setCalculation(null);}, []);
+  const attached = source.mode !== 'FIXTURE' && evidence?.bundle_id === bundleId ? evidence : null;
+  const ready = !bundleId || !!attached;
+  const contextKey = JSON.stringify([source.mode, source.snapshot_id, source.source_sha256, observation.ticker, bundleId, ready]);
+  const calculationKey = JSON.stringify([contextKey, inputs]);
+  const scenarios = ready && calculation?.key === calculationKey ? calculation.scenarios : null;
+  const prefix = `${source.mode === 'FIXTURE' ? 'FIXTURE' : 'UNVERIFIED'}-${observation.ticker}`;
+  const sourceContext = {mode:source.mode, snapshot_id:source.snapshot_id, ticker:observation.ticker};
+  const save = () => {
+    const payload = {schema:'observation-research-v2', source_sha256:source.source_sha256, source_context:sourceContext, draft, sec_bundle_id:bundleId, scenario_assumptions:inputs};
+    try {restoreResearch(payload, source.source_sha256, sourceContext);}
+    catch {setMessage('Draft contains an invalid date or assumption value. Correct it before saving.'); return;}
+    try {localStorage.setItem(storageKey, JSON.stringify(payload)); setMessage('Observation draft saved for this exact snapshot and ticker. Evidence and calculations are reverified when loaded.');}
+    catch {setMessage('Browser storage unavailable. Export the dossier to preserve this draft.');}
+  };
+  const load = () => {
+    try {
+      const restored = restoreResearch(JSON.parse(localStorage.getItem(storageKey) ?? 'null'), source.source_sha256, sourceContext);
+      if (source.mode === 'FIXTURE' && restored.bundleId) throw new Error('Real entity attachment cannot be loaded into a fixture observation.');
+      setDraft(restored.draft); setInputs(restored.inputs); setBundleId(restored.bundleId);
+      setEvidence(null); setCalculation(null); setEvidenceRevision(value => value+1);
+      setMessage('Saved source-bound observation draft loaded. Attached evidence must reverify; scenarios require recalculation.');
+    } catch {setMessage('No valid draft matches this observation and source checksum.');}
+  };
+  const dossier = () => ({schema:'observation-research-v2', status:'USER_ASSERTIONS_NOT_VERIFIED_THESIS', source, observation, draft,
+    scenario_assumptions:inputs, scenarios,
+    issuer_evidence:attached ? {association_status:'OPERATOR_SELECTED_ENTITY_NOT_VERIFIED_SECURITY_MAPPING', ...attached} : null,
+    limitations:['Current saved observation only; not historical PIT evidence', 'SEC attachment is an operator research association, not a security/class assignment', 'Source clocks remain separate; no merged PIT profile', 'No permanent identity, eligibility approval or ranking', 'Financial model inputs are user assumptions, not forecasts', 'Reported Finviz values retain provider scale; no automatic USD or share conversion']});
+  return <section className="panel company-research" aria-label={`Research workspace for observation ${observation.ticker}`}>
     <div className="panel-title"><div><p className="eyebrow">{source.mode} · CURRENT OBSERVATION · UNVERIFIED</p><h2>{observation.ticker} · Observation research desk</h2><p>{observation.company}. This is a source-bound research draft, with no assigned permanent identity or screening score.</p></div><button className="secondary" onClick={onClose}>Close observation desk</button></div>
     <p>Retrieved {source.retrieved_at}. Provider observation time is unknown. Reported price, market-cap scale, currency, security type and historical continuity are unverified.</p>
     <dl><dt>Snapshot</dt><dd className="hash">{source.snapshot_id}</dd><dt>Original CSV SHA-256</dt><dd className="hash">{source.source_sha256}</dd></dl>
-    <div className="input-grid">{(Object.keys(blank) as (keyof Draft)[]).map(k => <label key={k}>{labels[k]}{k === 'review_date' ? <input type="date" value={draft[k]} onChange={e => setDraft({...draft, [k]: e.target.value})}/> : <textarea aria-label={labels[k]} maxLength={5000} value={draft[k]} onChange={e => setDraft({...draft, [k]: e.target.value})}/>}</label>)}</div>
-    <div className="button-row"><button className="secondary" onClick={save}>Save observation draft</button><button className="secondary" onClick={load}>Load observation draft</button><button className="secondary" onClick={() => download(`${source.mode === 'FIXTURE' ? 'FIXTURE' : 'UNVERIFIED'}-${observation.ticker}-research.json`, JSON.stringify({schema: 'observation-research-v1', status: 'USER_ASSERTIONS_NOT_VERIFIED_THESIS', source, observation, draft, limitations: ['Current saved observation only; not historical PIT evidence', 'No permanent identity, security-type approval or ranking', 'Draft assertions and cited text require independent verification', 'Reported values retain provider scale; no currency conversion']}, null, 2), 'application/json')}>Export observation dossier</button></div>
-    <p role="status">{message}</p><p>Notes persist only when saved. A different snapshot has a separate draft. Export preserves the original reported values and provenance without activating research inputs.</p>
+    <div className="input-grid">{(Object.keys(emptyNotes) as (keyof ObservationNotes)[]).map(name => <label key={name}>{labels[name]}{name === 'review_date' ? <input type="date" value={draft[name]} onChange={event => setDraft({...draft, [name]:event.target.value})}/> : <textarea aria-label={labels[name]} maxLength={5000} value={draft[name]} onChange={event => setDraft({...draft, [name]:event.target.value})}/>}</label>)}</div>
+    {source.mode !== 'FIXTURE' && <CompanyEvidencePicker key={evidenceRevision} bundleId={bundleId} onSelect={id => {setBundleId(id); setEvidence(null); setCalculation(null);}} onVerified={onVerified} onUseRevenue={value => {setInputs({...inputs, revenue:String(value)}); setCalculation(null); setMessage('Selected SEC annual revenue copied as your starting assumption. Security association, class shares and USD applicability remain unverified.');}}/>}
+    <ObservationScenarios inputs={inputs} onInputs={next => {setInputs(next); setCalculation(null);}} contextKey={contextKey} enabled={ready} onCalculated={(key, values) => setCalculation(values.length ? {key, scenarios:values} : null)} results={scenarios}/>
+    <div className="button-row"><button className="secondary" onClick={save}>Save observation draft</button><button className="secondary" onClick={load}>Load observation draft</button><button className="secondary" disabled={!ready} onClick={() => download(`${prefix}-research.json`, JSON.stringify(dossier(), null, 2), 'application/json')}>Export observation dossier</button><button className="secondary" disabled={!ready} onClick={() => download(`${prefix}-memo.md`, observationMemo(source, observation, draft, attached, scenarios), 'text/markdown')}>Export observation research memo</button></div>
+    <p role="status">{message}</p><p>Notes, selected archive ID and assumption inputs persist only when saved. A different snapshot has a separate draft. Evidence is reverified and calculations are cleared on load. Exports preserve separate sources and user assertions without activating research inputs.</p>
   </section>;
 }

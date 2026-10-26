@@ -1,4 +1,14 @@
-# Active implementation — arithmetic and negative controls / 2026-10-26
+# Active implementation — company research / 2026-10-26
+
+PR #31 merged as 993213b with 372 backend / 20 browser tests, Gemini approval and main preview.
+Current feat/company-research connects Finviz drafts, explicit SEC evidence and assumption models
+with saved inputs/cited exports. Finish QA, CI, independent review and guarded merge; verify main.
+Then complete dated technical features per docs/REMAINING_REQUIREMENTS.md. Full goal stays active;
+Finviz + SEC suffice to continue. Read STATUS.md and docs/COMPANY_RESEARCH.md.
+
+---
+
+# Previous implementation — arithmetic and negative controls / 2026-10-26
 
 PR #30 merged as b1412c6 with 345 backend / 18 browser tests, Gemini approval and real-data smoke.
 Current feat/research-validation adds numeric integrity guards and date-local negative controls

@@ -298,7 +298,39 @@ def read_sec_bundle(bundle_id: str, *, include_statements: bool = False) -> dict
         )
     if _read(folder / "normalized.json", MAX_BYTES) != _json(normalized):
         raise ValueError("SEC normalized integrity mismatch")
-    report = {"bundle_id": bundle_id, "manifest": manifest, "normalized": normalized}
+    parent = json.loads(raw["submissions"])
+    issuer_name = parent.get("name")
+    if (
+        not isinstance(issuer_name, str)
+        or not 1 <= len(issuer_name) <= 200
+        or not issuer_name.isprintable()
+    ):
+        issuer_name = None
+    issuer: dict[str, Any] = {"name": issuer_name}
+    for field in ("tickers", "exchanges"):
+        values = parent.get(field)
+        issuer[field] = (
+            values
+            if (
+                isinstance(values, list)
+                and len(values) <= 100
+                and all(
+                    isinstance(v, str) and 1 <= len(v) <= 100 and v.isprintable() for v in values
+                )
+            )
+            else None
+        )
+    issuer.update(
+        scope="CURRENT_ISSUER_METADATA_NOT_SECURITY_MAPPING",
+        source_sha256=manifest["submissions"]["sha256"],
+        retrieved_at=manifest["submissions"]["retrieved_at"],
+    )
+    report = {
+        "bundle_id": bundle_id,
+        "manifest": manifest,
+        "normalized": normalized,
+        "issuer": issuer,
+    }
     if include_statements:
         from packages.data.sec_statements import normalize_statements
 
