@@ -1,7 +1,9 @@
 # Sprint status — 2026-10-26
 
-Current increment: reproducible company/share-class comparisons, after reference PR #21 merged
-as a791727 (154 backend / six browser tests in CI, independent Claude approval with zero blockers).
+Current increment: independent issuer-evidence dossier audit, after comparison PR #22 merged
+as 92fd42f. One issuer-hosted annual report for an already queried candidate is archived locally;
+class/ticker cover-table evidence is transcribed with byte provenance and unresolved FIGI/temporal
+assignment gaps. The offline audit never approves identities or promotes research inputs.
 Current verification results are recorded at the top of STATUS.md.
 Saved ten-record sample: three case/whitespace agreements, seven text differences; all require review.
 Ten of 11,783 source observations were queried; ten candidates, zero identity promotions.

@@ -1,5 +1,12 @@
 # Plan and decisions — 2026-10-23
 
+2026-10-26 issuer-evidence increment: add an offline audit of one attributed local dossier bound
+to an existing candidate, original source and reference batch. Archive the issuer-hosted annual
+report for ticker A; record cover-table transcriptions, hashes, unknown publication time and
+remaining assignment/continuity gaps. Transcriptions are operator assertions, never trusted
+identity facts. Do not promote a mapping, expand the sample or open research gates. Next obtain
+independent FIGI-to-class assignment evidence covering the saved source times. See ISSUER_EVIDENCE.md.
+
 Build the mandatory Sprint 0–3 vertical slice before adding research sophistication.
 The repository initially contained only the owner's nine numbered specification files and no commits.
 
