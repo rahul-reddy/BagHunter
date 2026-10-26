@@ -35,8 +35,8 @@ software workflows; full final-runtime checks and PR review are still required:
 | Product views | Nine functional views, responsive filters and saved watchlist | Final browser/accessibility run |
 | Discovery | Six stages, frozen policy, dated transitions, relative strength/breadth, technical and financial diagnostics | Unvalidated rules; no empirical score calibration |
 | Museum | Multi-anchor/sector cohorts, horizon/threshold filters, failed controls and exports | Artificial universe only; real PIT membership/delists unavailable |
-| Thesis Studio | Editable scenarios, dilution/debt, source/catalyst/falsification/bear draft, save/load/export | No verified live theses or independent factual critique without real evidence |
-| Validation | Chronological purge/embargo, metrics/sensitivity/bootstrap, cash/caps/participation/cost/action simulation and multiple baselines | Inspected fixture is not untouched holdout; no daily-risk or calibrated market-impact claim |
+| Thesis Studio | Editable scenarios, dilution/debt, source/falsification/bear draft, dated multi-event catalyst calendar, save/load/export | No verified live theses or independent factual critique without real evidence |
+| Validation | Chronological purge/embargo, metrics/sensitivity/bootstrap, daily marked equity/risk, cash/caps/participation/cost/action simulation and multiple baselines | Inspected fixture is not untouched holdout; no intraday-risk or calibrated market-impact claim |
 | Settings | Persistent display preferences, exportable discovery/portfolio policies, provider/recovery controls | Read-only API means refresh is an explicit CLI action |
 | Sources | Browser-selectable Finviz/reference archives, source binding and failure clearing | Identities, units, currency and current-to-historical continuity remain unverified |
 | SEC | Local accession-bound annual fact parser, amendment/lag/unit/conflict checks | Original extraction vintages, quarters/custom tags and identity verification remain unsupported |
@@ -46,8 +46,11 @@ Do not equate this assessment with full goal completion. After review/merge, rea
 specifications and keep any independent software gaps in the active queue. Empirical gates stay
 BLOCKED until their actual evidence exists; a polished fixture app does not open them.
 
-Next independent software work: daily mark-to-market portfolio risk (current diagnostics observe
-window-end equity) and a structured multi-event catalyst calendar beyond memo text/review dates.
+Daily mark-to-market portfolio risk and the structured multi-event catalyst calendar are now
+implemented in feat/daily-risk-catalyst, with boundary and real-browser acceptance. Review and
+merge remain separate gates. Next audit items include useful source-bound research workflows for
+the owner's saved current Finviz observations, broader policy sensitivity diagnostics and final
+release packaging. No real provider beyond Finviz Elite is available (owner confirmation).
 
 Externally blocked acceptance: licensed historical PIT membership/bars/actions/delist coverage;
 verified real security identities, field units/currencies, original filing vintages and enough

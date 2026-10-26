@@ -22,7 +22,7 @@ from packages.data.providers import UnconfiguredMarketProvider
 from packages.data.run_archive import verify_integrity, write_integrity
 from packages.research.cohorts import cohort_grid
 from packages.research.discovery import DiscoveryPolicy, discover
-from packages.research.features import VERSION, eligible, snapshot, symbol_at
+from packages.research.features import VERSION, eligible, snapshot
 from packages.research.outcomes import matched_pairs, outcome
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 
@@ -107,16 +107,10 @@ def run(
         "latest_source_timestamp": max(b.available_at for b in dataset.bars).isoformat(),
         "market_provider": UnconfiguredMarketProvider().get_coverage_report(),
     }
-    features = []
-    for instrument in dataset.instruments:
-        if eligible(instrument, asof):
-            f = snapshot(instrument, dataset.bars, dataset.facts, asof)
-            f["ticker"] = symbol_at(dataset.symbols, instrument.security_id, asof)
-            features.append(f)
-    if not features:
-        raise ValueError("No eligible fixture instruments at requested asof")
     discovery = discover(dataset, asof, policy or DiscoveryPolicy())
     features = discovery["signals"]
+    if not features:
+        raise ValueError("No eligible fixture instruments at requested asof")
     # Labels never passed to feature assembly. Separate on-disk hindsight namespace.
     anchor = datetime(2020, 1, 1, 23, tzinfo=UTC)
     labels = [
@@ -152,6 +146,7 @@ def run(
         {
             "selector": r["policy"]["selector"],
             "metrics": r["metrics"],
+            "daily_risk": r["daily_risk"],
             "executions": len(r["executions"]),
             "excluded": len(r["exclusions"]),
             "ending_equity": r["ending_equity"],

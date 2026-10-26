@@ -6,7 +6,10 @@ Owner correction: finish implementing the application. The full goal remains act
 PR #23 merged as d25d221; that evidence-only increment did not complete the product. Missing data
 gates do not justify leaving independent software undone. See docs/COMPLETION.md and WORKSPACE.md.
 
-## Current branch: feat/complete-research-workspace
+## Delivered foundation and current branch: feat/daily-risk-catalyst
+
+PR #24 merged as 3df7113 after Linux CI (245 backend / 11 browser tests) and independent
+Gemini approval with zero blockers. Its reviewed tree matches the squash merge.
 
 Nine functional views; configurable six-stage discovery and dated history; technical/financial
 diagnostics; persistent watchlists and expanded Radar filters; Thesis Studio scenario/draft/memo
@@ -20,29 +23,29 @@ Inputs/predictors and hindsight outputs stay separated. Unvalidated heuristics a
 research remain explicit. Notes/scenarios are operator assertions, not trusted facts. No automatic
 identity approval, provider requests, original-vintage certification, purchases or deployment.
 
-## Verification and next work
+## Current increment and verification
 
-Full scripts/qa.ps1 passed on the final runtime worktree: locked Python/npm installs, harness,
-skill validation, lint/format/types, 240 backend tests (five Windows symlink skips), ten browser
-tests, production build and demo. Boundary suites cover future invariance, all stages, arithmetic,
-constraints, actions, source selection, archive tampering and chronology. Linux CI must run the
-skipped boundaries. Thesis desktop/mobile and Validation Lab screenshots were inspected under
-artifacts/screenshots/. Manual refresh template revalidated/reused run 7902fa2b2409acbc. SEC
-normalization CLI ran on fictional raw inputs, producing two quarantined facts and no activation.
-Current-head CI and independent review remain required before guarded merge.
-Final comparison-request hardening then passed frontend lint/types/build and all eleven browser
-tests; backend source is unchanged from the 240-test full QA run. Rapid baseline switching now
-cancels stale requests and rejects cross-run response binding. Local load smoke: 30 successful
-health/current/signals requests, median 28.18 ms, p95 58.60 ms; saved-source selection read the
-11,783-row archive with zero provider requests. Evidence: artifacts/test_results/load-smoke.json.
-Browser defects found (watchlist accessible-name mismatch and textarea labeling) were fixed without
-weakening accessibility gates. The delisting test needed an explicitly permissive liquidity policy
-to hold that fictional instrument; its setup was corrected. Evidence: artifacts/test_results/.
+Daily close marked portfolio equity now includes held-session losses, cash gaps, distributions,
+splits, delisting cash and correctly dated exit costs. Missing marks reject and terminal equity
+must reconcile to cash. Drawdown/volatility/zero-risk-free Sharpe/zero-target Sortino assumptions
+are explicit; exhausted or zero-variance paths do not receive invented ratios. Turnover uses actual
+buy and sale notional. Window-end metrics stay separately labeled. Validation execution filters
+and pagination improve the ledger. Thesis Studio adds a persistent dated catalyst calendar with
+public HTTPS citations, falsification conditions, status/filter/remove/export; all remain operator
+assertions. Scenario results bind to their exact assumptions, preventing stale memo arithmetic.
+The prior review's empty legacy cohort CSV and redundant feature-computation advisories are fixed.
 
-Real SEC vintages, historical PIT universe/actions/delist coverage, verified real identities and
-currency/scale remain externally unresolved. Zero real verified investment theses. Next: finish full
-acceptance, independent review and guarded merge, then reassess the full completion matrix.
-Do not close the overall goal merely because this PR lands.
+Full scripts/qa.ps1 passed on this runtime worktree with isolated 8001/5174 ports, preserving
+the main preview: locked installs, harness/skills, lint/format/types, 249 backend tests (five
+Windows symlink skips), demo, frontend lint/types/build and all 13 real-browser tests including
+accessibility/mobile checks. Evidence: artifacts/test_results/ and apps/web/playwright-report/.
+Exact-head Linux CI and independent review remain required before guarded merge.
+
+Owner confirms Finviz Elite only; no additional historical provider is available. Real SEC
+vintages, historical PIT universe/actions/delist coverage, verified identities and currency/scale
+remain externally unresolved. Zero real verified investment theses. Complete all independent
+software first; next audit source-bound current-observation research and policy sensitivity.
+Do not close the overall goal merely because an individual PR lands.
 
 ---
 

@@ -34,10 +34,17 @@ Services bind to loopback. No broker connection, spending, scheduler or deployme
 - Thesis Studio calculates editable bear/base/bull assumptions with dilution/net debt and supports
   hypothesis, catalyst citations, review date, falsification and bear-argument drafts. Save/load locally
   and download Markdown. Defaults are illustrative user assumptions, not company financials.
+  Its dated catalyst calendar saves up to 100 events per security, with optional public HTTPS
+  citations, falsification conditions and planned/observed/invalidated operator statuses. Filter,
+  remove and export events locally; changing a status does not verify an assertion.
 - Validation Lab separates the legacy toy from a constrained simulation, with execution rows, costs,
   whole shares, cash, caps, 12–1 momentum/revenue-growth/seeded-random comparators, return/drawdown/
   win-rate/payoff diagnostics, cost sensitivity, purge/embargo and illustrative bootstrap arithmetic.
-  The inspected fixture is not an untouched holdout. Sparse windows do not supply daily Sharpe.
+  Daily close equity includes cash gaps, corporate actions and costs, with close-to-close drawdown,
+  volatility, zero-risk-free Sharpe and zero-target Sortino. Window-end metrics remain separately
+  labeled. Execution filters and pagination keep the ledger usable. The inspected fixture is not
+  an untouched holdout; fixture weekdays are not an exchange calendar. Ratios are undefined where
+  variance is zero or equity exhaustion prevents valid sampling.
 - Data Quality exposes source/archive-checksum status, limitations and source/report downloads.
 - Settings persists display preferences and exports model/portfolio policies for explicit CLI refresh.
   Browser edits never rewrite materialized output or activate provider data.
@@ -69,6 +76,9 @@ seeded_random. Comparators share constraints. Missing selector inputs are exclud
 Next-weekday-open entries use 21-session holds and cash gaps. Participation uses prior known dollar
 volume, never future execution volume. Exits cannot finance entries at the same earlier open.
 Dividends stay cash, splits alter shares, delist proceeds are explicit, missing exits fail closed.
+Missing held-session marks also fail closed. Delisted holdings become explicit cash after the
+terminal event; terminal daily equity must reconcile to simulated cash. Turnover includes actual
+buy notional plus sale/delist proceeds, excluding cash dividends.
 Fixed combined costs are assumptions, not calibrated impact. No borrowing, shorting or trading.
 
 Run IDs bind raw bytes, UTC clock, seed, code and both policies. Identical refresh verifies/reuses
@@ -88,6 +98,9 @@ memo downloads remain separate user drafts. No generated draft counts as a verif
 neither registers a task or requests provider data. CI/review gates remain mandatory. Deployments
 require owner confirmation and a commit already on main. On Windows stop dev servers before npm ci
 if native binaries are locked. Run `pwsh -NoProfile -File scripts/qa.ps1` for full acceptance.
+For an isolated second worktree, set BAGHUNTER_API_PORT=8001 and BAGHUNTER_WEB_PORT=5174 in its
+shell before starting its Vite/Playwright commands; both accept only integer ports 1–65535 and
+keep loopback binding. Defaults remain 8000/5173. Its Python environment and data stay separate.
 
 ## Accession-bound SEC normalization
 
