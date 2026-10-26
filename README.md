@@ -140,3 +140,8 @@ to merged commits. Public repository visibility was explicitly authorized by the
 
 Validation Lab includes [date-safe negative controls](docs/NEGATIVE_CONTROLS.md) for configured
 discovery and momentum ranks, with frozen ledgers, matured outcomes and explicit fixture limits.
+
+
+The [current-company research desk](docs/COMPANY_RESEARCH.md) supports explicit SEC evidence
+attachments, assumption scenarios and saved/cited memo exports from Finviz observations. The
+[remaining requirement register](docs/REMAINING_REQUIREMENTS.md) tracks unfinished software.

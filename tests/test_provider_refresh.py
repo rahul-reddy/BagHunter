@@ -269,6 +269,8 @@ def test_sec_api_requires_verified_bundle_and_preserves_empty_filters(transport)
     response = client.get(endpoint + "?limit=1").json()
     assert response["total"] == 1 and response["source_facts"] == 1
     assert response["normalized"]["facts"][0]["published_at"] == "2020-02-02T00:00:00Z"
+    assert response["issuer"]["scope"] == "CURRENT_ISSUER_METADATA_NOT_SECURITY_MAPPING"
+    assert response["issuer"]["name"] is None
     assert client.get(endpoint + "?metric=annual_net_income").json()["total"] == 0
     for query in ("limit=101", "offset=-1", "metric=share_price"):
         assert client.get(endpoint + "?" + query).status_code == 422
@@ -276,6 +278,42 @@ def test_sec_api_requires_verified_bundle_and_preserves_empty_filters(transport)
     (Path("data/real/sec/bundles") / result["bundle_id"] / "companyfacts.json").write_text("{}")
     rejected = client.get(endpoint)
     assert rejected.status_code == 503 and "verification failed" in rejected.json()["detail"]
+
+
+@pytest.mark.parametrize("kind", ["valid", "missing", "bad_name", "bad_lists"])
+def test_issuer_display_metadata_is_bounded_current_and_never_a_security_assignment(
+    transport, kind
+):
+    submissions, facts = sec_sources()
+    if kind != "missing":
+        submissions.update(
+            name="Fictional issuer", tickers=["FICTION", "FICTION.A"], exchanges=["NYSE"]
+        )
+        submissions["phone"] = "Fictional detail not exported"
+    if kind == "bad_name":
+        submissions["name"] = "Unsafe\nname"
+    if kind == "bad_lists":
+        submissions["tickers"] = ["TOO_MANY"] * 101
+        submissions["exchanges"] = ["bad\nexchange"]
+    transport(
+        lambda request: httpx.Response(
+            200, json=facts if "/companyfacts/" in request.url.path else submissions
+        )
+    )
+    result = sync_sec("1", CONTACT, datetime(2020, 4, 1, tzinfo=UTC), Path.cwd() / "data/real/sec")
+    bundle = read_sec_bundle(result["bundle_id"])
+    issuer = bundle["issuer"]
+    assert set(issuer) == {"name", "tickers", "exchanges", "scope", "source_sha256", "retrieved_at"}
+    assert issuer["source_sha256"] == bundle["manifest"]["submissions"]["sha256"]
+    assert issuer["retrieved_at"] == bundle["manifest"]["submissions"]["retrieved_at"]
+    assert issuer["scope"] == "CURRENT_ISSUER_METADATA_NOT_SECURITY_MAPPING"
+    assert issuer["name"] == ("Fictional issuer" if kind in ("valid", "bad_lists") else None)
+    assert issuer["tickers"] == (
+        ["FICTION", "FICTION.A"] if kind in ("valid", "bad_name") else None
+    )
+    assert issuer["exchanges"] == (["NYSE"] if kind in ("valid", "bad_name") else None)
+    assert len(bundle["normalized"]["facts"]) == 1
+    assert bundle["normalized"]["identity_assignment"] == "OPERATOR_SUPPLIED_UNVERIFIED"
 
 
 def test_sec_bundle_rejects_linked_archive(tmp_path, transport):

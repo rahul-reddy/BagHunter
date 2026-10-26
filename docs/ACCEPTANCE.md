@@ -1,5 +1,9 @@
 # Full specification acceptance and known issues
 
+Area-level PASS labels below are bounded software assessments, not full-spec completion proof.
+See [remaining requirements](REMAINING_REQUIREMENTS.md) for concrete unfinished software and
+[company research](COMPANY_RESEARCH.md) for the current source-bound workflow and pending gates.
+
 This matrix separates executable software from empirical research. The complete goal is not
 satisfied by opening nine pages or passing fixture tests. Commands and current counts are recorded
 in STATUS.md; exact-head CI, independent model review and guarded merges are recorded in each PR.

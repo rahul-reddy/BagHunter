@@ -1,3 +1,21 @@
+# Current release checkpoint — 2026-10-26
+
+The full specification is not complete. Main 993213b (PR #31) passed 372 backend and 20 browser
+tests in exact-head Linux CI, independent Gemini review with zero blockers and the refreshed
+local preview. Reviewed source package: artifacts/BagHunter-source-993213b1f372.zip; its private
+receipt is artifacts/test_results/research-validation-release-receipt.json. Source packages exclude
+credentials, licensed/raw archives and dependencies. Deployment is not requested.
+
+Current feat/company-research is under local acceptance: it connects explicit SEC evidence to
+Finviz observation drafts, assumption models and cited exports. CI/review/merge are still required
+for that increment. See STATUS.md for current evidence and docs/REMAINING_REQUIREMENTS.md for
+concrete unfinished software. No broad PASS statement below substitutes for final item-level audit.
+Zero real investment theses are verified; empirical coverage/vintage/identity gates remain open.
+
+---
+
+# Archived checkpoints
+
 # Release readiness — research workspace / 2026-10-26
 
 The full application goal is active. The expanded implementation and every data boundary are
