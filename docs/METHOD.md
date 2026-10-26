@@ -20,9 +20,12 @@
   Costs are 20 bps entry + 20 bps exit, subtracted as 0.004 of entry notional.
   Unresolved exits are flagged. Fixture universe capacity and sector diversification are not modeled.
 
-Features implement 1/5/21/63-session momentum, 8/21 EMA, 60-session base width, relative volume,
-20-session dollar volume and knowable annual-revenue growth. Relative strength, industry breadth,
-quality, valuation and catalyst factors remain missing. No feature assembler accepts outcome labels.
+Features implement 1/5/21/63-session momentum, 8/21 EMA, 20/60/120-session base references,
+moving averages/ATR/volatility, relative volume, 20-session dollar volume, benchmark-relative
+strength, dated sector breadth and available annual financial ratios. Breadth requires more than
+one eligible peer. Quality is missing in the revenue-only fixture; valuation and catalyst factors
+remain missing. No feature assembler accepts outcome labels. Discovery and constrained simulation
+extend the legacy toy; their contracts and boundaries are in MODEL_CARD.md and WORKSPACE.md.
 
 The fixture is constructed to exercise success and failure paths, so its return differences are
 tautological software demonstrations. No hypothesis, hit rate, significance or investment inference

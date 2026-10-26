@@ -25,7 +25,7 @@ Evidence standard: an implemented feature requires working code and acceptance t
 placeholder, or description of missing data is not an implementation. A tested fixture workflow is
 software acceptance, never empirical validation. Independent review/CI must cover the final head.
 
-## Current implementation assessment (acceptance running)
+## Current implementation assessment
 
 The starting gaps above are retained as the audit baseline. This branch implements the following
 software workflows; full final-runtime checks and PR review are still required:
@@ -48,9 +48,15 @@ BLOCKED until their actual evidence exists; a polished fixture app does not open
 
 Daily mark-to-market portfolio risk and the structured multi-event catalyst calendar passed
 Linux CI (254 backend / 13 browser), independent Gemini review and guarded merge as PR #25.
-Source-bound Finviz research drafts/dossiers and complete-archive reported-field filters are
-implemented in feat/observation-workspace; full QA/review remain separate gates. Next audit items
-include broader policy sensitivity diagnostics and final release packaging. No real provider beyond Finviz Elite is available (owner confirmation).
+Source-bound Finviz research drafts/dossiers and complete-archive reported-field filters passed
+Linux CI (256 backend / 14 browser), independent Gemini review and guarded merge as PR #26.
+Dated-factor weight/liquidity sensitivity, reusable policy downloads, a model card and complete
+acceptance/known-issues matrix are now implemented in feat/policy-sensitivity. Full local QA passed on
+the combined PR #26 base: 254 backend / 15 browser tests with five Windows symlink skips;
+exact-head CI/review remain required.
+See ACCEPTANCE.md and MODEL_CARD.md for the requirement-by-requirement limits. Final delivery
+packages reviewed main without local data or credentials. Finviz Elite is the only available
+provider (owner confirmation). The full empirical goal is not declared complete.
 
 Externally blocked acceptance: licensed historical PIT membership/bars/actions/delist coverage;
 verified real security identities, field units/currencies, original filing vintages and enough

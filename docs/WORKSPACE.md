@@ -45,6 +45,8 @@ Services bind to loopback. No broker connection, spending, scheduler or deployme
   labeled. Execution filters and pagination keep the ledger usable. The inspected fixture is not
   an untouched holdout; fixture weekdays are not an exchange calendar. Ratios are undefined where
   variance is zero or equity exhaustion prevents valid sampling.
+  Weight/liquidity sensitivity holds dated factors fixed across six explicit variants, with rank
+  changes, covered weight and exclusions. It does not refit, infer performance or choose a policy.
 - Data Quality exposes source/archive-checksum status, limitations and source/report downloads.
 - Settings persists display preferences and exports model/portfolio policies for explicit CLI refresh.
   Browser edits never rewrite materialized output or activate provider data.
@@ -94,6 +96,7 @@ integrity manifest are labeled. Back up the adjacent raw source archive and runs
 
 `/runs/<id>/reports/<name>` downloads source_manifest.json, validation.json, portfolio.json,
 portfolio_policy.json, discovery_policy.json, cohort_grid.json, toy_backtest.json,
+discovery_sensitivity.json,
 historical_cohorts.csv, baghunter_watchlist.csv, historical_cases.md, discovery_digest.md and
 research_limitations.md. `/runs/<id>/dossiers/<security_id>` downloads a fixture dossier. Scenario
 memo downloads remain separate user drafts. No generated draft counts as a verified thesis.
@@ -102,6 +105,12 @@ memo downloads remain separate user drafts. No generated draft counts as a verif
 neither registers a task or requests provider data. CI/review gates remain mandatory. Deployments
 require owner confirmation and a commit already on main. On Windows stop dev servers before npm ci
 if native binaries are locked. Run `pwsh -NoProfile -File scripts/qa.ps1` for full acceptance.
+
+Package a source-only release from a reviewed main commit with
+`git archive --format=zip --output=artifacts/BagHunter-source.zip main`. The package contains tracked
+source, specifications, lockfiles and examples. It excludes credentials, local licensed exports,
+generated runs and installed dependencies. Install/start with the commands above after extraction;
+the fixture demo recreates reports. Real local archives/config require a separate private backup.
 For an isolated second worktree, set BAGHUNTER_API_PORT=8001 and BAGHUNTER_WEB_PORT=5174 in its
 shell before starting its Vite/Playwright commands; both accept only integer ports 1–65535 and
 keep loopback binding. Defaults remain 8000/5173. Its Python environment and data stay separate.

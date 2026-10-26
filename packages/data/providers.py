@@ -38,7 +38,8 @@ class SecClient:
     """Single-process 2 req/s maximum; callers must coordinate concurrent processes.
 
     Fetches raw submissions only. Current companyfacts are NOT historical PIT facts.
-    Historical pagination and accession-based financial parsing remain unimplemented.
+    Historical pagination is unsupported. The separate offline accession-bound annual parser
+    does not certify original extraction vintages or automatically activate research data.
     """
 
     def __init__(self, user_agent: str, cache: Path) -> None:

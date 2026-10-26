@@ -1,17 +1,20 @@
 # Release readiness — research workspace / 2026-10-26
 
 The full application goal is active. The expanded implementation and every data boundary are
-documented in [Workspace](../docs/WORKSPACE.md) and [Completion audit](../docs/COMPLETION.md).
+documented in [Workspace](../docs/WORKSPACE.md), [Completion audit](../docs/COMPLETION.md),
+[full acceptance matrix](../docs/ACCEPTANCE.md) and [model card](../docs/MODEL_CARD.md).
 
 | Current gate | Status | Evidence / limitation |
 | --- | --- | --- |
 | Expanded product workflows | PASS locally | Nine views; discovery, cohorts, thesis, settings, constrained validation, sources and reports |
-| Final runtime lint/types/build/backend/browser | PASS locally | Full QA: 240 backend / five Windows skips / ten browser tests; final UI hardening: lint/types/build and eleven browser tests; screenshots inspected |
+| Final runtime lint/types/build/backend/browser | PASS locally | Combined full QA: 254 backend / five Windows skips / 15 browser; lint/format/types/build/demo/harness; screenshots inspected |
 | PR #24 exact-head CI / independent review / guarded merge | PASS | 245 backend / 11 browser in Linux CI; Gemini approval; identical-tree merge 3df7113 |
 | Daily risk / structured calendar local QA | PASS | Full scripts/qa.ps1: 249 backend, five Windows skips, 13 browser; lint/types/build/demo/harness |
-| PR #25 CI / independent review / guarded merge | PASS | 254 backend / 13 browser in Linux CI; Gemini approval, no findings; identical-tree merge 5922443 |
-| Source-bound Finviz desk / filters local acceptance | PASS | Full QA: 251 backend / five Windows skips / 14 browser; lint/types/build/demo/harness |
-| Source-bound Finviz desk / filters CI and review | REQUIRED | Exact-head CI, independent review and guarded merge |
+| PR #25 CI / review / guarded merge | PASS | 254 backend / 13 browser in Linux CI; Gemini approval, identical-tree merge 5922443 |
+| Ranking sensitivity / release audit local QA | PASS | Combined full QA: 254 backend / five Windows skips / 15 browser on main 6cce117 base |
+| PR #26 source-bound Finviz CI / review / guarded merge | PASS | 256 backend / 14 browser in Linux CI; Gemini approval with no findings; merge 6cce117 |
+| Actual Finviz archive smoke | PASS bounded local scope | 11,783 source rows; 24 successful local requests; real saved-source browser/draft/dossier flow, no provider calls or identity promotion |
+| Combined revision CI / review / merge | REQUIRED | Exact-head CI and independent review before guarded merge |
 | Original SEC vintages / PIT universe / delist actions / real identity | BLOCKED | External evidence not established; outputs remain fixture or quarantined |
 | Empirical holdout findings / verified investment theses | BLOCKED | Fixed inspected fixture is not an untouched real holdout; zero verified theses |
 | Deployment | NOT REQUESTED | Manual confirmed deployment only, from main |
