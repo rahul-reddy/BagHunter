@@ -1,17 +1,14 @@
 # Sprint status — 2026-10-26
 
-Full application goal is active by explicit owner correction. Current increment implements all nine
-views, discovery/history, diagnostics, thesis scenarios/drafts, multi-anchor cohorts, constrained
-simulation/baselines, validation audits, policies, watchlists, archive comparisons/cache integrity,
-reports, saved-source selection and quarantined accession-bound SEC facts. Final acceptance and PR
-gates for PR #24 passed (245 backend / 11 browser in Linux CI; independent Gemini approval).
-PR #25 daily marked risk/calendar passed Linux CI (254 backend / 13 browser), independent
-Gemini review and guarded merge 5922443. PR #26 source-bound Finviz drafts/filters passed Linux CI (256 backend / 14 browser),
-independent Gemini review and guarded merge 6cce117. Current sensitivity/release-audit increment passed
-full local QA on the combined PR #26 base (254 backend / 15 browser; five Windows skips);
-exact-head CI/review remain required. Actual saved Finviz source-to-browser dossier smoke also
-passed for the 11,783-row archive with no provider request or identity promotion. Track software versus empirical acceptance separately in docs/COMPLETION.md.
-Missing data is not a reason to leave independent application work unfinished. Zero verified theses.
+Full application goal remains active. PRs #24–27 are merged through d0210e1 (final Linux CI:
+259 backend / 15 browser; Gemini approval, zero blockers). Owner direction: Finviz is sufficient;
+SEC contact is supplied in .env. Current feat/provider-refresh adds secure allowlisted .env/alias
+loading, supported Finviz overview refresh, bounded SEC pair synchronization and source-verified
+SEC filing UI. Real execution succeeded: 11,772 fresh Finviz rows and 102 annual SEC facts for
+CIK 0001090872; no identity promotion. After-hours filing publication timing and safe nested source
+paths were corrected against real SEC payloads. Full local QA passed 289 backend tests (seven Windows skips) and 17 browser tests, plus
+lint/types/build/demo/harness. Exact-head CI/independent review remain required. No overall goal-completion or empirical claim. Zero real
+verified investment theses. See STATUS.md and docs/PROVIDER_REFRESH.md.
 
 ---
 

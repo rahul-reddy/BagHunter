@@ -1,3 +1,65 @@
+# Current handoff — Finviz/SEC provider integration / 2026-10-26
+
+## Owner direction and full goal
+
+Finish the complete application. The owner confirms Finviz is sufficient and supplied SEC contact
+information in the ignored .env under BAGHUNTER_SEC_USER_AGENT. Use these providers; do not make
+another subscription a prerequisite. Never print credentials or contact values. The full goal stays
+open across increments and no synthetic research result satisfies empirical requirements.
+
+## Delivered baseline and current branch
+
+PRs #24–27 are merged; main d0210e1 has the reviewed tree badbbd1e9802a523f666b528a126839911dbaec7.
+Final PR #27 Linux CI passed 259 backend / 15 browser tests and Gemini independently approved with
+zero blockers. The nine-view research workspace, daily risk, catalyst calendar, Finviz research desk,
+source-bound reports and sensitivity diagnostics remain implemented. Source package/receipt are
+under artifacts/. This branch is feat/provider-refresh.
+
+Provider commands now read allowlisted private .env settings with process-environment precedence,
+including the owner's BAGHUNTER_SEC_USER_AGENT alias. Finviz refresh archives and ingests the exact
+supported overview CSV with bounded redirects, response size and token-free manifests. SEC sync
+fetches bounded CIK-bound submissions/companyfacts, verifies immutable raw cache contents, normalizes
+annual facts and publishes independently verifiable source bundles. API remains read-only.
+
+Data Quality adds real SEC filing evidence with explicit selection, source/normalized verification,
+metric filters, pagination, source citations and current-page export. It works without a fixture
+run. Source mismatches clear old facts. No CIK-to-security promotion, identity approval or historical
+activation occurs.
+
+Real SEC payloads exposed nested document paths and Friday-after-hours filing-date differences.
+Safe bounded subpaths are supported while traversal/origin changes reject. Publication now uses
+the later of acceptance and following UTC midnight of the official filing day, then applies lag.
+The policy is versioned. Exact acceptance metadata stays required. Tests cover Friday/Monday timing,
+filing-date disagreement, missingness, tampering, redirect/size/auth boundaries and secret redaction.
+
+## Executed real observations and verification
+
+Using the existing private configuration, Finviz refresh succeeded: snapshot
+3d51596880319d09db94d6f9c60618e36804b3cf07bfc2f09900052a37d78d3e, 11,772 rows. SEC CIK 0001090872
+(the existing Agilent investigation) produced bundle
+78713fbae94ca471629e80f3eef3ae541fed288fe030cd2d70e17f1dd9fb8530 with 102 annual facts; 285 records
+without recent exact accession metadata and 384 unsupported form/period records were excluded.
+All raw/licensed outputs remain ignored locally; neither contact values nor authenticated URLs
+are in output/archives. These counts are not empirical findings or a verified security universe.
+
+Full scripts/qa.ps1 passed on the current runtime worktree: locked installs, harness/skills,
+lint/format/types, 289 backend tests (seven Windows symlink skips), demo/cache verification,
+frontend lint/types/build and all 17 browser tests. SEC desktop evidence screenshot inspected.
+Evidence: artifacts/test_results/, apps/web/playwright-report/ and artifacts/screenshots/. The first browser
+attempt exhausted its budget during a 28-second cold Vite load; its bounded full-workflow budget
+now includes cold compilation, download inspection and accessibility. A real mobile overflow from
+long status/pagination content was fixed without weakening layout assertions. Checks used isolated 8001/5174 ports.
+Exact-head Linux CI must exercise skipped link boundaries; independent review remains required.
+
+Next: finish full QA, CI, independent review and guarded merge; copy only the validated ignored
+source archives to the main preview and exercise the actual fresh Finviz/SEC browser workflows.
+Continue the full application matrix using Finviz/SEC, keeping unestablished historical semantics,
+identities and original vintages explicit. Zero real verified investment theses.
+
+---
+
+# Archived handoff — prior full application implementation
+
 # Current handoff — full application implementation / 2026-10-26
 
 ## Goal and scope

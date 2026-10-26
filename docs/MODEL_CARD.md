@@ -53,8 +53,10 @@ Sector/country/volume/positive-P-E filters are reported-field queries, not commo
 or a candidate ranking. Unknown permanent identities, price currency/adjustments, market-cap scale,
 provider observation timestamps and historical continuity remain unresolved.
 
-SEC normalization accepts local accession-bound annual USD facts under documented lag/amendment
-rules, but output remains quarantined. Original extraction vintages, real identity verification,
+SEC synchronization now fetches bounded real source pairs and normalizes accession-bound annual
+USD facts. Publication uses the later of acceptance and following UTC midnight of official filing
+day, followed by processing lag; after-hours acceptance does not publish Monday facts over a
+weekend. Data Quality inspects independently source-verified bundles; output remains quarantined. Original extraction vintages, real identity verification,
 quarterly/YTD interpretation and custom taxonomies are not certified. No contact is invented.
 
 Thesis scenarios are explicit user arithmetic with no probabilities or forecasts. Notes, source

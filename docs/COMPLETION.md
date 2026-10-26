@@ -63,3 +63,15 @@ verified real security identities, field units/currencies, original filing vinta
 observations for independent empirical validation. Zero real verified investment theses. Do not
 close the full goal merely because these gates are documented; complete all independent software
 work first and report the remaining requirements individually.
+
+## Finviz/SEC continuation — 2026-10-26
+
+Owner confirms Finviz is enough and added SEC contact in .env. PR #27 is merged as d0210e1
+(259 backend / 15 browser in Linux CI, independent Gemini approval). Current provider-refresh
+work reads the supplied alias safely, refreshes the supported Finviz CSV, synchronizes real SEC
+raw pairs and exposes source-verified filing evidence in Data Quality. Real execution produced
+11,772 fresh Finviz rows and 102 annual SEC facts; full QA/CI/review remain separate gates.
+Do not turn unestablished historical semantics into a request for another subscription by default.
+Use the available Finviz/SEC stack and finish independent software against verified contracts.
+Publication timing now covers after-hours/weekend filing dates conservatively; original extraction
+vintages and security/class identities still need their own evidence. See PROVIDER_REFRESH.md.

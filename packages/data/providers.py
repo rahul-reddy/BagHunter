@@ -37,37 +37,97 @@ class UnconfiguredMarketProvider:
 class SecClient:
     """Single-process 2 req/s maximum; callers must coordinate concurrent processes.
 
-    Fetches raw submissions only. Current companyfacts are NOT historical PIT facts.
+    Fetches bounded raw submissions and companyfacts.
+    Current companyfacts are NOT historical PIT facts.
     Historical pagination is unsupported. The separate offline accession-bound annual parser
     does not certify original extraction vintages or automatically activate research data.
     """
 
     def __init__(self, user_agent: str, cache: Path) -> None:
-        if "@" not in user_agent or "example.com" in user_agent:
+        if (
+            "@" not in user_agent
+            or "example.com" in user_agent
+            or len(user_agent) > 512
+            or any(ord(c) < 32 for c in user_agent)
+        ):
             raise ValueError("Set SEC_USER_AGENT with your organization and real contact email")
         self.user_agent = user_agent
         self.cache = cache
         self.last_request = 0.0
 
     def submissions(self, cik: str) -> dict[str, Any]:
-        if not cik.isdigit() or len(cik) > 10:
-            raise ValueError("CIK must contain 1–10 digits")
-        url = f"https://data.sec.gov/submissions/CIK{int(cik):010d}.json"
+        return self._fetch(cik, "submissions")
+
+    def companyfacts(self, cik: str) -> dict[str, Any]:
+        return self._fetch(cik, "companyfacts")
+
+    def _fetch(self, cik: str, resource: str) -> dict[str, Any]:
+        if not cik.isdigit() or len(cik) > 10 or int(cik) == 0:
+            raise ValueError("CIK must contain 1–10 digits and be positive")
+        filename = f"CIK{int(cik):010d}.json"
+        url = (
+            f"https://data.sec.gov/submissions/{filename}"
+            if resource == "submissions"
+            else f"https://data.sec.gov/api/xbrl/companyfacts/{filename}"
+        )
+        if self.cache.resolve() != self.cache.absolute():
+            raise ValueError("SEC cache must not traverse symlinks")
         self.cache.mkdir(parents=True, exist_ok=True)
-        with httpx.Client(headers={"User-Agent": self.user_agent}, timeout=30) as client:
+        with httpx.Client(
+            headers={"User-Agent": self.user_agent}, timeout=30, follow_redirects=False
+        ) as client:
             for attempt in range(3):
                 time.sleep(max(0, 0.5 - (time.monotonic() - self.last_request)))
                 self.last_request = time.monotonic()
-                response = client.get(url)
-                if response.status_code in (429, 500, 502, 503) and attempt < 2:
-                    time.sleep(2**attempt)
-                    continue
-                response.raise_for_status()
-                body = response.content
+                with client.stream("GET", url) as response:
+                    if response.status_code in (429, 500, 502, 503) and attempt < 2:
+                        time.sleep(2**attempt)
+                        continue
+                    response.raise_for_status()
+                    if "application/json" not in response.headers.get("content-type", "").lower():
+                        raise ValueError("SEC response is not JSON")
+                    chunks = []
+                    size = 0
+                    for chunk in response.iter_bytes(chunk_size=64 * 1024):
+                        size += len(chunk)
+                        if size > 20 * 1024 * 1024:
+                            raise ValueError("SEC response exceeds size limit")
+                        chunks.append(chunk)
+                body = b"".join(chunks)
+                payload = json.loads(body)
+                if (
+                    not isinstance(payload, dict)
+                    or not str(payload.get("cik", "")).isdigit()
+                    or int(payload["cik"]) != int(cik)
+                    or not isinstance(
+                        payload.get("filings" if resource == "submissions" else "facts"), dict
+                    )
+                ):
+                    raise ValueError("SEC resource/CIK binding mismatch")
                 digest = hashlib.sha256(body).hexdigest()
                 target = self.cache / f"{digest}.json"
-                if not target.exists():
-                    target.write_bytes(body)
+                metadata = self.cache / f"{digest}.manifest.json"
+                if target.is_symlink() or metadata.is_symlink():
+                    raise ValueError("Linked SEC cache member")
+                if target.exists() or metadata.exists():
+                    from packages.data.finviz import _read
+
+                    if _read(target, 20 * 1024 * 1024) != body:
+                        raise ValueError("SEC cache integrity mismatch")
+                    previous: dict[str, Any] = json.loads(_read(metadata, 64 * 1024))
+                    retrieved = datetime.fromisoformat(previous["retrieved_at"])
+                    if (
+                        set(previous) != {"url", "sha256", "retrieved_at", "status", "license_note"}
+                        or previous.get("url") != url
+                        or previous.get("sha256") != digest
+                        or previous.get("status") != "RAW_ONLY_NOT_PIT_NORMALIZED"
+                        or previous.get("license_note")
+                        != "SEC public source; no market data entitlement"
+                        or retrieved.utcoffset() is None
+                        or retrieved > datetime.now(UTC)
+                    ):
+                        raise ValueError("SEC manifest integrity mismatch")
+                    return previous
                 manifest = {
                     "url": url,
                     "sha256": digest,
@@ -75,6 +135,9 @@ class SecClient:
                     "status": "RAW_ONLY_NOT_PIT_NORMALIZED",
                     "license_note": "SEC public source; no market data entitlement",
                 }
-                (self.cache / f"{digest}.manifest.json").write_text(json.dumps(manifest, indent=2))
+                with target.open("xb") as stream:
+                    stream.write(body)
+                with metadata.open("x", encoding="utf-8") as stream:
+                    json.dump(manifest, stream, indent=2)
                 return manifest
         raise RuntimeError("SEC retries exhausted")

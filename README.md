@@ -85,7 +85,7 @@ files remain the product contract.
 
 ## Optional real SEC raw download
 
-Set `SEC_USER_AGENT` in your shell to your organization and real contact email, then:
+Set `BAGHUNTER_SEC_USER_AGENT` (or `SEC_USER_AGENT`) in your private `.env`, then:
 
 ```powershell
 uv run baghunter sec-fetch --cik 320193 --output data/real/sec/raw
@@ -95,7 +95,11 @@ This makes a public SEC request and saves raw submissions plus a checksum manife
 normalize facts or make the synthetic sample real. The separate offline `normalize-sec` command
 accepts accession-bound annual USD facts from local raw inputs and keeps them quarantined; see
 the workspace guide. No original-vintage or identity certification is inferred.
-The CLI does not auto-load `.env`; inject environment variables explicitly. No paid requests occur.
+Provider commands read only their allowlisted `.env` settings; process environment values override
+the file. `sync-sec --cik 1090872` fetches a bounded submissions/companyfacts pair, normalizes annual
+facts under conservative filing-day publication/lag rules, and saves a quarantined evidence bundle.
+Inspect it in Data Quality → SEC filing evidence. `refresh-finviz --usage-authorized` refreshes the
+supported current overview snapshot using your existing Elite token. See [provider refresh](docs/PROVIDER_REFRESH.md).
 
 ## Historical export staging
 

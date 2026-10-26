@@ -48,6 +48,9 @@ Services bind to loopback. No broker connection, spending, scheduler or deployme
   Weight/liquidity sensitivity holds dated factors fixed across six explicit variants, with rank
   changes, covered weight and exclusions. It does not refit, infer performance or choose a policy.
 - Data Quality exposes source/archive-checksum status, limitations and source/report downloads.
+  Its separate SEC filing-evidence panel verifies real saved raw pairs and normalized facts,
+  with metric filters, pagination, dated filing links and current-page JSON export. It remains
+  available when fixture research is unavailable and never joins a CIK to Finviz automatically.
 - Settings persists display preferences and exports model/portfolio policies for explicit CLI refresh.
   Browser edits never rewrite materialized output or activate provider data.
 - Finviz Observations lists local snapshots for explicit selection without restarting the API.
@@ -124,9 +127,10 @@ submissions and aggregate companyfacts. Use an existing local raw pair:
 uv run baghunter normalize-sec --submissions data/real/sec/submissions.json --companyfacts data/real/sec/companyfacts.json --security-id local-unverified-id --asof 2022-01-03T23:00:00+00:00
 ```
 
-The parser never downloads or invents a contact. Both CIKs must match. Each accepted fact requires
-its exact accession, aware acceptance timestamp and primary document; acceptance/publication proxy
-plus lag must precede as-of. Date-only filed is not used as an acceptance clock. Annual USD revenue,
+The offline parser never downloads or invents a contact. Both CIKs must match. Each accepted fact
+requires its exact accession, aware acceptance timestamp and safe primary document path. Publication
+uses max(acceptance, following UTC midnight of the official filing day), then processing lag must
+precede as-of. Date-only filed is not substituted for an acceptance clock. Annual USD revenue,
 net/operating income and operating cashflow are supported. Conflicting aliases reject, amendments
 remain, and unsupported units/periods/missing old acceptance metadata are counted and excluded.
 Quarterly/YTD conversion and custom taxonomies are unsupported. Raw hashes and filing URLs remain.
@@ -134,3 +138,5 @@ Quarterly/YTD conversion and custom taxonomies are unsupported. Raw hashes and f
 Output stays in data/real/sec/quarantine. Security-ID assignment is an operator assertion. Current
 aggregate facts do not prove original extraction vintage, publisher authenticity or class identity.
 Real research still requires original-vintage and licensed PIT universe/action/delisting evidence.
+For explicit manual downloads using the owner's existing Finviz subscription and `.env` SEC
+contact, see [Provider refresh](PROVIDER_REFRESH.md). Finviz remains the selected market provider.
