@@ -41,6 +41,11 @@ def main() -> None:
     )
     sync.add_argument("--cik", required=True)
     sync.add_argument("--asof", default=None)
+    sync.add_argument(
+        "--include-history",
+        action="store_true",
+        help="Fetch declared older submissions; bounded and source-preserving",
+    )
     sync.add_argument("--env-file", type=Path, default=Path(".env"))
     refresh = sub.add_parser(
         "refresh-finviz", help="Fetch and quarantine a current overview snapshot"
@@ -224,6 +229,7 @@ def main() -> None:
                         contact,
                         datetime.fromisoformat(args.asof) if args.asof else datetime.now(UTC),
                         Path("data/real/sec"),
+                        include_history=args.include_history,
                     )
         except (ValueError, OSError, TypeError, KeyError, csv.Error, httpx.HTTPError) as exc:
             print(
