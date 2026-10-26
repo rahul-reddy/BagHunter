@@ -13,15 +13,20 @@ type Evidence = { reference_id: string; base_snapshot_id: string; mode: string; 
         shared_identifiers: Record<string, string[]> }[] }[] } };
 const pretty = (value: string) => value.replaceAll('_', ' ');
 
-export function ReferenceEvidence({ baseSnapshotId, mode }: { baseSnapshotId: string; mode: string }) {
+export function ReferenceEvidence({ baseSnapshotId, mode, explicitSelection = false }: { baseSnapshotId: string; mode: string; explicitSelection?: boolean }) {
   const [revision, setRevision] = useState(0);
+  const [selectedBatch, setSelectedBatch] = useState('');
+  const [batches, setBatches] = useState<{reference_id: string; retrieved_at: string; limit: number}[]>([]);
+  useEffect(() => {const controller = new AbortController(); const params = new URLSearchParams({snapshot: baseSnapshotId, mode}); fetch(`/api/finviz/references?${params}`, {signal: controller.signal}).then(async r => {if (r.ok) {const data: unknown = await r.json(); if (Array.isArray(data)) setBatches(data);}}).catch(() => {}); return () => controller.abort();}, [baseSnapshotId, mode]);
   const [result, setResult] = useState<{ key: string; evidence: Evidence } | null>(null);
   const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
-  const key = JSON.stringify([baseSnapshotId, mode, revision]);
+  const key = JSON.stringify([baseSnapshotId, mode, revision, selectedBatch, explicitSelection]);
   useEffect(() => {
     if (revision === 0) return;
     const controller = new AbortController();
-    fetch('/api/finviz/reference', { signal: controller.signal }).then(async response => {
+    const params = new URLSearchParams({snapshot: baseSnapshotId, mode});
+    if (selectedBatch) params.set('reference', selectedBatch);
+    fetch(explicitSelection || selectedBatch ? `/api/finviz/reference?${params}` : '/api/finviz/reference', { signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('No valid local reference batch is selected. See docs/REFERENCE.md.');
       const data = await response.json() as Evidence;
       if (data.base_snapshot_id !== baseSnapshotId || data.mode !== mode)
@@ -36,13 +41,14 @@ export function ReferenceEvidence({ baseSnapshotId, mode }: { baseSnapshotId: st
       if (!controller.signal.aborted) setFailure({ key, message: error.message });
     });
     return () => controller.abort();
-  }, [key, baseSnapshotId, mode, revision]);
+  }, [key, baseSnapshotId, mode, revision, selectedBatch, explicitSelection]);
   const evidence = result?.key === key ? result.evidence : null;
   const error = failure?.key === key ? failure.message : null;
   return <section className="reference-evidence" aria-label="Current reference evidence">
     <h3>Current reference evidence</h3>
     <p>Inspect a saved OpenFIGI mapping batch. Candidates describe a later reference lookup, not
       verified identities at the observation time. Finviz identities and security types stay unresolved.</p>
+    <label>Saved reference batch<select value={selectedBatch} onChange={e => {setSelectedBatch(e.target.value); setRevision(0);}}><option value="">Use configured reference selection</option>{batches.map(b => <option key={b.reference_id} value={b.reference_id}>{b.retrieved_at} · {b.limit} queried · {b.reference_id.slice(0, 12)}</option>)}</select></label>
     <button className="secondary" onClick={() => setRevision(value => value + 1)}>Inspect reference evidence</button>
     {error ? <p role="alert">{error}</p> : revision > 0 && !evidence ? <p role="status">Loading saved reference evidence…</p> : null}
     {evidence && <>

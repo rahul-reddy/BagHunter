@@ -14,11 +14,17 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from packages.backtest.constrained import PortfolioPolicy, simulate
 from packages.backtest.toy import evaluate
+from packages.backtest.validation import diagnostics
 from packages.data.fixture import fixture
 from packages.data.providers import UnconfiguredMarketProvider
+from packages.data.run_archive import verify_integrity, write_integrity
+from packages.research.cohorts import cohort_grid
+from packages.research.discovery import DiscoveryPolicy, discover
 from packages.research.features import VERSION, eligible, snapshot, symbol_at
 from packages.research.outcomes import matched_pairs, outcome
+from packages.research.reports import candidate_memo, case_report, discovery_digest
 
 DEFAULT_ASOF = "2022-01-03T23:00:00+00:00"
 
@@ -34,7 +40,13 @@ def table(path: Path, rows: list[dict[str, Any]]) -> None:
         pq.write_table(pa.Table.from_pylist(rows), path)
 
 
-def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
+def run(
+    output: Path,
+    asof: datetime,
+    seed: int = 7,
+    policy: DiscoveryPolicy | None = None,
+    portfolio_policy: PortfolioPolicy | None = None,
+) -> dict[str, Any]:
     if asof.utcoffset() is None:
         raise ValueError("asof must include timezone")
     asof = asof.astimezone(UTC)
@@ -45,6 +57,44 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
     dataset = fixture()
     raw = dataset.model_dump_json().encode()
     checksum = hashlib.sha256(raw).hexdigest()
+    policy = policy or DiscoveryPolicy()
+    portfolio_policy = portfolio_policy or PortfolioPolicy(seed=seed)
+    code_hash = hashlib.sha256()
+    for module in sorted(Path(__file__).parent.rglob("*.py")):
+        code_hash.update(module.relative_to(Path(__file__).parent).as_posix().encode())
+        code_hash.update(module.read_text(encoding="utf-8").encode())
+    code_digest = code_hash.hexdigest()
+    policy_digest = hashlib.sha256(
+        json.dumps(policy.model_dump(), sort_keys=True).encode()
+    ).hexdigest()
+    portfolio_digest = hashlib.sha256(
+        json.dumps(portfolio_policy.model_dump(), sort_keys=True).encode()
+    ).hexdigest()
+    run_key = hashlib.sha256(
+        f"{checksum}:{asof.isoformat()}:{seed}:{VERSION}:{code_digest}:{policy_digest}:{portfolio_digest}".encode()
+    ).hexdigest()
+    target = output / "runs" / run_key[:16]
+    if target.exists():
+        verify_integrity(target)
+        raw_path = output.parent / "raw" / f"{checksum}.json"
+        if raw_path.read_bytes() != raw:
+            raise ValueError("Cached raw source mismatch")
+        cached = json.loads((target / "run.json").read_text(encoding="utf-8"))
+        if cached["run_id"] != run_key[:16] or cached["mode"] != "FIXTURE":
+            raise ValueError("Cached run binding mismatch")
+        pointer = output / f"current-{os.getpid()}.tmp"
+        pointer.write_text(run_key[:16], encoding="utf-8")
+        os.replace(pointer, output / "CURRENT")
+        return {
+            "run_id": cached["run_id"],
+            "mode": "FIXTURE",
+            "output": str(output),
+            "signals": len(cached["signals"]),
+            "labels": len(cached["study"]["labels"]),
+            "pairs": len(cached["study"]["pairs"]),
+            "evaluation_windows": len(cached["backtest"]["rows"]),
+            "cache_reused": True,
+        }
     source = {
         "source_id": "fixture-v1",
         "mode": "FIXTURE",
@@ -65,6 +115,8 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
             features.append(f)
     if not features:
         raise ValueError("No eligible fixture instruments at requested asof")
+    discovery = discover(dataset, asof, policy or DiscoveryPolicy())
+    features = discovery["signals"]
     # Labels never passed to feature assembly. Separate on-disk hindsight namespace.
     anchor = datetime(2020, 1, 1, 23, tzinfo=UTC)
     labels = [
@@ -74,7 +126,7 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
         for years in (1, 2, 3, 5)
     ]
     pairs = matched_pairs(dataset.instruments, labels, anchor, seed)
-    study = {
+    study: dict[str, Any] = {
         "mode": "FIXTURE",
         "anchor": anchor.isoformat(),
         "labels": labels,
@@ -88,33 +140,46 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
             if eligible(i, anchor)
         ],
     }
+    study["cohorts"] = cohort_grid(dataset)
     backtest = evaluate(dataset, seed)
-    run_key = hashlib.sha256(f"{checksum}:{asof.isoformat()}:{seed}:{VERSION}".encode()).hexdigest()
-    code_hash = hashlib.sha256()
-    for module in sorted(Path(__file__).parent.rglob("*.py")):
-        code_hash.update(module.relative_to(Path(__file__).parent).as_posix().encode())
-        code_hash.update(module.read_text(encoding="utf-8").encode())
-    code_digest = code_hash.hexdigest()
-    run_key = hashlib.sha256(f"{run_key}:{code_digest}".encode()).hexdigest()
+    validation = diagnostics(backtest)
+    portfolio = simulate(dataset, portfolio_policy or PortfolioPolicy())
+    comparator_runs = [
+        simulate(dataset, portfolio_policy.model_copy(update={"selector": selector}))
+        for selector in ("momentum_12_1", "revenue_growth", "seeded_random")
+    ]
+    portfolio["comparators"] = [
+        {
+            "selector": r["policy"]["selector"],
+            "metrics": r["metrics"],
+            "executions": len(r["executions"]),
+            "excluded": len(r["exclusions"]),
+            "ending_equity": r["ending_equity"],
+        }
+        for r in comparator_runs
+    ]
     payload: dict[str, Any] = {
         "run_id": run_key[:16],
         "code_sha256": code_digest,
         "mode": "FIXTURE",
         "research_only": True,
         "asof": asof.isoformat(),
-        "model_version": VERSION,
+        "model_version": policy.version,
         "seed": seed,
         "sources": [source],
         "signals": sorted(features, key=lambda f: -f["score"]),
         "study": study,
         "backtest": backtest,
+        "discovery": {k: v for k, v in discovery.items() if k != "signals"},
+        "validation": validation,
+        "portfolio": portfolio,
         "theses": [],
         "thesis_status": "BLOCKED: no real candidate evidence",
         "limitations": [
             "All market and filing observations are SYNTHETIC FIXTURES",
             "No empirical investment findings or live stock candidates",
             "Licensed historical PIT universe/delist data not configured",
-            "SEC adapter raw download only; no PIT-normalized financial parser",
+            "SEC accession-bound facts stay quarantined; original extraction vintage unverified",
         ],
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -138,11 +203,31 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
         table(staging / "hindsight" / "cohort_pairs.parquet", pairs)
         dump(staging / "reports" / "source_manifest.json", source)
         dump(staging / "reports" / "toy_backtest.json", backtest)
-        with (staging / "reports" / "historical_cohorts.csv").open("w", newline="") as stream:
+        dump(staging / "reports" / "validation.json", validation)
+        dump(staging / "reports" / "portfolio.json", portfolio)
+        dump(staging / "reports" / "portfolio_policy.json", portfolio["policy"])
+        dump(staging / "reports" / "cohort_grid.json", study["cohorts"])
+        (staging / "reports" / "historical_cases.md").write_text(
+            case_report(payload), encoding="utf-8"
+        )
+        (staging / "reports" / "discovery_digest.md").write_text(
+            discovery_digest(payload), encoding="utf-8"
+        )
+        for feature in features:
+            path = staging / "reports" / "theses" / f"{feature['security_id']}.md"
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(candidate_memo(payload, feature["security_id"]), encoding="utf-8")
+        table(staging / "hindsight" / "multi_anchor_labels.parquet", study["cohorts"]["labels"])
+        dump(staging / "reports" / "discovery_policy.json", discovery["policy"])
+        with (staging / "reports" / "historical_cohorts.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as stream:
             writer = csv.DictWriter(stream, fieldnames=list(labels[0]))
             writer.writeheader()
             writer.writerows(labels)
-        with (staging / "reports" / "baghunter_watchlist.csv").open("w", newline="") as stream:
+        with (staging / "reports" / "baghunter_watchlist.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as stream:
             fields = ["security_id", "ticker", "asof_time", "stage", "score", "completeness"]
             writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
             writer.writeheader()
@@ -162,10 +247,13 @@ def run(output: Path, asof: datetime, seed: int = 7) -> dict[str, Any]:
             "13 sequential non-overlapping screening windows; no fitted model or holdout claim.\n"
             "See toy_backtest.json for dates, rows, comparators and limitations.\n"
         )
+        write_integrity(staging)
         # Immutable run folder + atomic pointer avoids partial reads during refresh.
         runs = output / "runs"
         runs.mkdir(parents=True, exist_ok=True)
         target = runs / payload["run_id"]
+        if target.exists():
+            verify_integrity(target)
         if not target.exists():
             # Windows scanners may briefly hold a freshly written directory open.
             for attempt in range(6):

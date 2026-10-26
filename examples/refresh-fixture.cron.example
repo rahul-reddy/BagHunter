@@ -1,0 +1,3 @@
+# Manual example only: BagHunter installs no job.
+# Replace /path/to/BagHunter and review the fixed fixture clock before enabling.
+# 0 8 * * 1-5 cd /path/to/BagHunter && uv run baghunter demo --asof 2022-01-03T23:00:00+00:00

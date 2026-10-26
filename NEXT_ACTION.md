@@ -1,5 +1,16 @@
 # Next action
 
+Owner directive: finish the full application; keep the overall goal active across milestones.
+Use docs/COMPLETION.md. Current product work: feat/complete-research-workspace; see WORKSPACE.md.
+Finish final acceptance, source-selection/browser tests, CI and independent review, then guarded
+merge and reassess every remaining requirement. Data gaps do not block independent software work.
+No purchases or deployment. Run `pwsh -NoProfile -File scripts/qa.ps1` after stopping workspace dev
+servers to release Windows native dependency locks. Restart instructions remain below.
+
+---
+
+## Archived provider-evidence sequencing
+
 The BagHunter branding checkpoint is merged in PR #15 (389db89), before historical adapter work.
 
 The historical staging adapter is merged in PR #16 (b0c205b). The owner has Finviz Elite.

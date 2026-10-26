@@ -1,5 +1,6 @@
 import argparse
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -8,13 +9,16 @@ from pathlib import Path
 
 import httpx
 
-from packages.data.finviz import ingest_snapshot
+from packages.backtest.constrained import PortfolioPolicy
+from packages.data.finviz import _json, _read, ingest_snapshot
 from packages.data.history import LocalHistoryProvider, ingest
 from packages.data.issuer import audit_issuer
 from packages.data.providers import SecClient
 from packages.data.reconciliation import inspect_reference
 from packages.data.reference import fetch_reference
+from packages.data.sec_facts import normalize_sec
 from packages.pipeline import DEFAULT_ASOF, run
+from packages.research.discovery import DiscoveryPolicy
 
 
 def main() -> None:
@@ -25,9 +29,20 @@ def main() -> None:
         cmd.add_argument("--asof", default=DEFAULT_ASOF)
         cmd.add_argument("--seed", type=int, default=7)
         cmd.add_argument("--output", type=Path, default=Path("data/fixture/latest"))
+        cmd.add_argument("--policy", type=Path, help="Local JSON discovery policy; fixture only")
+        cmd.add_argument("--portfolio-policy", type=Path, help="Local JSON portfolio constraints")
     sec = sub.add_parser("sec-fetch", help="Raw real SEC submissions; not mixed with fixture")
     sec.add_argument("--cik", required=True)
     sec.add_argument("--output", type=Path, default=Path("data/real/sec/raw"))
+    normalize = sub.add_parser(
+        "normalize-sec", help="Accession-bound local SEC facts; quarantine only"
+    )
+    normalize.add_argument("--submissions", type=Path, required=True)
+    normalize.add_argument("--companyfacts", type=Path, required=True)
+    normalize.add_argument("--security-id", required=True)
+    normalize.add_argument("--asof", required=True)
+    normalize.add_argument("--lag-hours", type=int, default=24)
+    normalize.add_argument("--output", type=Path, default=Path("data/real/sec/quarantine"))
     for name in ("audit-history", "ingest-history"):
         cmd = sub.add_parser(
             name, help="Validate a normalized export; quarantine only, no activation"
@@ -58,7 +73,39 @@ def main() -> None:
     issuer.add_argument("--reference", required=True)
     issuer.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
     args = parser.parse_args()
-    if args.command == "audit-issuer":
+    if args.command == "normalize-sec":
+        try:
+            report = normalize_sec(
+                _read(args.submissions, 20 * 1024 * 1024),
+                _read(args.companyfacts, 20 * 1024 * 1024),
+                args.security_id,
+                datetime.fromisoformat(args.asof),
+                args.lag_hours,
+            )
+            if "quarantine" not in args.output.resolve().parts:
+                raise ValueError("SEC normalized outputs must remain in quarantine")
+            body = _json(report)
+            digest = hashlib.sha256(body).hexdigest()
+            args.output.mkdir(parents=True, exist_ok=True)
+            target = args.output / f"{digest}.json"
+            if target.exists() and _read(target, 20 * 1024 * 1024) != body:
+                raise ValueError("Existing SEC output integrity mismatch")
+            if not target.exists():
+                with target.open("xb") as stream:
+                    stream.write(body)
+            result = {
+                "status": report["status"],
+                "facts": len(report["facts"]),
+                "sha256": digest,
+                "excluded_counts": report["excluded_counts"],
+            }
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            print(
+                f"SEC normalization rejected ({type(exc).__name__}); raw details suppressed.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
+    elif args.command == "audit-issuer":
         try:
             report = audit_issuer(args.bundle, args.snapshot, args.reference, args.mode)
             result = {
@@ -148,7 +195,26 @@ def main() -> None:
     elif args.command == "sec-fetch":
         result = SecClient(os.environ.get("SEC_USER_AGENT", ""), args.output).submissions(args.cik)
     else:
-        result = run(args.output, datetime.fromisoformat(args.asof), args.seed)
+        try:
+            policy = (
+                DiscoveryPolicy.model_validate_json(_read(args.policy, 64 * 1024))
+                if args.policy
+                else None
+            )
+            portfolio_policy = (
+                PortfolioPolicy.model_validate_json(_read(args.portfolio_policy, 64 * 1024))
+                if args.portfolio_policy
+                else None
+            )
+            result = run(
+                args.output, datetime.fromisoformat(args.asof), args.seed, policy, portfolio_policy
+            )
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            print(
+                f"Fixture refresh rejected ({type(exc).__name__}); raw details suppressed.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
     print(json.dumps(result, indent=2))
 
 

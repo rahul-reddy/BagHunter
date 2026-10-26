@@ -1,0 +1,105 @@
+import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import { mkdir } from 'node:fs/promises';
+
+test('run comparison clears stale requests and rejects response binding mismatches', async ({page}) => {
+  const current = await (await page.request.get('/api/runs/current')).json() as {run_id: string; asof: string};
+  const first = '1'.repeat(16), second = '2'.repeat(16);
+  await page.route('**/api/runs', route => route.fulfill({json: [current, {run_id: first, asof: '2020-01-01'}, {run_id: second, asof: '2021-01-01'}]}));
+  let mismatch = false;
+  await page.route('**/api/runs/*/compare/*', async route => {
+    const previous = route.request().url().split('/').at(-1)!;
+    if (previous === first) await new Promise(resolve => setTimeout(resolve, 300));
+    return route.fulfill({json: {run_id: current.run_id, previous_id: mismatch ? first : previous,
+      policy_changed: false, changes: [{security_id: previous === first ? 'OLDER RESPONSE' : 'LATEST RESPONSE', change: 'RETAINED', before_stage: 'WATCH', after_stage: 'EMERGING', score_change: 1}]}});
+  });
+  await page.goto('/');
+  await page.getByLabel('Compare against saved run').selectOption(first);
+  await page.getByLabel('Compare against saved run').selectOption(second);
+  await expect(page.getByText('LATEST RESPONSE', {exact: false})).toBeVisible();
+  await expect(page.getByText('OLDER RESPONSE', {exact: false})).toHaveCount(0);
+  mismatch = true;
+  await page.getByLabel('Compare against saved run').selectOption('');
+  await page.getByLabel('Compare against saved run').selectOption(second);
+  await expect(page.getByRole('alert')).toContainText('different run selection');
+  await expect(page.getByText('LATEST RESPONSE', {exact: false})).toHaveCount(0);
+});
+
+test('discovery filters, saved watchlist and candidate stage history', async ({page}) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', {name: 'Discovery stage distribution'})).toBeVisible();
+  await page.getByRole('button', {name: 'BagHunter Radar', exact: true}).click();
+  await page.getByRole('button', {name: 'Save DEMO-A to watchlist', exact: true}).click();
+  await page.getByLabel('Saved watchlist only').check();
+  await expect(page.getByRole('button', {name: 'DEMO-A fx-compound'})).toBeVisible();
+  await expect(page.getByRole('button', {name: 'DEMO-B fx-failure'})).toHaveCount(0);
+  await page.reload();
+  await page.getByRole('button', {name: 'BagHunter Radar', exact: true}).click();
+  await expect(page.getByLabel('Saved watchlist only')).toBeChecked();
+  await page.getByLabel('Minimum relative volume').fill('100');
+  await expect(page.getByText('No securities match these filters.')).toBeVisible();
+  await page.getByLabel('Minimum relative volume').fill('0');
+  await page.getByRole('button', {name: 'DEMO-A fx-compound'}).click();
+  await expect(page.getByRole('heading', {name: 'Setup & stage history'})).toBeVisible();
+  await expect(page.getByRole('table', {name: 'Dated discovery stage history'}).getByRole('row')).toHaveCount(22);
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+});
+
+test('thesis scenarios, dilution sensitivity, local draft and memo download', async ({page}) => {
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Thesis Studio', exact: true}).click();
+  await expect(page.getByRole('heading', {name: 'Base scenario', exact: true})).toBeVisible();
+  const base = page.locator('.scenario-card').filter({has: page.getByRole('heading', {name: 'Base scenario', exact: true})});
+  const original = await base.locator('strong').textContent();
+  await page.getByLabel('Annual dilution (fraction)').fill('.2');
+  await expect(base.locator('strong')).not.toHaveText(original!);
+  await page.getByLabel('Research hypothesis', {exact: true}).fill('Fictional hypothesis requiring evidence');
+  await page.getByLabel('Falsification conditions').fill('Revenue growth reverses');
+  await page.getByRole('button', {name: 'Save draft locally'}).click();
+  await page.getByLabel('Research hypothesis', {exact: true}).fill('Changed');
+  await page.getByRole('button', {name: 'Load saved draft'}).click();
+  await expect(page.getByLabel('Research hypothesis', {exact: true})).toHaveValue('Fictional hypothesis requiring evidence');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', {name: 'Download thesis memo'}).click();
+  expect((await pending).suggestedFilename()).toMatch(/^FIXTURE-.+-memo.md$/);
+  await page.getByLabel('Starting shares (assumption)').fill('0');
+  await expect(page.getByRole('alert')).toContainText('outside supported bounds');
+  await expect(page.getByRole('heading', {name: 'Base scenario', exact: true})).toHaveCount(0);
+  await page.getByLabel('Starting shares (assumption)').fill('10000000');
+  await expect(page.getByRole('heading', {name: 'Base scenario', exact: true})).toBeVisible();
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await mkdir('../../artifacts/screenshots', {recursive: true});
+  await page.screenshot({path: '../../artifacts/screenshots/thesis-studio.png', fullPage: true});
+  await page.setViewportSize({width: 390, height: 844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({path: '../../artifacts/screenshots/thesis-mobile.png', fullPage: true});
+});
+
+test('cohort filters, validation diagnostics, settings and exports', async ({page}) => {
+  await page.goto('/');
+  await page.getByRole('button', {name: '100-Bagger Museum', exact: true}).click();
+  await page.getByLabel('Outcome horizon').selectOption('5');
+  await page.getByLabel('Outcome group').selectOption('MISSING');
+  await expect(page.getByRole('listitem').filter({hasText: 'fx-compound: Missing horizon'})).toBeVisible();
+  await page.getByRole('button', {name: 'Validation Lab', exact: true}).click();
+  await expect(page.getByRole('heading', {name: 'Performance diagnostics'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'Constrained portfolio simulation'})).toBeVisible();
+  await expect(page.getByText('NOT_UNTOUCHED', {exact: false})).toBeVisible();
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await mkdir('../../artifacts/screenshots', {recursive: true});
+  await page.screenshot({path: '../../artifacts/screenshots/validation-lab.png', fullPage: true});
+  await page.getByRole('button', {name: 'Settings', exact: true}).click();
+  await page.getByLabel('Minimum displayed 20D dollar volume').fill('999999999');
+  await page.getByRole('button', {name: 'BagHunter Radar', exact: true}).click();
+  await expect(page.getByText('No securities match these filters.')).toBeVisible();
+  await page.getByRole('button', {name: 'Settings', exact: true}).click();
+  await page.getByRole('button', {name: 'Reset display preferences'}).click();
+  await page.getByLabel('Discovery policy JSON').fill('invalid');
+  await page.getByRole('button', {name: 'Download discovery policy'}).click();
+  await expect(page.getByText('Enter a valid JSON object before exporting.')).toBeVisible();
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await page.getByRole('button', {name: 'Command Center', exact: true}).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('link', {name: 'Download watchlist CSV'}).click();
+  expect((await download).suggestedFilename()).toBe('baghunter_watchlist.csv');
+});
