@@ -22,7 +22,8 @@ The original numbered specifications remain authoritative.
 | Large real PIT universe and empirical archaeology | BLOCKED | Finviz Elite is the sole provider; archived membership, actions/delist proceeds and historical export semantics are not yet established; continue verifying supported Finviz contracts |
 | Real contemporaneous facts, common-share identities and field units | BLOCKED | Original filing vintages, independent security/class assignments, reported scale/currency and source-time continuity remain unresolved |
 | Multi-decade/regime, small/microcap benchmarks, capacity and calibrated impact | BLOCKED | Representative real histories/benchmarks and execution evidence unavailable; fixture subgroups do not satisfy these requirements |
-| Predictive calibration, negative-control study and untouched holdout | BLOCKED | No representative real labeled sample or untouched period; fixed fixture has been inspected, no fitted probability model or empirical claim |
+| Frozen negative-control mechanics | Implemented; current revision gates in STATUS.md | Matured outcomes only, same-date label permutations, predated irrelevant rank with prior-known IDs, complete pools, deterministic reports/UI; no p-value or predictive claim |
+| Empirical calibration, negative-control study and untouched holdout | BLOCKED | No representative real labeled sample or untouched period; fixed fixture has been inspected, no fitted probability model or empirical claim |
 | 3–5 evidence-backed theses and independent factual bear critique | BLOCKED | Zero real verified theses; operator notes/scenarios and independent code review do not establish factual investment evidence |
 | Source-only release packaging | Required after final merge | git archive from reviewed main; install via README; exclude local credentials/licensed archives and generated dependencies |
 | Public deployment | NOT REQUESTED | Manual owner-confirmed deployment only, from main; no target configured |

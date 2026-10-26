@@ -1,4 +1,14 @@
-# Active implementation — SEC statements / 2026-10-26
+# Active implementation — arithmetic and negative controls / 2026-10-26
+
+PR #30 merged as b1412c6 with 345 backend / 18 browser tests, Gemini approval and real-data smoke.
+Current feat/research-validation adds numeric integrity guards and date-local negative controls
+with frozen ranks, mature-only outcomes, complete pools and prior-known identities. Finish QA,
+exact-head CI, independent review and guarded merge; verify main and continue the full scope.
+Read STATUS.md and docs/NEGATIVE_CONTROLS.md. Finviz + SEC remain the stack.
+
+---
+
+# Previous implementation — SEC statements / 2026-10-26
 
 PR #29 is merged as 28a2fda (324 backend / 17 browser in CI, Gemini approval and final real-data
 preview passed). Current feat/sec-statements implements quarterly/YTD/instant statements, EPS,

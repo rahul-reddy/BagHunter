@@ -6,6 +6,8 @@ from datetime import date, timedelta
 from statistics import mean, pstdev
 from typing import Any
 
+from packages.shared.numeric import require_finite
+
 
 def partition_windows(rows: list[dict[str, Any]], embargo_days: int = 7) -> dict[str, Any]:
     if not 0 <= embargo_days <= 365:
@@ -56,6 +58,15 @@ def partition_windows(rows: list[dict[str, Any]], embargo_days: int = 7) -> dict
 
 
 def performance(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
+    try:
+        result = _performance(rows, field)
+        require_finite(result, "window performance")
+        return result
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Window performance exceeds finite numeric bounds") from exc
+
+
+def _performance(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
     if not rows:
         return {
             "windows": 0,
@@ -72,6 +83,7 @@ def performance(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
     drawdown = 0.0
     for value in returns:
         equity *= 1 + value
+        require_finite(equity, "compounded wealth")
         peak = max(peak, equity)
         drawdown = min(drawdown, equity / peak - 1)
     days = (date.fromisoformat(rows[-1]["exit"]) - date.fromisoformat(rows[0]["entry"])).days

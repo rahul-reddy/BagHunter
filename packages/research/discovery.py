@@ -12,6 +12,7 @@ from packages.data.finviz import _json
 from packages.research.features import eligible, snapshot, symbol_at, utc_asof
 from packages.research.fundamentals import statement_ratios
 from packages.shared.models import Dataset, Record
+from packages.shared.numeric import require_finite
 
 STAGES = ("WATCH", "IGNITION", "EMERGING", "CONFIRMED", "EXTENDED/AGING", "INVALIDATED")
 
@@ -100,6 +101,15 @@ def classify(
 
 
 def discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[str, Any]:
+    try:
+        result = _discover(dataset, asof, policy)
+        require_finite(result, "discovery output")
+        return result
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Discovery features exceed finite numeric bounds") from exc
+
+
+def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[str, Any]:
     asof = utc_asof(asof)
     sessions = sorted(
         {b.session for b in dataset.bars if b.available_at <= asof and b.session <= asof.date()}
@@ -137,11 +147,11 @@ def discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[
             f["revenue_growth"] = f["financials"]["revenue_growth"]
             growth = f["revenue_growth"]
             f["components"]["fundamental_inflection"] = (
-                None if growth is None else min(100, max(0, growth * 100))
+                None if growth is None else min(1, max(0, growth)) * 100
             )
             margins = [f["financials"]["operating_margin"], f["financials"]["cashflow_margin"]]
             f["components"]["business_quality"] = (
-                None if any(m is None for m in margins) else min(100, max(0, mean(margins) * 100))
+                None if any(m is None for m in margins) else min(1, max(0, mean(margins))) * 100
             )
             f["sector"] = instrument.sector
             f["cap_bucket"] = instrument.cap_bucket
@@ -161,6 +171,7 @@ def discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[
             returns = [
                 known[j].close / known[j - 1].close - 1 for j in range(len(known) - 20, len(known))
             ]
+            require_finite(returns, "daily feature returns")
             closes = [b.close for b in known]
             f["technical"] = {
                 "sma_20": mean(closes[-20:]),
@@ -191,6 +202,7 @@ def discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[
             ]
             f["volatility_20d"] = pstdev(returns) * 252**0.5
             f["consolidation"] = f["base_width_60d"] <= policy.max_base_width
+            require_finite(f, "discovery features before ranking")
             batch.append(f)
         for f in batch:
             peers = [p for p in batch if p["sector"] == f["sector"]]

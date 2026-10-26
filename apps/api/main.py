@@ -391,6 +391,10 @@ def report_download(run_id: str, report_name: str) -> Response:
     reports = {
         "source_manifest.json": data["sources"],
         "validation.json": data.get("validation", {}),
+        "negative_controls.json": data.get("validation", {}).get("negative_controls", {}),
+        "discovery_negative_controls.json": data.get("validation", {}).get(
+            "discovery_negative_controls", {}
+        ),
         "discovery_policy.json": data.get("discovery", {}).get("policy", {}),
         "discovery_sensitivity.json": data.get("discovery", {}).get("sensitivity", {}),
         "toy_backtest.json": data["backtest"],

@@ -1,4 +1,32 @@
-# Current handoff — quarterly statements and dilution / 2026-10-26
+# Current handoff — arithmetic integrity and negative controls / 2026-10-26
+
+Full application goal remains active. PR #30 is merged as b1412c62f23b: exact-head Linux CI passed
+345 backend / 18 browser tests, Gemini approved with no blockers, and the main real statement
+preview passed citations, arithmetic, export, pagination and desktop/mobile accessibility checks.
+Finviz + existing SEC configuration remain the providers; no additional subscription is needed.
+
+Current feat/research-validation fixes reproduced finite-input overflow in research financial
+ratios and guards derived price/volume, wealth and risk outputs. Overflowing financial fields
+stay null with citations/missing weight and visible reasons. Feature version is heuristic-v2.
+Date-safe negative controls cover both configured six-factor discovery and frozen momentum.
+They retain separate dated candidate pools/policy fingerprints, permute only matured outcomes
+within each date and compare a prior-dated synthetic irrelevant rank when identities were known.
+The default diagnostic has 12 mature windows / 30 observations; one later outcome is excluded.
+Reports, API download and Validation Lab inspection are implemented; empirical claims stay closed.
+
+Full final-revision local QA passed: 365 backend tests (seven Windows skips), 20 browser tests,
+locked installs, workflow/skill checks, lint/types/build and demo. Both configured discovery and
+momentum diagnostics reproduce independently from saved ledgers, with policy fingerprints and
+outcome fields excluded from gold feature columns. Browser coverage includes model/window
+selection, exports, legacy missingness, financial range warnings and desktop/mobile accessibility.
+Mobile scans found and fixed keyboard access to existing scrollable tables and status wrapping.
+Exact-head CI and independent review remain required before guarded merge. See
+docs/NEGATIVE_CONTROLS.md. Next finish acceptance and review, refresh main, then continue the full
+specification audit. Zero real verified investment theses; no overall completion claim.
+
+---
+
+# Previous handoff — quarterly statements and dilution / 2026-10-26
 
 Full application goal remains active. PR #29 is merged as 28a2fda58b46; exact-head Linux CI passed
 324 backend / 17 browser tests, Gemini approved with zero blockers, and the main preview passed

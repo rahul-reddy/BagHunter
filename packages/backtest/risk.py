@@ -5,8 +5,19 @@ from datetime import date
 from statistics import mean, pstdev, stdev
 from typing import Any
 
+from packages.shared.numeric import require_finite
+
 
 def daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
+    try:
+        result = _daily_risk(curve)
+        require_finite(result, "daily risk")
+        return result
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Daily risk exceeds finite numeric bounds") from exc
+
+
+def _daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
     if not curve:
         return {"status": "NO_DAILY_EQUITY", "observations": 0}
     dates = [date.fromisoformat(row["date"]) for row in curve]
@@ -27,6 +38,7 @@ def daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
     returns = [
         right / left - 1 for left, right in zip(values[:-1], values[1:], strict=True) if left > 0
     ]
+    require_finite(returns, "daily equity returns")
     exhausted = any(value == 0 for value in values[:-1])
     sd = stdev(returns) if len(returns) >= 2 and not exhausted else None
     downside = (
@@ -52,7 +64,7 @@ def daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
         else None,
         "worst_daily_return": min(returns) if returns else None,
         "daily_tail_5pct": sorted(returns)[int((len(returns) - 1) * 0.05)] if returns else None,
-        "skewness": mean((v - mean(returns)) ** 3 for v in returns) / population_sd**3
+        "skewness": mean(((v - mean(returns)) / population_sd) ** 3 for v in returns)
         if population_sd
         else None,
         "ratio_status": "UNDEFINED_AFTER_EQUITY_EXHAUSTION"

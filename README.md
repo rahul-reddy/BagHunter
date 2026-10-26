@@ -136,3 +136,7 @@ audit keeps identity decisions subject to review and never activates research in
 Read [AGENTS.md](AGENTS.md). Short branches, lockfile installs, exact-head CI and independent model
 review; merge only through `scripts/merge-pr.ps1`. Deployment is manual, owner-confirmed and limited
 to merged commits. Public repository visibility was explicitly authorized by the owner on 2026-10-23.
+
+
+Validation Lab includes [date-safe negative controls](docs/NEGATIVE_CONTROLS.md) for configured
+discovery and momentum ranks, with frozen ledgers, matured outcomes and explicit fixture limits.

@@ -1,12 +1,14 @@
 """Predictors accept only prices, facts and dated identity; no outcome-label argument."""
 
+import math
 from datetime import UTC, datetime, timedelta
 from statistics import mean
 from typing import Any
 
 from packages.shared.models import Bar, Fact, Instrument, Symbol
+from packages.shared.numeric import require_finite
 
-VERSION = "heuristic-v1-unvalidated"
+VERSION = "heuristic-v2-unvalidated"
 
 
 def utc_asof(asof: datetime) -> datetime:
@@ -62,6 +64,17 @@ def assert_pit(publications: list[datetime], asof: datetime) -> None:
 def snapshot(
     instrument: Instrument, bars: list[Bar], facts: list[Fact], asof: datetime
 ) -> dict[str, Any]:
+    try:
+        result = _snapshot(instrument, bars, facts, asof)
+        require_finite(result, "feature snapshot")
+        return result
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Price/volume features exceed finite numeric bounds") from exc
+
+
+def _snapshot(
+    instrument: Instrument, bars: list[Bar], facts: list[Fact], asof: datetime
+) -> dict[str, Any]:
     asof = utc_asof(asof)
     history = sorted(
         [
@@ -88,6 +101,8 @@ def snapshot(
         raise ValueError("insufficient volume baseline")
     relative_volume = history[-1].volume / volume_baseline
     dollar_volume = mean(b.close * b.volume for b in history[-20:])
+    base_width = base_high / base_low - 1
+    require_finite([returns, relative_volume, dollar_volume, base_width], "price/volume features")
     ema: dict[str, float] = {}
     for n in (8, 21):
         value = closes[0]
@@ -101,11 +116,17 @@ def snapshot(
             revisions[str(f.period_end)] = f
     revenues = list(revisions.values())
     growth = None
-    if len(revenues) >= 2 and revenues[-2].value > 0:
-        growth = revenues[-1].value / revenues[-2].value - 1
+    if (
+        len(revenues) >= 2
+        and revenues[-2].value > 0
+        and revenues[-1].unit == revenues[-2].unit == "USD"
+        and 330 <= (revenues[-1].period_end - revenues[-2].period_end).days <= 400
+    ):
+        value = revenues[-1].value / revenues[-2].value - 1
+        growth = value if math.isfinite(value) else None
     components: dict[str, float | None] = {
-        "price_volume": min(100, max(0, returns["return_63d"] * 200 + 30)),
-        "fundamental_inflection": None if growth is None else min(100, max(0, growth * 100)),
+        "price_volume": min(100, max(0, min(0.35, max(-0.15, returns["return_63d"])) * 200 + 30)),
+        "fundamental_inflection": None if growth is None else min(1, max(0, growth)) * 100,
         "industry_breadth": None,
         "business_quality": None,
         "valuation_catalyst": None,
@@ -139,7 +160,7 @@ def snapshot(
         "dollar_volume_20d": dollar_volume,
         "relative_volume": relative_volume,
         "base_high_60d": base_high,
-        "base_width_60d": base_high / base_low - 1,
+        "base_width_60d": base_width,
         "revenue_growth": growth,
         "components": components,
         "weights": weights,
