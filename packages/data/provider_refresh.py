@@ -14,6 +14,13 @@ import httpx
 from packages.data.finviz import COLUMNS, MAX_BYTES, _json, _parse, _read, ingest_snapshot
 from packages.data.providers import SecClient
 from packages.data.sec_facts import NORMALIZATION_VERSION, normalize_sec
+from packages.data.sec_history import (
+    HISTORY_POLICY,
+    MAX_HISTORY_FILES,
+    MAX_RAW_BYTES,
+    history_descriptors,
+    normalize_history,
+)
 
 
 def refresh_finviz(token: str, *, usage_authorized: bool) -> dict[str, Any]:
@@ -95,7 +102,9 @@ def refresh_finviz(token: str, *, usage_authorized: bool) -> dict[str, Any]:
     return {k: report[k] for k in ("snapshot_id", "mode", "rows", "retrieved_at", "status")}
 
 
-def sync_sec(cik: str, user_agent: str, asof: datetime, output: Path) -> dict[str, Any]:
+def sync_sec(
+    cik: str, user_agent: str, asof: datetime, output: Path, *, include_history: bool = False
+) -> dict[str, Any]:
     if asof.utcoffset() is None or asof > datetime.now(UTC):
         raise ValueError("SEC research clock must be aware and not future")
     if not cik.isdigit() or len(cik) > 10 or int(cik) <= 0:
@@ -109,7 +118,25 @@ def sync_sec(cik: str, user_agent: str, asof: datetime, output: Path) -> dict[st
     raw_submissions = _read(output / "raw" / f"{submissions['sha256']}.json", MAX_BYTES)
     raw_facts = _read(output / "raw" / f"{companyfacts['sha256']}.json", MAX_BYTES)
     local_id = f"sec-cik-{cik}-unverified"
-    normalized = normalize_sec(raw_submissions, raw_facts, local_id, asof)
+    history: dict[str, bytes] = {}
+    history_sources = []
+    derived = None
+    if include_history:
+        descriptors = history_descriptors(raw_submissions)
+        raw_size = len(raw_submissions) + len(raw_facts)
+        for descriptor in descriptors:
+            if raw_size >= MAX_RAW_BYTES:
+                raise ValueError("SEC history raw size exceeds bound")
+            source = client.submission_history(cik, descriptor["name"])
+            body = _read(output / "raw" / f"{source['sha256']}.json", MAX_BYTES)
+            raw_size += len(body)
+            if raw_size > MAX_RAW_BYTES:
+                raise ValueError("SEC history raw size exceeds bound")
+            history[descriptor["name"]] = body
+            history_sources.append({"name": descriptor["name"], "source": source})
+        derived, normalized = normalize_history(raw_submissions, raw_facts, history, local_id, asof)
+    else:
+        normalized = normalize_sec(raw_submissions, raw_facts, local_id, asof)
     manifest = {
         "version": "sec-bundle-v1",
         "normalization_policy": NORMALIZATION_VERSION,
@@ -121,6 +148,12 @@ def sync_sec(cik: str, user_agent: str, asof: datetime, output: Path) -> dict[st
         "submissions": submissions,
         "companyfacts": companyfacts,
     }
+    if include_history:
+        manifest.update(
+            version="sec-bundle-v2-history",
+            history_policy=HISTORY_POLICY,
+            history_sources=history_sources,
+        )
     identity = hashlib.sha256(_json(manifest)).hexdigest()
     root = output / "bundles"
     if root.resolve() != root.absolute():
@@ -135,6 +168,11 @@ def sync_sec(cik: str, user_agent: str, asof: datetime, output: Path) -> dict[st
         "companyfacts.json": raw_facts,
         "normalized.json": _json(normalized),
     }
+    if derived is not None:
+        files.update(history)
+        files["derived-submissions.json"] = derived
+    if sum(map(len, files.values())) > 80 * 1024 * 1024:
+        raise ValueError("SEC bundle total size exceeds bound")
     if any(len(body) > MAX_BYTES for body in files.values()):
         raise ValueError("SEC bundle output exceeds size limit")
     if destination.exists():
@@ -166,26 +204,26 @@ def read_sec_bundle(bundle_id: str) -> dict[str, Any]:
     folder = Path.cwd() / "data/real/sec/bundles" / bundle_id
     if folder.resolve() != folder:
         raise ValueError("SEC bundle must not traverse symlinks")
-    names = {"manifest.json", "submissions.json", "companyfacts.json", "normalized.json"}
-    if {p.name for p in folder.iterdir()} != names or any(
-        p.is_symlink() or not p.is_file() for p in folder.iterdir()
-    ):
-        raise ValueError("SEC bundle member mismatch")
+    if (folder / "manifest.json").is_symlink():
+        raise ValueError("Linked SEC manifest")
     manifest = json.loads(_read(folder / "manifest.json", 64 * 1024))
+    history_mode = manifest.get("version") == "sec-bundle-v2-history"
+    keys = {
+        "version",
+        "normalization_policy",
+        "cik",
+        "security_id",
+        "asof",
+        "lag_hours",
+        "status",
+        "submissions",
+        "companyfacts",
+    }
+    if history_mode:
+        keys |= {"history_policy", "history_sources"}
     if (
-        set(manifest)
-        != {
-            "version",
-            "normalization_policy",
-            "cik",
-            "security_id",
-            "asof",
-            "lag_hours",
-            "status",
-            "submissions",
-            "companyfacts",
-        }
-        or manifest["version"] != "sec-bundle-v1"
+        set(manifest) != keys
+        or manifest["version"] not in ("sec-bundle-v1", "sec-bundle-v2-history")
         or manifest["normalization_policy"] != NORMALIZATION_VERSION
         or not re.fullmatch(r"\d{10}", manifest["cik"])
         or int(manifest["cik"]) <= 0
@@ -195,6 +233,32 @@ def read_sec_bundle(bundle_id: str) -> dict[str, Any]:
         or hashlib.sha256(_json(manifest)).hexdigest() != bundle_id
     ):
         raise ValueError("SEC bundle manifest binding mismatch")
+    names = {"manifest.json", "submissions.json", "companyfacts.json", "normalized.json"}
+    if history_mode:
+        if (
+            manifest["history_policy"] != HISTORY_POLICY
+            or not isinstance(manifest["history_sources"], list)
+            or len(manifest["history_sources"]) > MAX_HISTORY_FILES
+        ):
+            raise ValueError("Invalid SEC history manifest")
+        for item in manifest["history_sources"]:
+            if (
+                set(item) != {"name", "source"}
+                or not isinstance(item["name"], str)
+                or not re.fullmatch(
+                    rf"CIK{manifest['cik']}-submissions-\d{{3}}\.json", item["name"]
+                )
+                or item["name"] in names
+            ):
+                raise ValueError("Invalid or duplicate SEC history archive member")
+            names.add(item["name"])
+        names.add("derived-submissions.json")
+    if {p.name for p in folder.iterdir()} != names or any(
+        p.is_symlink() or not p.is_file() for p in folder.iterdir()
+    ):
+        raise ValueError("SEC bundle member mismatch")
+    if sum(p.stat().st_size for p in folder.iterdir()) > 80 * 1024 * 1024:
+        raise ValueError("SEC bundle total size exceeds bound")
     asof = datetime.fromisoformat(manifest["asof"])
     if asof.utcoffset() is None or asof > datetime.now(UTC):
         raise ValueError("Invalid SEC research clock")
@@ -215,9 +279,37 @@ def read_sec_bundle(bundle_id: str) -> dict[str, Any]:
         raw[name] = _read(folder / f"{name}.json", MAX_BYTES)
         if hashlib.sha256(raw[name]).hexdigest() != metadata["sha256"]:
             raise ValueError("SEC source checksum mismatch")
-    normalized = normalize_sec(
-        raw["submissions"], raw["companyfacts"], manifest["security_id"], asof
-    )
+    if history_mode:
+        parts = {}
+        for item in manifest["history_sources"]:
+            body = _read(folder / item["name"], MAX_BYTES)
+            metadata = item["source"]
+            expected_url = f"https://data.sec.gov/submissions/{item['name']}"
+            _verify_sec_metadata(metadata, expected_url, body)
+            parts[item["name"]] = body
+        derived, normalized = normalize_history(
+            raw["submissions"], raw["companyfacts"], parts, manifest["security_id"], asof
+        )
+        if _read(folder / "derived-submissions.json", MAX_BYTES) != derived:
+            raise ValueError("SEC derived submissions integrity mismatch")
+    else:
+        normalized = normalize_sec(
+            raw["submissions"], raw["companyfacts"], manifest["security_id"], asof
+        )
     if _read(folder / "normalized.json", MAX_BYTES) != _json(normalized):
         raise ValueError("SEC normalized integrity mismatch")
     return {"bundle_id": bundle_id, "manifest": manifest, "normalized": normalized}
+
+
+def _verify_sec_metadata(metadata: dict[str, Any], url: str, body: bytes) -> None:
+    if (
+        set(metadata) != {"url", "sha256", "retrieved_at", "status", "license_note"}
+        or metadata["url"] != url
+        or metadata["status"] != "RAW_ONLY_NOT_PIT_NORMALIZED"
+        or metadata["license_note"] != "SEC public source; no market data entitlement"
+        or hashlib.sha256(body).hexdigest() != metadata["sha256"]
+    ):
+        raise ValueError("SEC historical source binding/checksum mismatch")
+    retrieved = datetime.fromisoformat(metadata["retrieved_at"])
+    if retrieved.utcoffset() is None or retrieved > datetime.now(UTC):
+        raise ValueError("Invalid SEC historical retrieval clock")

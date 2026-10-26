@@ -1,3 +1,13 @@
+# Active implementation — 2026-10-26
+
+PR #28 is merged as da7ce12 with 296 backend / 17 browser tests in Linux CI and independent
+Gemini approval. Current feat/sec-history adds older SEC accession coverage and a cited annual
+financial profile. Complete current-revision QA, CI, review and guarded merge; refresh the local
+preview and continue full-app acceptance. Finviz + existing SEC configuration are sufficient to
+continue; no identity promotion or fabricated empirical results. See STATUS.md.
+
+---
+
 # Sprint status — 2026-10-26
 
 Full application goal remains active. PRs #24–27 are merged through d0210e1 (final Linux CI:

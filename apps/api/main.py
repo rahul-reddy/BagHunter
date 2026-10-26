@@ -18,6 +18,7 @@ from packages.data.reconciliation import inspect_reference
 from packages.data.run_archive import verify_integrity
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 from packages.research.scenarios import Scenario, scenario
+from packages.research.sec_profile import financial_profile
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
 
@@ -76,6 +77,7 @@ def sec_bundle(
     normalized = report["normalized"]
     matches = [f for f in normalized["facts"] if not metric or f["metric"] == metric]
     return report | {
+        "financial_profile": financial_profile(normalized),
         "normalized": normalized | {"facts": matches[offset : offset + limit]},
         "total": len(matches),
         "offset": offset,

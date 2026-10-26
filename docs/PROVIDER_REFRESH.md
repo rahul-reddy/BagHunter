@@ -78,3 +78,27 @@ excluding 285 records without recent accession metadata and 384 unsupported form
 These are source/normalization counts, not investment findings or a historical investable universe.
 Full goal acceptance remains open. Next integrate additional supported Finviz/SEC workflows against
 verified contracts, keeping real observations separate from synthetic cohort/backtest outcomes.
+
+
+## Historical accession coverage and financial profile
+
+`uv run baghunter sync-sec --cik 0001090872 --include-history` additionally fetches the
+historical submissions files explicitly declared by that CIK's parent response. At most ten parts,
+10,000 merged accessions and 60 MiB of raw input are supported; an exceeded bound rejects rather
+than truncates. Exact overlaps deduplicate; conflicting accession metadata rejects. Raw parent,
+companyfacts and historical parts remain unchanged. A separate deterministic derived submissions
+index and its source hashes make the union reproducible. v1 bundles remain readable; history
+bundles use `sec-bundle-v2-history`. API/browser reads never request these sources.
+
+Executed for the existing CIK: one older part plus recent metadata yields 2,365 accession rows;
+26 rows lack primary documents and stay excluded from citation-bearing normalization. The result
+contains 165 supported annual facts, with zero missing-accession exclusions and 597 unsupported
+form/period records. Current aggregate downloads do not certify original extraction vintages.
+
+Data Quality displays a descriptive annual financial profile from the complete verified bundle,
+independent of the fact table's metric filter and pagination. Revenue growth requires adjacent
+330–400-day annual ends and positive prior revenue. Margins require same-period USD facts and
+positive revenue; absent values remain unavailable. Latest revisions obey the frozen clock and
+processing lag, with acceptance time breaking publication-bound ties. All used facts retain filing
+citations. No per-share valuation, security identity, ranking or historical-universe promotion is
+implied. The full profile has its own JSON export; fact exports contain only the current fact page.

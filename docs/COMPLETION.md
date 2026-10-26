@@ -75,3 +75,10 @@ Do not turn unestablished historical semantics into a request for another subscr
 Use the available Finviz/SEC stack and finish independent software against verified contracts.
 Publication timing now covers after-hours/weekend filing dates conservatively; original extraction
 vintages and security/class identities still need their own evidence. See PROVIDER_REFRESH.md.
+
+
+SEC history continuation (feat/sec-history): bounded declared older submissions parts recover 165
+annual facts for the existing filer, with zero missing-accession fact exclusions. The API and
+browser expose a full-bundle annual financial profile with growth/margins, dated citations,
+coverage counts and independent JSON export. Original sources remain immutable and v1 archives
+remain supported. Current-revision QA, CI and independent review are tracked in STATUS.md.

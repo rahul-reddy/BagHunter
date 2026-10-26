@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -39,7 +40,7 @@ class SecClient:
 
     Fetches bounded raw submissions and companyfacts.
     Current companyfacts are NOT historical PIT facts.
-    Historical pagination is unsupported. The separate offline accession-bound annual parser
+    Explicit bounded historical submission parts are supported. The accession-bound annual parser
     does not certify original extraction vintages or automatically activate research data.
     """
 
@@ -61,13 +62,22 @@ class SecClient:
     def companyfacts(self, cik: str) -> dict[str, Any]:
         return self._fetch(cik, "companyfacts")
 
-    def _fetch(self, cik: str, resource: str) -> dict[str, Any]:
+    def submission_history(self, cik: str, name: str) -> dict[str, Any]:
+        return self._fetch(cik, "history", name)
+
+    def _fetch(self, cik: str, resource: str, part: str | None = None) -> dict[str, Any]:
         if not cik.isdigit() or len(cik) > 10 or int(cik) == 0:
             raise ValueError("CIK must contain 1–10 digits and be positive")
         filename = f"CIK{int(cik):010d}.json"
+        if resource == "history":
+            if not isinstance(part, str) or not re.fullmatch(
+                rf"CIK{int(cik):010d}-submissions-\d{{3}}\.json", part
+            ):
+                raise ValueError("Invalid SEC history filename/CIK binding")
+            filename = part
         url = (
             f"https://data.sec.gov/submissions/{filename}"
-            if resource == "submissions"
+            if resource in ("submissions", "history")
             else f"https://data.sec.gov/api/xbrl/companyfacts/{filename}"
         )
         if self.cache.resolve() != self.cache.absolute():
@@ -95,7 +105,22 @@ class SecClient:
                         chunks.append(chunk)
                 body = b"".join(chunks)
                 payload = json.loads(body)
-                if (
+                if resource == "history":
+                    fields = (
+                        "accessionNumber",
+                        "acceptanceDateTime",
+                        "filingDate",
+                        "form",
+                        "primaryDocument",
+                    )
+                    if not isinstance(payload, dict) or any(
+                        not isinstance(payload.get(k), list) or len(payload[k]) > 10_000
+                        for k in fields
+                    ):
+                        raise ValueError("Invalid SEC historical columns")
+                    if "cik" in payload and str(payload["cik"]).lstrip("0") != str(int(cik)):
+                        raise ValueError("SEC history CIK binding mismatch")
+                elif (
                     not isinstance(payload, dict)
                     or not str(payload.get("cik", "")).isdigit()
                     or int(payload["cik"]) != int(cik)

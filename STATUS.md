@@ -1,3 +1,29 @@
+# Current handoff — SEC history and financial profile / 2026-10-26
+
+Full application goal remains active. Finviz Elite and the owner's existing SEC contact in .env
+are the configured sources; no additional subscription is required for this implementation.
+PR #28 is merged as da7ce122d81f: exact-head Linux CI passed 296 backend / 17 browser tests;
+Gemini approved with no findings. Main remains the usable preview baseline.
+
+Current uncommitted feat/sec-history in BagHunter-risk adds bounded declared SEC history parts,
+immutable v2 bundles with original sources and deterministic union verification, and descriptive
+annual revenue/growth/margin profiles with source citations and separate exports. Existing v1
+bundles remain supported. The existing real filer now yields 165 annual facts versus 102:
+2,365 metadata rows, 26 missing documents explicitly excluded, zero missing-accession fact
+exclusions. No security identity promotion or empirical investment claim.
+
+Local QA passed 316 backend tests (seven Windows skips), lint/types/build/demo/harness;
+all 17 browser tests passed, including profile citations/exports and mobile accessibility. A final payload-CIK binding guard subsequently passed 22 history
+tests; exact-head CI will cover the final revision. Independent review remains required before
+guarded merge. See docs/PROVIDER_REFRESH.md for bounds and assumptions.
+
+Next: finish acceptance, address failures, open the focused PR, verify exact-head CI and independent
+review, merge through scripts/merge-pr.ps1, then refresh the local preview and continue the full
+application matrix. Missing historical extraction vintages and market-universe/action coverage
+stay explicit. Zero real verified investment theses.
+
+---
+
 # Current handoff — Finviz/SEC provider integration / 2026-10-26
 
 ## Owner direction and full goal

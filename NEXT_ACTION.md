@@ -1,3 +1,13 @@
+# Active implementation — 2026-10-26
+
+PR #28 is merged as da7ce12 with 296 backend / 17 browser tests in Linux CI and independent
+Gemini approval. Current feat/sec-history adds older SEC accession coverage and a cited annual
+financial profile. Complete current-revision QA, CI, review and guarded merge; refresh the local
+preview and continue full-app acceptance. Finviz + existing SEC configuration are sufficient to
+continue; no identity promotion or fabricated empirical results. See STATUS.md.
+
+---
+
 # Next action
 
 Finish the full application with Finviz Elite and SEC; owner supplied SEC contact in .env.
