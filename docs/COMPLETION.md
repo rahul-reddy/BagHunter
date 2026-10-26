@@ -1,5 +1,12 @@
 # BagHunter implementation completion audit
 
+Arithmetic/validation continuation: finite-input ratio overflow now retains explicit missing
+factors or rejects unrepresentable calculations before ranking/publication. Configured six-factor
+and momentum ranks have distinct mature-only negative-control reports with dated pools, policy
+fingerprints, within-date permutations and prior-known-identity irrelevant ranks. UI downloads,
+legacy states and mobile keyboard scrolling are implemented. Final revision gates are in STATUS.md;
+these fixture diagnostics do not establish empirical calibration or complete the overall goal.
+
 SEC statement continuation: separate verified-source quarterly, annual, cumulative and instant
 reports now provide EPS, weighted diluted shares, YoY changes, balance-sheet evidence and narrow
 CFO-less-PPE arithmetic. Periods/units/citations and missingness stay explicit; original bundles

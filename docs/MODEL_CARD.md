@@ -74,3 +74,10 @@ Licensed PIT universe and dated membership; action/adjustment/delist coverage in
 verified class/permanent identities and provider units; original filing/publication vintages;
 representative controls and benchmarks; frozen protocol followed by a truly untouched real holdout;
 independent factual critique. Until then, research conclusions are inconclusive.
+
+
+Configured six-factor and frozen momentum ranks now have separate date-local negative-control
+reports. Only matured labels are permuted within date; a predated irrelevant rank requires prior
+identity knowledge. Null ranges/tail fractions remain descriptive fixture arithmetic, not p-values
+or evidence of predictive skill. Numeric guards preserve missing factors or reject unrepresentable
+calculations before publication. See [negative controls](NEGATIVE_CONTROLS.md).

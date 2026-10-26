@@ -4,11 +4,13 @@ import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 
+import pyarrow.parquet as pq
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from apps.api.main import app
+from packages.backtest.negative_controls import negative_controls
 from packages.backtest.validation import diagnostics, partition_windows, performance
 from packages.data.finviz import _json
 from packages.data.fixture import fixture
@@ -286,7 +288,37 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     assert client.get(f"/runs/{before}/compare/{after}").status_code == 422
     data = client.get(f"/runs/{after}").json()
     validation = diagnostics(data["backtest"])
-    assert validation == data["validation"]
+    controls = negative_controls(
+        data["backtest"]["rows"], datetime.fromisoformat(data["asof"]), data["seed"]
+    )
+    discovery_controls = negative_controls(
+        [
+            row
+            | {
+                "candidates": row["discovery_candidates"],
+                "eligible_count": len(row["discovery_candidates"]),
+            }
+            for row in data["backtest"]["rows"]
+        ],
+        datetime.fromisoformat(data["asof"]),
+        data["seed"],
+        selector_model=data["model_version"],
+        selector_config_sha256=data["discovery"]["policy_sha256"],
+    )
+    assert (
+        validation
+        | {"negative_controls": controls, "discovery_negative_controls": discovery_controls}
+        == data["validation"]
+    )
+    assert discovery_controls["selector_config_sha256"] == data["discovery"]["policy_sha256"]
+    assert discovery_controls["input_sha256"] != controls["input_sha256"]
+    assert controls["windows"] == 12 and controls["candidate_observations"] == 30
+    assert controls["excluded_windows"]["unmatured"] == ["2021-12-06"]
+    saved_controls = root / "runs" / after / "reports" / "negative_controls.json"
+    assert json.loads(saved_controls.read_text()) == controls
+    assert not {"negative_controls", "candidates", "net_return", "label_available_at"} & set(
+        pq.read_schema(root / "runs" / after / "gold" / "features.parquet").names
+    )
     returns = [r["total_return"] for r in validation["cost_sensitivity"]]
     assert returns == sorted(returns, reverse=True)
     for name in [
@@ -294,6 +326,8 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
         "historical_cohorts.csv",
         "source_manifest.json",
         "validation.json",
+        "negative_controls.json",
+        "discovery_negative_controls.json",
         "research_limitations.md",
         "historical_cases.md",
         "discovery_digest.md",

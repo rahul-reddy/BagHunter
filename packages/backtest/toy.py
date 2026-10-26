@@ -6,13 +6,18 @@ This is a mechanical walk-forward screening demonstration, not a strategy valida
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from packages.research.discovery import DiscoveryPolicy, discover
 from packages.research.features import eligible, snapshot
 from packages.shared.models import Dataset
+from packages.shared.numeric import require_finite
 
 
-def evaluate(dataset: Dataset, seed: int) -> dict[str, Any]:
+def evaluate(
+    dataset: Dataset, seed: int, discovery_policy: DiscoveryPolicy | None = None
+) -> dict[str, Any]:
     sessions = sorted({b.session for b in dataset.bars})
     lookup = {(b.security_id, b.session): b for b in dataset.bars}
+    identity_dates = {i.security_id: str(i.first_seen) for i in dataset.instruments}
     rows: list[dict[str, Any]] = []
     for index in range(260, min(780, len(sessions) - 23), 42):
         decision, entry, exit_day = sessions[index], sessions[index + 1], sessions[index + 22]
@@ -24,11 +29,22 @@ def evaluate(dataset: Dataset, seed: int) -> dict[str, Any]:
                 if features["dollar_volume_20d"] >= 1000000:
                     candidates.append(features)
         candidates.sort(key=lambda f: (-f["return_63d"], f["security_id"]))
+        policy = discovery_policy or DiscoveryPolicy()
+        discovered = discover(dataset, asof, policy)["signals"]
+        discovery_candidates = [
+            f
+            for f in discovered
+            if f["eligible"]
+            and f["close"] >= policy.min_price
+            and f["dollar_volume_20d"] >= policy.min_dollar_volume
+        ]
         if not candidates:
             continue
         chosen = candidates[0]["security_id"]
         realized: dict[str, float] = {}
-        for security_id in [c["security_id"] for c in candidates] + ["fx-market"]:
+        for security_id in sorted(
+            {c["security_id"] for c in candidates + discovery_candidates} | {"fx-market"}
+        ):
             first = lookup.get((security_id, entry))
             last = lookup.get((security_id, exit_day))
             delists = [
@@ -49,6 +65,8 @@ def evaluate(dataset: Dataset, seed: int) -> dict[str, Any]:
         ]
         if net is None or len(peer_returns) != len(candidates) or "fx-market" not in realized:
             raise ValueError("Incomplete evaluation coverage; cannot summarize comparable wealth")
+        if any(c["security_id"] not in realized for c in discovery_candidates):
+            raise ValueError("Incomplete discovery evaluation coverage")
         rows.append(
             {
                 "decision": str(decision),
@@ -61,8 +79,40 @@ def evaluate(dataset: Dataset, seed: int) -> dict[str, Any]:
                 else None,
                 "benchmark_net": realized.get("fx-market"),
                 "coverage": "FILLED" if net is not None else "UNRESOLVED_EXIT",
+                "label_available_at": max(
+                    datetime.combine(exit_day, datetime.min.time(), UTC) + timedelta(hours=23),
+                    max(
+                        b.available_at
+                        for b in dataset.bars
+                        if b.session <= exit_day and b.security_id in realized
+                    ),
+                ).isoformat(),
+                "candidates": [
+                    {
+                        "security_id": c["security_id"],
+                        "identity_first_seen": identity_dates[c["security_id"]],
+                        "signal_score": c["return_63d"],
+                        "signal_at": asof.isoformat(),
+                        "latest_publication": c["latest_included_publication"],
+                        "net_return": realized[c["security_id"]],
+                    }
+                    for c in candidates
+                ],
+                "eligible_count": len(candidates),
+                "discovery_candidates": [
+                    {
+                        "security_id": c["security_id"],
+                        "identity_first_seen": identity_dates[c["security_id"]],
+                        "signal_score": c["score"],
+                        "signal_at": asof.isoformat(),
+                        "latest_publication": c["latest_included_publication"],
+                        "net_return": realized[c["security_id"]],
+                    }
+                    for c in discovery_candidates
+                ],
             }
         )
+    require_finite(rows, "frozen evaluation ledger")
     equity = {"selector": 1.0, "equal_weight": 1.0, "benchmark": 1.0}
     curve = []
     for row in rows:
@@ -73,6 +123,7 @@ def evaluate(dataset: Dataset, seed: int) -> dict[str, Any]:
         ):
             if row[field] is not None:
                 equity[key] *= 1 + row[field]
+        require_finite(equity, "toy compounded wealth")
         curve.append({"date": row["exit"], **equity})
     return {
         "mode": "FIXTURE",

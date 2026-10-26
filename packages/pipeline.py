@@ -15,6 +15,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from packages.backtest.constrained import PortfolioPolicy, simulate
+from packages.backtest.negative_controls import negative_controls
 from packages.backtest.toy import evaluate
 from packages.backtest.validation import diagnostics
 from packages.data.fixture import fixture
@@ -137,8 +138,25 @@ def run(
         ],
     }
     study["cohorts"] = cohort_grid(dataset)
-    backtest = evaluate(dataset, seed)
+    backtest = evaluate(dataset, seed, policy)
     validation = diagnostics(backtest)
+    validation["negative_controls"] = negative_controls(
+        backtest["rows"], asof, seed, selector_model=backtest["model"]
+    )
+    validation["discovery_negative_controls"] = negative_controls(
+        [
+            row
+            | {
+                "candidates": row["discovery_candidates"],
+                "eligible_count": len(row["discovery_candidates"]),
+            }
+            for row in backtest["rows"]
+        ],
+        asof,
+        seed,
+        selector_model=policy.version,
+        selector_config_sha256=discovery["policy_sha256"],
+    )
     portfolio = simulate(dataset, portfolio_policy or PortfolioPolicy())
     comparator_runs = [
         simulate(dataset, portfolio_policy.model_copy(update={"selector": selector}))
@@ -201,6 +219,11 @@ def run(
         dump(staging / "reports" / "source_manifest.json", source)
         dump(staging / "reports" / "toy_backtest.json", backtest)
         dump(staging / "reports" / "validation.json", validation)
+        dump(staging / "reports" / "negative_controls.json", validation["negative_controls"])
+        dump(
+            staging / "reports" / "discovery_negative_controls.json",
+            validation["discovery_negative_controls"],
+        )
         dump(staging / "reports" / "portfolio.json", portfolio)
         dump(staging / "reports" / "portfolio_policy.json", portfolio["policy"])
         dump(staging / "reports" / "cohort_grid.json", study["cohorts"])
@@ -244,6 +267,11 @@ def run(
             "# Demonstration only\n\nFrozen 63-day momentum, next-open fills, 40 bps round-trip.\n"
             "13 sequential non-overlapping screening windows; no fitted model or holdout claim.\n"
             "See toy_backtest.json for dates, rows, comparators and limitations.\n"
+            f"\nDate-local negative controls at {asof.isoformat()}: "
+            f"{validation['negative_controls']['windows']} matured testable windows. "
+            "See negative_controls.json for frozen ranks, irrelevant ranks, date-local null ranges "
+            "and availability exclusions. Descriptive fixture checks only; no p-value, alpha "
+            "or untouched-holdout claim.\n"
         )
         write_integrity(staging)
         # Immutable run folder + atomic pointer avoids partial reads during refresh.
