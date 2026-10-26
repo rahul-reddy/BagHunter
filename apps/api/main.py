@@ -9,22 +9,97 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import Response
 
-from packages.data.finviz import read_snapshot
+from packages.data.finviz import _read, read_snapshot
 from packages.data.reconciliation import inspect_reference
+from packages.data.run_archive import verify_integrity
+from packages.research.reports import candidate_memo, case_report, discovery_digest
+from packages.research.scenarios import Scenario, scenario
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
 
 
+@app.get("/finviz/snapshots")
+def finviz_snapshots() -> dict[str, Any]:
+    entries = []
+    unavailable = 0
+    for mode in ("FIXTURE", "EXTERNAL_UNVERIFIED"):
+        root = Path("data/finviz/snapshots") / mode.lower()
+        if root.is_symlink() or root.is_junction():
+            continue
+        for folder in sorted(root.glob("*")):
+            if not re.fullmatch(r"[a-f0-9]{64}", folder.name):
+                continue
+            try:
+                if folder.is_symlink() or (folder / "coverage.json").is_symlink():
+                    raise ValueError("Linked snapshot index")
+                report = json.loads(_read(folder / "coverage.json", 64 * 1024))
+                if report["snapshot_id"] != folder.name or report["mode"] != mode:
+                    raise ValueError("Index binding mismatch")
+                if type(report["rows"]) is not int or not 1 <= report["rows"] <= 100_000:
+                    raise ValueError("Invalid index row count")
+                if datetime.fromisoformat(report["retrieved_at"]).utcoffset() is None:
+                    raise ValueError("Invalid index timestamp")
+                entries.append(
+                    {k: report[k] for k in ("snapshot_id", "mode", "rows", "retrieved_at")}
+                )
+            except (OSError, ValueError, KeyError, TypeError):
+                unavailable += 1
+    return {
+        "snapshots": entries,
+        "unavailable": unavailable,
+        "status": "INDEX_METADATA_ONLY_SELECTION_REVALIDATES_SOURCE",
+    }
+
+
+@app.get("/finviz/references")
+def finviz_references(
+    snapshot: str = Query(pattern=r"^[a-f0-9]{64}$"), mode: str = "EXTERNAL_UNVERIFIED"
+) -> list[dict[str, Any]]:
+    if mode not in ("FIXTURE", "EXTERNAL_UNVERIFIED"):
+        raise HTTPException(422, "Invalid reference mode")
+    result: list[dict[str, Any]] = []
+    root = Path("data/reference/openfigi") / mode.lower()
+    if root.is_symlink() or root.is_junction():
+        return result
+    for folder in sorted(root.glob("*")):
+        if not re.fullmatch(r"[a-f0-9]{64}", folder.name):
+            continue
+        try:
+            if folder.is_symlink() or (folder / "manifest.json").is_symlink():
+                continue
+            report = json.loads(_read(folder / "manifest.json", 64 * 1024))
+            if report["base_snapshot_id"] == snapshot and report["mode"] == mode:
+                if type(report["limit"]) is not int or not 1 <= report["limit"] <= 10:
+                    raise ValueError("Invalid reference index count")
+                if datetime.fromisoformat(report["retrieved_at"]).utcoffset() is None:
+                    raise ValueError("Invalid reference index timestamp")
+                result.append(
+                    {
+                        "reference_id": folder.name,
+                        "retrieved_at": report["retrieved_at"],
+                        "limit": report["limit"],
+                    }
+                )
+        except (OSError, ValueError, TypeError, KeyError):
+            continue
+    return result
+
+
 @app.get("/finviz/reference")
-def finviz_reference() -> dict[str, Any]:
-    mode = os.environ.get("BAGHUNTER_FINVIZ_MODE", "EXTERNAL_UNVERIFIED")
+def finviz_reference(
+    snapshot: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+    reference: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+    mode: str | None = None,
+) -> dict[str, Any]:
+    mode = mode or os.environ.get("BAGHUNTER_FINVIZ_MODE", "EXTERNAL_UNVERIFIED")
     if mode not in ("FIXTURE", "EXTERNAL_UNVERIFIED"):
         raise HTTPException(503, "Invalid local reference source mode")
     try:
         return inspect_reference(
-            os.environ.get("BAGHUNTER_REFERENCE_SNAPSHOT", ""),
-            os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", ""),
+            reference or os.environ.get("BAGHUNTER_REFERENCE_SNAPSHOT", ""),
+            snapshot or os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", ""),
             mode,  # type: ignore[arg-type]
         )
     except (OSError, ValueError, TypeError, KeyError, csv.Error):
@@ -38,9 +113,11 @@ def finviz_observations(
     q: str = Query(default="", max_length=100),
     offset: int = Query(default=0, ge=0, le=100_000),
     limit: int = Query(default=50, ge=1, le=100),
+    snapshot: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+    mode: str | None = None,
 ) -> dict[str, Any]:
-    snapshot_id = os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", "")
-    mode = os.environ.get("BAGHUNTER_FINVIZ_MODE", "EXTERNAL_UNVERIFIED")
+    snapshot_id = snapshot or os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", "")
+    mode = mode or os.environ.get("BAGHUNTER_FINVIZ_MODE", "EXTERNAL_UNVERIFIED")
     if mode not in ("FIXTURE", "EXTERNAL_UNVERIFIED"):
         raise HTTPException(503, "Invalid local Finviz source mode")
     try:
@@ -82,16 +159,35 @@ def finviz_observations(
     }
 
 
+def read_run(run_id: str) -> dict[str, Any]:
+    if not re.fullmatch(r"[0-9a-f]{16}", run_id):
+        raise HTTPException(404, "Invalid research run ID")
+    root = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest"))
+    folder = root / "runs" / run_id
+    try:
+        if folder.is_symlink() or (folder / "run.json").is_symlink():
+            raise ValueError("Linked run archive")
+        has_integrity = (folder / "integrity.json").exists()
+        if has_integrity:
+            verify_integrity(folder, only="run.json")
+        data: dict[str, Any] = json.loads(_read(folder / "run.json", 20 * 1024 * 1024))
+        if data["run_id"] != run_id or data["mode"] != "FIXTURE":
+            raise ValueError("Invalid run binding or mode")
+        data["archive_integrity"] = (
+            "RUN_CHECKSUM_VERIFIED" if has_integrity else "LEGACY_NO_CHECKSUM_MANIFEST"
+        )
+        return data
+    except (OSError, ValueError, KeyError, TypeError):
+        raise HTTPException(503, "No valid saved research run") from None
+
+
 def current() -> dict[str, Any]:
     root = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest"))
     try:
         run_id = (root / "CURRENT").read_text(encoding="utf-8").strip()
         if not re.fullmatch(r"[0-9a-f]{16}", run_id):
             raise ValueError("invalid run pointer")
-        data: dict[str, Any] = json.loads(
-            (root / "runs" / run_id / "run.json").read_text(encoding="utf-8")
-        )
-        return data
+        return read_run(run_id)
     except (OSError, ValueError) as exc:
         raise HTTPException(503, "No valid local run. Execute: uv run baghunter demo") from exc
 
@@ -116,8 +212,146 @@ def latest() -> dict[str, Any]:
 
 @app.get("/runs")
 def runs() -> list[dict[str, Any]]:
-    data = current()
-    return [{k: data[k] for k in ("run_id", "mode", "asof", "model_version")}]
+    root = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest"))
+    result = []
+    for folder in sorted((root / "runs").glob("*")):
+        if not re.fullmatch(r"[0-9a-f]{16}", folder.name):
+            continue
+        try:
+            data = read_run(folder.name)
+            result.append({k: data[k] for k in ("run_id", "mode", "asof", "model_version")})
+        except HTTPException:
+            continue
+    return sorted(result, key=lambda r: (r["asof"], r["run_id"]), reverse=True)
+
+
+@app.get("/runs/{run_id}")
+def saved_run(run_id: str) -> dict[str, Any]:
+    data = read_run(run_id)
+    data["age_days"] = (datetime.now(UTC) - datetime.fromisoformat(data["asof"])).days
+    return data
+
+
+@app.get("/runs/{run_id}/compare/{previous_id}")
+def compare_runs(run_id: str, previous_id: str) -> dict[str, Any]:
+    new, old = read_run(run_id), read_run(previous_id)
+    if datetime.fromisoformat(old["asof"]) > datetime.fromisoformat(new["asof"]):
+        raise HTTPException(422, "Comparison baseline must not be later than the selected run")
+    before = {f["security_id"]: f for f in old["signals"]}
+    after = {f["security_id"]: f for f in new["signals"]}
+    rows = []
+    for sid in sorted(before.keys() | after.keys()):
+        left, right = before.get(sid), after.get(sid)
+        rows.append(
+            {
+                "security_id": sid,
+                "change": "ADDED" if left is None else "REMOVED" if right is None else "RETAINED",
+                "before_stage": left["stage"] if left else None,
+                "after_stage": right["stage"] if right else None,
+                "score_change": right["score"] - left["score"] if right and left else None,
+            }
+        )
+    return {
+        "run_id": run_id,
+        "previous_id": previous_id,
+        "mode": "FIXTURE",
+        "policy_changed": new.get("discovery", {}).get("policy_sha256")
+        != old.get("discovery", {}).get("policy_sha256"),
+        "changes": rows,
+    }
+
+
+@app.get("/runs/{run_id}/reports/{report_name}")
+def report_download(run_id: str, report_name: str) -> Response:
+    data = read_run(run_id)
+    reports = {
+        "source_manifest.json": data["sources"],
+        "validation.json": data.get("validation", {}),
+        "discovery_policy.json": data.get("discovery", {}),
+        "toy_backtest.json": data["backtest"],
+        "portfolio.json": data.get("portfolio", {}),
+        "portfolio_policy.json": data.get("portfolio", {}).get("policy", {}),
+        "cohort_grid.json": data["study"].get("cohorts", {}),
+    }
+    if report_name in reports:
+        return Response(
+            json.dumps(reports[report_name], indent=2, allow_nan=False),
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{report_name}"'},
+        )
+    if report_name in ("baghunter_watchlist.csv", "historical_cohorts.csv"):
+        import io
+
+        rows = data["signals"] if report_name.startswith("baghunter") else data["study"]["labels"]
+        fields = (
+            ["security_id", "ticker", "asof_time", "stage", "score", "completeness"]
+            if report_name.startswith("baghunter")
+            else list(rows[0])
+        )
+        stream = io.StringIO(newline="")
+        writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+        return Response(
+            stream.getvalue(),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{report_name}"'},
+        )
+    if report_name == "research_limitations.md":
+        return Response(
+            "# FIXTURE research limitations\n\n" + "\n".join(f"- {v}" for v in data["limitations"]),
+            media_type="text/markdown; charset=utf-8",
+        )
+    if report_name in ("historical_cases.md", "discovery_digest.md"):
+        text = case_report(data) if report_name == "historical_cases.md" else discovery_digest(data)
+        return Response(
+            text,
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{report_name}"'},
+        )
+    raise HTTPException(404, "Unknown report")
+
+
+@app.get("/runs/{run_id}/dossiers/{security_id}")
+def dossier_download(run_id: str, security_id: str) -> Response:
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", security_id):
+        raise HTTPException(404, "Invalid security ID")
+    try:
+        text = candidate_memo(read_run(run_id), security_id)
+    except ValueError:
+        raise HTTPException(404, "No candidate in this run") from None
+    return Response(
+        text,
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="FIXTURE-{security_id}.md"'},
+    )
+
+
+@app.get("/scenario")
+def calculate_scenario(
+    revenue: float = Query(gt=0, le=1e15),
+    shares: float = Query(ge=1, le=1e15),
+    growth: float = Query(ge=-0.99, le=2),
+    margin: float = Query(ge=-1, le=1),
+    multiple: float = Query(ge=0, le=200),
+    reference_price: float = Query(ge=1e-9, le=1e9),
+    net_debt: float = Query(default=0, ge=-1e15, le=1e15),
+    dilution: float = Query(default=0, ge=0, le=1),
+    years: int = Query(default=3, ge=1, le=10),
+) -> dict[str, Any]:
+    return scenario(
+        Scenario(
+            revenue=revenue,
+            shares=shares,
+            growth=growth,
+            margin=margin,
+            multiple=multiple,
+            reference_price=reference_price,
+            net_debt=net_debt,
+            dilution=dilution,
+            years=years,
+        )
+    )
 
 
 @app.get("/signals")

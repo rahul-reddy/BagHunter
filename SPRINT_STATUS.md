@@ -1,5 +1,16 @@
 # Sprint status — 2026-10-26
 
+Full application goal is active by explicit owner correction. Current increment implements all nine
+views, discovery/history, diagnostics, thesis scenarios/drafts, multi-anchor cohorts, constrained
+simulation/baselines, validation audits, policies, watchlists, archive comparisons/cache integrity,
+reports, saved-source selection and quarantined accession-bound SEC facts. Final acceptance and PR
+gates are pending. Track software versus empirical acceptance separately in docs/COMPLETION.md.
+Missing data is not a reason to leave independent application work unfinished. Zero verified theses.
+
+---
+
+## Archived sprint handoff
+
 Current increment: independent issuer-evidence dossier audit, after comparison PR #22 merged
 as 92fd42f. One issuer-hosted annual report for an already queried candidate is archived locally;
 class/ticker cover-table evidence is transcribed with byte provenance and unresolved FIGI/temporal

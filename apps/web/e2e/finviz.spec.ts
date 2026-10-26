@@ -31,6 +31,25 @@ const referenceEvidence = { reference_id: 'd'.repeat(64), base_snapshot_id: cove
       { ticker: 'DEMO-Y', source_company: 'Imaginary company', disposition: 'NO_CANDIDATE_EVIDENCE', candidates: [] },
     ] } };
 
+test('explicit saved snapshot selection validates source binding without environment setup', async ({page}) => {
+  await page.route('**/api/finviz/snapshots', route => route.fulfill({json: {snapshots: [{snapshot_id: coverage.snapshot_id, mode: 'FIXTURE', rows: 51, retrieved_at: coverage.retrieved_at}]}}));
+  let mismatch = false;
+  await page.route('**/api/finviz/observations?**', route => {
+    const selected = new URL(route.request().url()).searchParams.get('snapshot');
+    if (!selected) return route.fulfill({status: 503, body: '{}'});
+    return route.fulfill({json: {coverage: {...coverage, snapshot_id: mismatch ? 'c'.repeat(64) : coverage.snapshot_id}, age_hours: 100, stale: true, total: 1, offset: 0, limit: 50, observations: [observation('DEMO-X', 'Fictional explicitly selected company')]}});
+  });
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Finviz Observations', exact: true}).click();
+  await expect(page.getByRole('alert')).toContainText('Select a valid local Finviz snapshot');
+  await page.getByLabel('Saved Finviz snapshot').selectOption(`FIXTURE:${coverage.snapshot_id}`);
+  await expect(page.getByText('Fictional explicitly selected company')).toBeVisible();
+  mismatch = true;
+  await page.getByRole('button', {name: 'Reload snapshot'}).click();
+  await expect(page.getByRole('alert')).toContainText('does not match the selected source');
+  await expect(page.getByText('Fictional explicitly selected company')).toHaveCount(0);
+});
+
 test('Finviz browsing, search, pagination and failure never mix with fixture rankings', async ({ page }) => {
   await page.route('**/api/runs/current', route => route.fulfill({ status: 503, body: '{}' }));
   await page.route('**/api/finviz/observations?**', route => {

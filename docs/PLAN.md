@@ -1,5 +1,10 @@
 # Plan and decisions — 2026-10-23
 
+2026-10-26 owner correction: finish the complete app. A small evidence increment is not the goal.
+Implement the remaining product/research workflows against all specifications, keep evidence gates
+explicit and continue across PRs until the full matrix is assessed. Old single-evidence-step
+sequencing does not block independent software work. See COMPLETION.md and WORKSPACE.md.
+
 2026-10-26 issuer-evidence increment: add an offline audit of one attributed local dossier bound
 to an existing candidate, original source and reference batch. Archive the issuer-hosted annual
 report for ticker A; record cover-table transcriptions, hashes, unknown publication time and

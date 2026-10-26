@@ -1,4 +1,47 @@
-# Current handoff — independent issuer-evidence dossier / 2026-10-26
+# Current handoff — full application implementation / 2026-10-26
+
+## Goal and scope
+
+Owner correction: finish implementing the application. The full goal remains active across PRs.
+PR #23 merged as d25d221; that evidence-only increment did not complete the product. Missing data
+gates do not justify leaving independent software undone. See docs/COMPLETION.md and WORKSPACE.md.
+
+## Current branch: feat/complete-research-workspace
+
+Nine functional views; configurable six-stage discovery and dated history; technical/financial
+diagnostics; persistent watchlists and expanded Radar filters; Thesis Studio scenario/draft/memo
+workflows; multi-anchor/sector/horizon cohorts; constrained simulation with whole shares, cash,
+position/sector/participation caps, costs and corporate actions; 12-1/revenue-growth/random baselines;
+performance/cost/purge/embargo/bootstrap diagnostics; source-bound run comparisons, checksummed
+refresh reuse, reports and dossiers; policy Settings; explicit saved Finviz/reference selection;
+quarantined accession-bound SEC fact normalization; manual refresh templates with no registered jobs.
+
+Inputs/predictors and hindsight outputs stay separated. Unvalidated heuristics and synthetic
+research remain explicit. Notes/scenarios are operator assertions, not trusted facts. No automatic
+identity approval, provider requests, original-vintage certification, purchases or deployment.
+
+## Verification and next work
+
+Full scripts/qa.ps1 passed on the final runtime worktree: locked Python/npm installs, harness,
+skill validation, lint/format/types, 240 backend tests (five Windows symlink skips), ten browser
+tests, production build and demo. Boundary suites cover future invariance, all stages, arithmetic,
+constraints, actions, source selection, archive tampering and chronology. Linux CI must run the
+skipped boundaries. Thesis desktop/mobile and Validation Lab screenshots were inspected under
+artifacts/screenshots/. Manual refresh template revalidated/reused run 7902fa2b2409acbc. SEC
+normalization CLI ran on fictional raw inputs, producing two quarantined facts and no activation.
+Current-head CI and independent review remain required before guarded merge.
+Browser defects found (watchlist accessible-name mismatch and textarea labeling) were fixed without
+weakening accessibility gates. The delisting test needed an explicitly permissive liquidity policy
+to hold that fictional instrument; its setup was corrected. Evidence: artifacts/test_results/.
+
+Real SEC vintages, historical PIT universe/actions/delist coverage, verified real identities and
+currency/scale remain externally unresolved. Zero real verified investment theses. Next: finish full
+acceptance, independent review and guarded merge, then reassess the full completion matrix.
+Do not close the overall goal merely because this PR lands.
+
+---
+
+# Archived handoff — independent issuer-evidence dossier / 2026-10-26
 
 ## Implemented and executed
 

@@ -1,5 +1,9 @@
 # BagHunter — 100-Bagger DNA Lab
 
+The [workspace guide](docs/WORKSPACE.md) covers all nine views, saved watchlists, stage history,
+cohorts, Thesis Studio, constrained validation, policies, run comparisons, reports, explicit Finviz
+selection and SEC normalization. The [completion audit](docs/COMPLETION.md) tracks the full goal.
+
 A local US-equities research laboratory with point-in-time feature cutoffs, failed-peer comparisons,
 a deterministic screening demonstration, and a read-only research terminal. **Research and simulation
 only. No orders or automated trading.**

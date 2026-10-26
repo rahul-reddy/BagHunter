@@ -1,4 +1,20 @@
-# Release readiness — issuer-evidence increment / 2026-10-26
+# Release readiness — research workspace / 2026-10-26
+
+The full application goal is active. The expanded implementation and every data boundary are
+documented in [Workspace](../docs/WORKSPACE.md) and [Completion audit](../docs/COMPLETION.md).
+
+| Current gate | Status | Evidence / limitation |
+| --- | --- | --- |
+| Expanded product workflows | PASS locally | Nine views; discovery, cohorts, thesis, settings, constrained validation, sources and reports |
+| Final runtime lint/types/build/backend/browser | PASS locally | scripts/qa.ps1: 240 backend, five Windows symlink skips, ten browser tests; screenshots inspected |
+| Exact-head CI / independent review / guarded merge | PENDING | Required for the product PR |
+| Original SEC vintages / PIT universe / delist actions / real identity | BLOCKED | External evidence not established; outputs remain fixture or quarantined |
+| Empirical holdout findings / verified investment theses | BLOCKED | Fixed inspected fixture is not an untouched real holdout; zero verified theses |
+| Deployment | NOT REQUESTED | Manual confirmed deployment only, from main |
+
+---
+
+# Archived readiness — issuer-evidence increment / 2026-10-26
 
 Current runtime worktree: offline issuer-dossier audit plus the existing fixture application.
 Detailed evidence and reproducible dossier command: [Issuer evidence](../docs/ISSUER_EVIDENCE.md).
