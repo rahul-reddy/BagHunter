@@ -1,5 +1,9 @@
 # Finviz and SEC provider refresh
 
+Direct quarterly/YTD statements, EPS, weighted shares and balance-sheet evidence from existing
+verified bundles are documented in [SEC statements](SEC_STATEMENTS.md). No additional provider
+refresh is needed to inspect them.
+
 Owner direction, 2026-10-26: use Finviz Elite as the market-data provider and the SEC contact details
 already added to the ignored `.env`. Another subscription is not a prerequisite for implementing
 the available workflows. Unsupported historical coverage stays explicit rather than fabricated.

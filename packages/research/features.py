@@ -6,7 +6,7 @@ from typing import Any
 
 from packages.shared.models import Bar, Fact, Instrument, Symbol
 
-VERSION = "heuristic-v0-unvalidated"
+VERSION = "heuristic-v1-unvalidated"
 
 
 def utc_asof(asof: datetime) -> datetime:
@@ -50,7 +50,7 @@ def facts_at(
             if f.security_id == security_id
             and max(f.accepted_at, f.published_at) + timedelta(hours=lag_hours) <= asof
         ],
-        key=lambda f: (f.period_end, f.published_at, f.accession),
+        key=lambda f: (f.period_end, f.published_at, f.accepted_at, f.accession),
     )
 
 

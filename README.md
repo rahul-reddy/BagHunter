@@ -100,6 +100,9 @@ the file. `sync-sec --cik 1090872` fetches a bounded submissions/companyfacts pa
 facts under conservative filing-day publication/lag rules, and saves a quarantined evidence bundle.
 Inspect it in Data Quality → SEC filing evidence. `refresh-finviz --usage-authorized` refreshes the
 supported current overview snapshot using your existing Elite token. See [provider refresh](docs/PROVIDER_REFRESH.md).
+Add `--include-history` to `sync-sec` to fetch declared older accession metadata. In the saved
+SEC panel, expand **Inspect quarterly statements, dilution and balance sheet** for EPS, weighted
+shares, cumulative cashflow and cited statement exports. See [SEC statements](docs/SEC_STATEMENTS.md).
 
 ## Historical export staging
 

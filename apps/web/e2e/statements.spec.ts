@@ -1,0 +1,53 @@
+import {test, expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+const id = 'c'.repeat(64);
+const manifest = {cik: '0000000001', asof: '2023-05-01T00:00:00Z', status: 'QUARANTINED_SEC_ENTITY_NOT_SECURITY_IDENTITY', lag_hours: 24, submissions: {retrieved_at: '2023-05-02T00:00:00Z'}, companyfacts: {retrieved_at: '2023-05-02T00:00:00Z'}};
+
+test('statement bases, missing data, citations and exports stay bound to the selected SEC archive', async ({page}) => {
+  test.setTimeout(60_000);
+  let fail = false;
+  await page.route('**/api/runs/current', route => route.fulfill({status: 503, json: {}}));
+  await page.route('**/api/sec/bundles', route => route.fulfill({json: {bundles: [{bundle_id: id, ...manifest}]}}));
+  await page.route('**/api/sec/bundles/*?**', route => route.fulfill({json: {bundle_id: id, manifest, source_facts: 0, total: 0, offset: 0, limit: 8, normalized: {normalization_policy: 'fixture', identity_assignment: 'UNVERIFIED', excluded_counts: {}, limitations: [], facts: []}}}));
+  await page.route('**/api/sec/bundles/*/statements?**', route => {
+    const query = new URL(route.request().url()).searchParams;
+    const basis = query.get('basis')!; const offset = Number(query.get('offset'));
+    const rows = Array.from({length: 13}, (_, i) => ({basis, period_start: basis === 'INSTANT' ? null : '2023-01-01', period_end: `2023-03-${String(i+1).padStart(2, '0')}`, values: {revenue: 1200000, diluted_eps: 1.25, weighted_shares_yoy: .1, assets: 3000000}, citations: [{metric: 'revenue', concept: 'Revenues', unit: 'USD', value: 1200000, accession: `fixture-${i}`, period_start: '2023-01-01', period_end: '2023-03-31', accepted_at: '2023-04-01T12:00:00Z', published_at: '2023-04-02T00:00:00Z', source_url: 'https://www.sec.gov/Archives/fixture.htm'}]}));
+    return route.fulfill({json: {bundle_id: fail ? 'd'.repeat(64) : id, manifest, basis, total: basis === 'YTD_9M' ? 0 : 13, offset, limit: 12, source_fact_count: 99, statements: {policy: 'sec-statements-v1', asof: manifest.asof, excluded_counts: {unsupported_unit: 1}, limitations: ['Fictional browser data']}, rows: basis === 'YTD_9M' ? [] : rows.slice(offset, offset+12)}});
+  });
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Data Quality', exact: true}).click();
+  await page.getByLabel('Saved SEC evidence', {exact: true}).selectOption(id);
+  await page.getByText('Inspect quarterly statements, dilution and balance sheet', {exact: true}).click();
+  const table = page.getByRole('table', {name: 'SEC financial statements by period basis', exact: true});
+  await expect(table).toContainText('1.25');
+  await expect(table).toContainText('Unavailable');
+  await expect(table).toContainText('10%');
+  await page.getByText('Statement citations for 2023-03-01', {exact: true}).click();
+  await expect(page.getByRole('link', {name: 'Revenues · 2023-01-01 / 2023-03-31 · fixture-0', exact: true})).toHaveAttribute('href', 'https://www.sec.gov/Archives/fixture.htm');
+  await page.getByRole('button', {name: 'Next statement periods', exact: true}).click();
+  await expect(page.getByText('Showing 13–13 of 13 statement periods')).toBeVisible();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', {name: 'Export current statement page', exact: true}).click();
+  const download = await pending;
+  expect(download.suggestedFilename()).toContain('-QUARTER-12.json');
+  const stream = await download.createReadStream(); const parts: Buffer[] = [];
+  for await (const chunk of stream!) parts.push(Buffer.from(chunk));
+  const exported = JSON.parse(Buffer.concat(parts).toString());
+  expect(exported.rows).toHaveLength(1); expect(exported.export_scope).toBe('CURRENT_STATEMENT_PAGE_ONLY');
+  await page.getByLabel('Statement period basis', {exact: true}).selectOption('INSTANT');
+  await expect(table).toContainText('Assets USD');
+  await expect(table).toContainText('3M');
+  await page.getByLabel('Statement period basis', {exact: true}).selectOption('YTD_9M');
+  await expect(page.getByText('No reported statements match this period basis.')).toBeVisible();
+  await page.getByLabel('Statement period basis', {exact: true}).selectOption('QUARTER');
+  await expect(table).toContainText('Revenue USD');
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await page.setViewportSize({width: 390, height: 844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  fail = true;
+  await page.getByRole('button', {name: 'Reload SEC statements', exact: true}).click();
+  await expect(page.getByRole('region', {name: 'SEC financial statements', exact: true}).getByRole('alert')).toContainText('does not match');
+  await expect(table).toHaveCount(0);
+});

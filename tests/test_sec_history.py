@@ -230,6 +230,15 @@ def test_full_sync_reader_retains_v1_and_verifies_every_history_and_derived_byte
     assert first["financial_profile"] == empty["financial_profile"]
     assert first["financial_profile"]["periods"] == 2
     assert first["financial_profile"]["latest"]["revenue_growth"] == 1
+    statements = api.get(endpoint + "/statements?basis=ANNUAL&limit=1").json()
+    assert statements["total"] == 2 and len(statements["rows"]) == 1
+    assert statements["source_fact_count"] == 2
+    assert statements["rows"][0]["values"]["revenue_yoy"] == 1
+    assert api.get(endpoint + "/statements?basis=QUARTER").json()["rows"] == []
+    assert api.get(endpoint + "/statements?offset=2&basis=ANNUAL").json()["rows"] == []
+    for query in ("basis=MONTH", "limit=101", "offset=-1"):
+        assert api.get(endpoint + "/statements?" + query).status_code == 422
+    assert api.post(endpoint + "/statements").status_code == 405
     folder = output / "bundles" / v2["bundle_id"]
     derived = folder / "derived-submissions.json"
     original_derived = derived.read_bytes()
@@ -240,6 +249,7 @@ def test_full_sync_reader_retains_v1_and_verifies_every_history_and_derived_byte
     (folder / NAME).write_bytes(b"{}")
     with pytest.raises(ValueError, match="checksum"):
         read_sec_bundle(v2["bundle_id"])
+    assert api.get(endpoint + "/statements").status_code == 503
 
 
 @pytest.mark.parametrize(

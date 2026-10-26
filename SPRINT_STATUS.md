@@ -1,4 +1,14 @@
-# Active implementation — 2026-10-26
+# Active implementation — SEC statements / 2026-10-26
+
+PR #29 is merged as 28a2fda (324 backend / 17 browser in CI, Gemini approval and final real-data
+preview passed). Current feat/sec-statements implements quarterly/YTD/instant statements, EPS,
+share/cashflow evidence and exact-period arithmetic from saved SEC archives. Finish current-head
+QA, CI, independent review and guarded merge, then verify main and continue the full specification.
+Use Finviz and existing SEC configuration. See STATUS.md and docs/SEC_STATEMENTS.md.
+
+---
+
+# Previous active implementation — 2026-10-26
 
 PR #28 is merged as da7ce12 with 296 backend / 17 browser tests in Linux CI and independent
 Gemini approval. Current feat/sec-history adds older SEC accession coverage and a cited annual

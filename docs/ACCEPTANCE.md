@@ -11,7 +11,7 @@ The original numbered specifications remain authoritative.
 | Immutable ingestion, lineage, identity intervals, PIT lag/amendments | PASS fixture/staging scope | Validated records/Parquet, SHA archives, cutoff/revision/action/integrity/tampering tests; external identities remain unverified |
 | Replaceable historical adapter | PASS quarantined import | Provider-neutral local bundle audit/ingest; explicit entitlement/action/coverage flags; never silently activates research |
 | Finviz available-provider workflow | PASS software; real fields unverified | Supported manual overview refresh, immutable importer, saved source selection/search/pagination, reported-field filters and snapshot-bound drafts/dossiers |
-| SEC fundamental normalization | PASS bounded real-source path | Private contact/.env alias, submissions/companyfacts sync, exact accession/official filing-day publication upper bound, annual USD facts, revisions/lag, bounded historical accession parts, cited descriptive financial profile, source-verified Data Quality browser; quarantined output |
+| SEC fundamental normalization | PASS bounded real-source path | Private contact/.env alias, submissions/companyfacts sync, exact accession/official filing-day publication upper bound, annual USD facts, revisions/lag, bounded historical accession parts, cited descriptive financial profile, direct quarterly/YTD/instant statements with EPS/shares/PPE evidence, source-verified Data Quality browser; quarantined output |
 | Historical archaeology and controls | PASS fixture mechanics | Multi-anchor/horizon/threshold/sector cohorts, failures/delist denominators, matched controls and case exports |
 | Discovery, dated history and explainability | PASS software | Six stages, configurable weights/thresholds, technical/available financial diagnostics, missingness, watchlists and source-attributed profiles |
 | Refresh/reproducibility | PASS software | Code/data/as-of/seed/policy-bound runs, cache integrity verification, run comparison, manual refresh templates and recovery guide |
@@ -29,7 +29,7 @@ The original numbered specifications remain authoritative.
 
 ## Known issues and deliberate limits
 
-- Quarterly/YTD SEC reconstruction, custom taxonomy interpretation, original-vintage certification and histories beyond the bounded declared-parts
+- Unreported-quarter reconstruction, custom taxonomy interpretation, original-vintage certification and histories beyond the bounded declared-parts
   import are unsupported. They require source contracts and
   boundary fixtures; annual aggregate facts must not be backdated into historical research.
 - Current Finviz exports are not an archived investable universe. No ticker/name agreement or

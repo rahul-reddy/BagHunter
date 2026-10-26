@@ -1,5 +1,11 @@
 # BagHunter implementation completion audit
 
+SEC statement continuation: separate verified-source quarterly, annual, cumulative and instant
+reports now provide EPS, weighted diluted shares, YoY changes, balance-sheet evidence and narrow
+CFO-less-PPE arithmetic. Periods/units/citations and missingness stay explicit; original bundles
+remain unchanged. Source and arithmetic boundaries are documented in SEC_STATEMENTS.md.
+Current-revision QA, CI and independent review are tracked in STATUS.md; full goal remains active.
+
 Owner correction, 2026-10-26: finish the application against the complete specification.
 The prior single-candidate evidence milestone did not satisfy that goal. The active goal remains
 open across individual PRs. Data entitlements block empirical claims, not software implementation.

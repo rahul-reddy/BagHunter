@@ -16,11 +16,41 @@ from packages.data.finviz import _read, read_snapshot
 from packages.data.provider_refresh import read_sec_bundle
 from packages.data.reconciliation import inspect_reference
 from packages.data.run_archive import verify_integrity
+from packages.data.sec_statements import statement_analysis
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 from packages.research.scenarios import Scenario, scenario
 from packages.research.sec_profile import financial_profile
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
+
+
+@app.get("/sec/bundles/{bundle_id}/statements")
+def sec_statements(
+    bundle_id: str,
+    basis: Literal["QUARTER", "ANNUAL", "YTD_6M", "YTD_9M", "INSTANT"] = "QUARTER",
+    offset: int = Query(default=0, ge=0, le=20_000),
+    limit: int = Query(default=12, ge=1, le=100),
+) -> dict[str, Any]:
+    try:
+        bundle = read_sec_bundle(bundle_id, include_statements=True)
+        statements = bundle["statements"]
+        rows = [row for row in statement_analysis(statements) if row["basis"] == basis]
+    except (OSError, ValueError, TypeError, KeyError):
+        raise HTTPException(
+            503, "SEC statement source verification or interpretation failed"
+        ) from None
+    return {
+        "bundle_id": bundle_id,
+        "manifest": bundle["manifest"],
+        "statements": {k: v for k, v in statements.items() if k != "facts"},
+        "source_fact_count": len(statements["facts"]),
+        "basis": basis,
+        "total": len(rows),
+        "offset": offset,
+        "limit": limit,
+        "rows": rows[offset : offset + limit],
+        "status": "DESCRIPTIVE_ENTITY_STATEMENTS_NOT_SECURITY_RANKING",
+    }
 
 
 @app.get("/sec/bundles")
