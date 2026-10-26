@@ -13,12 +13,75 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import Response
 
 from packages.data.finviz import _read, read_snapshot
+from packages.data.provider_refresh import read_sec_bundle
 from packages.data.reconciliation import inspect_reference
 from packages.data.run_archive import verify_integrity
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 from packages.research.scenarios import Scenario, scenario
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
+
+
+@app.get("/sec/bundles")
+def sec_bundles() -> dict[str, Any]:
+    root = Path.cwd() / "data/real/sec/bundles"
+    if root.resolve() != root:
+        raise HTTPException(503, "Invalid SEC archive root")
+    entries = []
+    unavailable = 0
+    for folder in sorted(root.glob("*"))[:200]:
+        if not re.fullmatch(r"[a-f0-9]{64}", folder.name):
+            continue
+        try:
+            if folder.resolve() != folder or (folder / "manifest.json").is_symlink():
+                raise ValueError("Linked SEC index")
+            metadata = json.loads(_read(folder / "manifest.json", 64 * 1024))
+            if (
+                not re.fullmatch(r"\d{10}", metadata["cik"])
+                or metadata["status"] != "QUARANTINED_SEC_ENTITY_NOT_SECURITY_IDENTITY"
+                or datetime.fromisoformat(metadata["asof"]).utcoffset() is None
+            ):
+                raise ValueError("Invalid SEC index")
+            entries.append(
+                {"bundle_id": folder.name, "cik": metadata["cik"], "asof": metadata["asof"]}
+            )
+        except (OSError, ValueError, TypeError, KeyError):
+            unavailable += 1
+    return {
+        "bundles": sorted(entries, key=lambda e: e["asof"], reverse=True),
+        "unavailable": unavailable,
+        "status": "INDEX_ONLY_SELECTION_REVALIDATES_ALL_SOURCES",
+    }
+
+
+@app.get("/sec/bundles/{bundle_id}")
+def sec_bundle(
+    bundle_id: str,
+    metric: Literal[
+        "",
+        "annual_revenue",
+        "annual_net_income",
+        "annual_operating_income",
+        "annual_operating_cashflow",
+    ] = "",
+    offset: int = Query(default=0, ge=0, le=100_000),
+    limit: int = Query(default=8, ge=1, le=100),
+) -> dict[str, Any]:
+    try:
+        report = read_sec_bundle(bundle_id)
+    except (OSError, ValueError, TypeError, KeyError):
+        raise HTTPException(
+            503, "No valid selected SEC bundle; source verification failed"
+        ) from None
+    normalized = report["normalized"]
+    matches = [f for f in normalized["facts"] if not metric or f["metric"] == metric]
+    return report | {
+        "normalized": normalized | {"facts": matches[offset : offset + limit]},
+        "total": len(matches),
+        "offset": offset,
+        "limit": limit,
+        "source_facts": len(normalized["facts"]),
+    }
 
 
 @app.get("/finviz/snapshots")

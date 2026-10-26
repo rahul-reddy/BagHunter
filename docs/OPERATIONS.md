@@ -14,11 +14,15 @@ The fixed fixture is a bounded CPU job; no automatic scheduler/backfill or paid 
 Ctrl+C; incomplete staging directories do not become active. Remove abandoned `run-*` directories
 only after stopping all pipeline writers. Review their absolute paths before deleting anything.
 
-Real SEC raw downloads go under data/real/sec/raw. Use one process, supply SEC_USER_AGENT explicitly,
-honor failures/backoff, and retain digests/manifests. Cache stores immutable responses but does not
+Real SEC raw downloads go under data/real/sec/raw. Use one process, configure BAGHUNTER_SEC_USER_AGENT
+(or SEC_USER_AGENT) in private .env/environment, honor failures/backoff and retain digests/manifests. Cache stores immutable responses but does not
 yet implement conditional HTTP fetching or historical pagination. Never treat current companyfacts
 as historical financial snapshots without accession/publication checks.
 
 No secrets in client bundles. `.env`, data and artifacts are ignored. Review exports and licensing
 before sharing. No deployment target exists: future deployments need explicit owner confirmation,
 must ship a commit already on main, and must record that SHA on the target.
+
+Provider commands and the real SEC evidence browser: [Provider refresh](PROVIDER_REFRESH.md).
+Manual CLI requests use the existing Finviz subscription and supplied SEC contact. No API/browser
+action starts downloads, changes credentials, approves identities or activates historical research.

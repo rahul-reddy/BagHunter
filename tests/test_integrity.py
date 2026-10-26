@@ -307,7 +307,7 @@ def test_sec_cache_http_failure_and_retry(tmp_path, monkeypatch):
         attempts.append(str(request.url))
         if len(attempts) == 1:
             return httpx.Response(429)
-        return httpx.Response(200, json={"filings": {"recent": {}}})
+        return httpx.Response(200, json={"cik": 320193, "filings": {"recent": {}}})
 
     monkeypatch.setattr(providers.time, "sleep", lambda _: None)
     monkeypatch.setattr(

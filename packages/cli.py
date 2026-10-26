@@ -2,7 +2,6 @@ import argparse
 import csv
 import hashlib
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -13,6 +12,8 @@ from packages.backtest.constrained import PortfolioPolicy
 from packages.data.finviz import _json, _read, ingest_snapshot
 from packages.data.history import LocalHistoryProvider, ingest
 from packages.data.issuer import audit_issuer
+from packages.data.provider_config import provider_setting
+from packages.data.provider_refresh import refresh_finviz, sync_sec
 from packages.data.providers import SecClient
 from packages.data.reconciliation import inspect_reference
 from packages.data.reference import fetch_reference
@@ -34,6 +35,18 @@ def main() -> None:
     sec = sub.add_parser("sec-fetch", help="Raw real SEC submissions; not mixed with fixture")
     sec.add_argument("--cik", required=True)
     sec.add_argument("--output", type=Path, default=Path("data/real/sec/raw"))
+    sec.add_argument("--env-file", type=Path, default=Path(".env"))
+    sync = sub.add_parser(
+        "sync-sec", help="Fetch real SEC pair and normalize into unverified bundles"
+    )
+    sync.add_argument("--cik", required=True)
+    sync.add_argument("--asof", default=None)
+    sync.add_argument("--env-file", type=Path, default=Path(".env"))
+    refresh = sub.add_parser(
+        "refresh-finviz", help="Fetch and quarantine a current overview snapshot"
+    )
+    refresh.add_argument("--env-file", type=Path, default=Path(".env"))
+    refresh.add_argument("--usage-authorized", required=True, action="store_true")
     normalize = sub.add_parser(
         "normalize-sec", help="Accession-bound local SEC facts; quarantine only"
     )
@@ -192,8 +205,33 @@ def main() -> None:
                 file=sys.stderr,
             )
             raise SystemExit(2) from None
-    elif args.command == "sec-fetch":
-        result = SecClient(os.environ.get("SEC_USER_AGENT", ""), args.output).submissions(args.cik)
+    elif args.command in ("sec-fetch", "sync-sec", "refresh-finviz"):
+        try:
+            if args.command == "refresh-finviz":
+                result = refresh_finviz(
+                    provider_setting("FINVIZ_TOKEN", args.env_file),
+                    usage_authorized=args.usage_authorized,
+                )
+            else:
+                contact = provider_setting("SEC_USER_AGENT", args.env_file)
+                if args.command == "sec-fetch":
+                    result = SecClient(contact, args.output).submissions(args.cik)
+                else:
+                    from datetime import UTC
+
+                    result = sync_sec(
+                        args.cik,
+                        contact,
+                        datetime.fromisoformat(args.asof) if args.asof else datetime.now(UTC),
+                        Path("data/real/sec"),
+                    )
+        except (ValueError, OSError, TypeError, KeyError, csv.Error, httpx.HTTPError) as exc:
+            print(
+                f"Provider ingestion rejected ({type(exc).__name__}); "
+                "credentials and response details suppressed.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from None
     else:
         try:
             policy = (

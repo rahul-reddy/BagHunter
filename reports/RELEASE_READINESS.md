@@ -14,7 +14,8 @@ documented in [Workspace](../docs/WORKSPACE.md), [Completion audit](../docs/COMP
 | Ranking sensitivity / release audit local QA | PASS | Combined full QA: 254 backend / five Windows skips / 15 browser on main 6cce117 base |
 | PR #26 source-bound Finviz CI / review / guarded merge | PASS | 256 backend / 14 browser in Linux CI; Gemini approval with no findings; merge 6cce117 |
 | Actual Finviz archive smoke | PASS bounded local scope | 11,783 source rows; 24 successful local requests; real saved-source browser/draft/dossier flow, no provider calls or identity promotion |
-| Combined revision CI / review / merge | REQUIRED | Exact-head CI and independent review before guarded merge |
+| PR #27 combined CI / review / guarded merge | PASS | 259 backend / 15 browser in Linux CI; Gemini approval; identical-tree main d0210e1 |
+| New Finviz/SEC provider continuation | IN PROGRESS | Actual refresh: 11,772 rows; SEC sync: 102 facts. Full local QA: 289 backend / seven Windows skips / 17 browser. Exact-head CI/review required |
 | Original SEC vintages / PIT universe / delist actions / real identity | BLOCKED | External evidence not established; outputs remain fixture or quarantined |
 | Empirical holdout findings / verified investment theses | BLOCKED | Fixed inspected fixture is not an untouched real holdout; zero verified theses |
 | Deployment | NOT REQUESTED | Manual confirmed deployment only, from main |

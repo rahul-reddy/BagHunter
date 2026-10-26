@@ -1,11 +1,12 @@
 # Next action
 
-Owner directive: finish the full application; keep the overall goal active across milestones.
-Use docs/COMPLETION.md. PRs #24–26 are merged. Current work: feat/policy-sensitivity; see WORKSPACE.md.
-Finish final acceptance, source-selection/browser tests, CI and independent review, then guarded
-merge and reassess every remaining requirement. Data gaps do not block independent software work.
-No purchases or deployment. Run `pwsh -NoProfile -File scripts/qa.ps1` after stopping workspace dev
-servers to release Windows native dependency locks. Restart instructions remain below.
+Finish the full application with Finviz Elite and SEC; owner supplied SEC contact in .env.
+Current branch: feat/provider-refresh. The CLI now supports the contact alias/.env, refresh-finviz
+and sync-sec; Data Quality has source-verified real SEC evidence. Both real provider commands ran.
+Finish full current-runtime QA, exact-head CI, independent review and guarded merge, then activate
+only the saved-source browser selections on main. Research inputs stay fixture/quarantined until
+actual acceptance gates pass. Do not ask for a different provider as the default next step.
+Read STATUS.md and docs/PROVIDER_REFRESH.md. No subscriptions, broker actions or deployment.
 
 ---
 

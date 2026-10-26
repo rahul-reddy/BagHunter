@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { FinvizBrowser } from './FinvizBrowser';
+import { SecEvidenceBrowser } from './SecEvidenceBrowser';
 import type { DailyRisk } from './DailyRiskPanel';
 import type { Sensitivity } from './RankingSensitivity';
 import { PriceChart, ThesisStudio, Settings, ValidationTools, CohortExplorer, RunTools, usePreferences, percent } from './ResearchTools';
@@ -113,9 +114,9 @@ function App() {
   return <div className="shell"><aside><a className="brand" href="#" onClick={() => setPage('Command Center')}><span className="brandmark">BH</span><span>BagHunter<small>100-BAGGER DNA LAB</small></span></a>
     <div className="nav-label">RESEARCH WORKSPACE</div><nav aria-label="Research views">{pages.map((p, i) => <button key={p} aria-current={p === page ? 'page' : undefined} onClick={() => setPage(p)}><span className="nav-icon" aria-hidden="true">{['◈', '⌁', '▦', '⌘', '▧', '◷', '◇', '⚙', '▤'][i]}</span>{p}</button>)}</nav>
     <div className="sidebar-note"><span className="dot"/> LOCAL LAB<small>Research & simulation only<br/>No order routing</small></div></aside>
-    <div className="workspace"><header><div><span className="breadcrumb">WORKSPACE</span><span className="slash">/</span>{page}</div><span className="tag">{page === 'Finviz Observations' ? 'LOCAL SNAPSHOT' : 'OFFLINE FIXTURE'}</span></header>
+    <div className="workspace"><header><div><span className="breadcrumb">WORKSPACE</span><span className="slash">/</span>{page}</div><span className="tag">{page === 'Finviz Observations' ? 'LOCAL SNAPSHOT' : page === 'Data Quality' ? 'SOURCE AUDIT' : 'OFFLINE FIXTURE'}</span></header>
       <main><div className="page-heading"><div><p className="eyebrow">EVIDENCE BEFORE CONVICTION</p><h1>{page}</h1><p className="subtitle">{page === 'Finviz Observations' ? 'Saved provider observations with unresolved coverage gaps.' : 'A point-in-time lens on asymmetric equity research.'}</p></div>{page !== 'Finviz Observations' && <button className="secondary" onClick={() => {setActiveRun('current'); setReload(n => n + 1);}}>↻ Reload local run</button>}</div>
-      {page === 'Finviz Observations' ? <FinvizBrowser/> : <><div className="warning" role="note"><strong>SYNTHETIC FIXTURE · RESEARCH ONLY</strong><span>Fictional prices, filings and outcomes. No empirical alpha findings or live candidates.</span></div>
+      {page === 'Finviz Observations' ? <FinvizBrowser/> : <>{page === 'Data Quality' ? <><div className="warning" role="note"><strong>SOURCE AUDIT · RESEARCH ONLY</strong><span>Each source states its fixture or external scope. Evidence inspection does not activate research inputs.</span></div><SecEvidenceBrowser/></> : <div className="warning" role="note"><strong>SYNTHETIC FIXTURE · RESEARCH ONLY</strong><span>Fictional prices, filings and outcomes. No empirical alpha findings or live candidates.</span></div>}
       {error ? <section className="panel" role="alert"><h2>Research data unavailable</h2><p>{error}</p><button onClick={() => setReload(n => n + 1)}>Retry connection</button></section> : !run ? <p role="status">Loading local research run…</p> : <>
         <div className="asof"><span><span className="dot amber"/> Historical clock: {run.asof}</span><span>STALE / FIXTURE · {run.age_days} days old</span><span>Run {run.run_id}</span></div>
         {storageError && <p role="status">{storageError}</p>}

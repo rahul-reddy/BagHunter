@@ -3,6 +3,8 @@
 The owner has an existing Finviz Elite subscription and authorized a local API export using
 FINVIZ_TOKEN from the ignored .env. The export succeeded on 2026-10-23. No purchase occurred.
 On 2026-10-26 the owner confirmed Finviz Elite is the only available provider.
+It is now the working provider scope. `refresh-finviz --usage-authorized` reads the existing token
+locally and archives a new supported overview snapshot; see [Provider refresh](PROVIDER_REFRESH.md).
 
 ## Source-bound observation research
 
@@ -34,8 +36,8 @@ These counts describe the export, not a verified common-stock research universe.
 
 CSV shape and archived-byte checksum were checked. Market-cap scale, security types, provider
 observation timestamps and historical coverage remain unverified. A typed local snapshot importer
-is implemented below; it does not activate the dashboard. Export itself remains a local operational
-script, not a supported CLI command.
+is implemented below; it does not activate the fixture research feed. The supported refresh command
+now performs the verified export and ingest sequence without logging authenticated URLs.
 
 ## Verified capabilities and remaining evidence
 
