@@ -53,3 +53,11 @@ signup or spending. Query a bounded alphabetical sample (at most ten) with US/eq
 all candidates, ambiguity, no-match and error states. Keep it separate from the earlier Finviz source
 and historical master: no ticker normalization, name-match inference or automatic identity promotion.
 Add a source-bound, read-only evidence panel and verify rate/retry/resource/privacy boundaries.
+
+2026-10-26 reconciliation increment: compare saved Finviz company names with all saved mapping
+candidates using exact text or case/whitespace only. Preserve suffixes, punctuation and class labels;
+flag missing IDs and same-level identifier reuse within the batch. Bind deterministic reports to
+both immutable sources and policy version with a reproducible checksum. Keep every result subject
+to independent company/class verification, including exact matches. No new requests, identity
+promotion, broader sample or historical activation. Next: independent issuer/class evidence for one
+queried candidate, with provenance and unresolved differences recorded before any identity decision.

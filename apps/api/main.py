@@ -11,7 +11,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query
 
 from packages.data.finviz import read_snapshot
-from packages.data.reference import read_reference
+from packages.data.reconciliation import inspect_reference
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
 
@@ -22,7 +22,7 @@ def finviz_reference() -> dict[str, Any]:
     if mode not in ("FIXTURE", "EXTERNAL_UNVERIFIED"):
         raise HTTPException(503, "Invalid local reference source mode")
     try:
-        return read_reference(
+        return inspect_reference(
             os.environ.get("BAGHUNTER_REFERENCE_SNAPSHOT", ""),
             os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", ""),
             mode,  # type: ignore[arg-type]

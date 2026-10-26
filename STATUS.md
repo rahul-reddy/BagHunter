@@ -1,4 +1,54 @@
-# Current handoff — current reference evidence / 2026-10-23
+# Current handoff — company/share-class comparison / 2026-10-26
+
+## Implemented and executed
+
+Reference PR #21 was squash-merged as a791727 before this branch began, with 154 backend and six
+browser tests in CI, independent Claude approval with zero blockers, and identical reviewed/merged
+trees. This increment adds a deterministic, read-only comparison of the same saved reference batch
+against its verified Finviz source. No new provider requests or sample expansion occurred.
+
+The evidence panel now shows both company names, exact/case-whitespace/different text comparisons,
+missing composite/share-class IDs, and same-level identifier reuse across queried source tickers.
+Every candidate remains REVIEW_REQUIRED; absent results remain NO_CANDIDATE_EVIDENCE. Raw archives,
+Finviz null IDs/unknown types and fixture research outputs are unchanged. Comparisons preserve
+punctuation, legal suffixes, accents and class designations. No fuzzy matching or automatic approval.
+
+Reports carry both source IDs/hashes/times, a versioned policy and a canonical-JSON checksum.
+GET /finviz/reference derives the separate report without writes or network access. The browser
+checks report/source/batch binding and removes stale evidence on failure. The offline
+reconcile-reference CLI prints aggregate provenance/counts only. See docs/REFERENCE.md.
+
+Executed saved-source comparison: ten of 11,783 observations; three CASE_WHITESPACE_ONLY, seven
+DIFFERENT_TEXT, no missing composite/share-class IDs or shared identifiers within this batch.
+Zero promotions. Report SHA: e09210a1b88e2ed68bb10e1a2c5d5aa0df66b6d5b3be616370c4bcac7b90793d.
+Original source/reference IDs and archive locations remain documented in docs/REFERENCE.md.
+The API smoke check returned HTTP 200 with ten comparisons and this digest; no provider rows logged.
+
+## Verification on this runtime revision
+
+uv run ruff check ., ruff format --check . and mypy packages apps/api passed. Full pytest with
+coverage/JUnit passed 168 tests, with two Windows symlink skips (Linux CI must run those boundaries).
+Evidence: artifacts/test_results/reconciliation-pytest.xml and coverage.xml. Frontend lint, types
+and production build passed. All six Playwright tests passed, including comparison labels, escaped
+names, missing-class flags, source/report mismatch rejection, reload errors, keyboard access,
+desktop/mobile accessibility and fixture research flows. Labeled fictional screenshots are under
+artifacts/screenshots/. An initial browser run timed out on first-page load while other checks ran;
+five other tests passed, then all six passed in the standalone rerun without code/test changes.
+git diff --check passed. .env and all vendor archives/operational scripts remain ignored.
+Current-head CI and independent review remain required before guarded squash merge.
+
+## Limits and next action
+
+Text agreement and present provider IDs do not verify a company or share class. Identifier reuse
+checks cover this batch only and may indicate legitimate aliases. No independent issuer/class
+evidence, historical identity, delisted universe, currency or market-cap scale gate is resolved.
+No empirical result, candidate thesis or deployment. Exactly one next step: collect independent
+issuer/share-class evidence for one queried candidate, archive provenance and unresolved differences,
+then assess whether a current identity decision can be proposed. Do not expand/promote automatically.
+
+---
+
+# Archived handoff — current reference evidence / 2026-10-23
 
 ## Implemented and executed
 

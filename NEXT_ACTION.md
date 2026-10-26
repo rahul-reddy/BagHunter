@@ -12,8 +12,11 @@ selected saved snapshot. Unknown units/types/IDs are shown without currency conv
 The bounded OpenFIGI reference adapter now archives current mapping candidates for a deterministic
 sample and exposes source-bound evidence in the browser. Ten of 11,783 observations were queried;
 all ten returned a single candidate. No Finviz identity/type was promoted or historical gate opened.
-Exactly one next implementation step: add auditable company/share-class reconciliation for these
-candidates before considering identity promotion or a larger sample. See docs/REFERENCE.md.
+Company/share-class comparison is now implemented: three case/whitespace agreements, seven text
+differences, no missing or reused composite/share-class IDs within the ten-record batch. Every
+candidate remains unverified. Reports retain both names, review flags and a reproducible digest.
+Exactly one next step: collect independent issuer/share-class evidence for one queried candidate
+before proposing any current identity decision or a larger sample. See docs/REFERENCE.md.
 Export-scale/currency and historical master evidence remain unmet gates. No manual CSV input needed.
 Never put credentials in chat, manifests, commits or logs. Finviz historical PIT/delisting coverage
 remains unverified; current screens cannot fill historical universe or original filing-vintage gaps.

@@ -1,7 +1,9 @@
-# Sprint status — 2026-10-23
+# Sprint status — 2026-10-26
 
-Current increment: bounded OpenFIGI current-reference evidence, after browser PR #20 merged.
-Local suite: 152 backend tests passed, two Windows symlink skips; six browser tests passed.
+Current increment: reproducible company/share-class comparisons, after reference PR #21 merged
+as a791727 (154 backend / six browser tests in CI, independent Claude approval with zero blockers).
+Current verification results are recorded at the top of STATUS.md.
+Saved ten-record sample: three case/whitespace agreements, seven text differences; all require review.
 Ten of 11,783 source observations were queried; ten candidates, zero identity promotions.
 Owner authorized a Finviz Elite API export; 11,783 screener rows are saved locally, separate from
 the synthetic dashboard. The ingest-finviz CLI stages typed JSON/Parquet observations with source

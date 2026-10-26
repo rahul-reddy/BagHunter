@@ -13,10 +13,10 @@ Only public tickers and US/equity request context are sent; no Finviz prices, co
 portfolio or full CSV is uploaded. Finviz .env credentials are never read by this client.
 
 Official unauthenticated mapping limits checked 2026-10-23: 25 requests/minute and 10 jobs/request,
-shared by IP. The client spaces requests at least 3.1 seconds apart within one process, permits at
+shared by IP. Each client instance spaces requests at least 3.1 seconds apart, permits at
 most three attempts, honors numeric Retry-After up to 60 seconds and rejects longer waits rather
 than retrying early. It retries HTTP 429 and selected server errors, not authentication/client errors
-or redirects. Coordinate other processes sharing the IP; this is not an account-wide rate limiter.
+or redirects. Coordinate other clients/processes sharing the IP; this is not a global rate limiter.
 HTTP timeouts are 30 seconds, response cap 4 MiB, and derived audit cap 100 candidates/job. Oversized
 responses are rejected; candidates are never silently truncated.
 
@@ -83,5 +83,40 @@ also checks source binding and clears earlier evidence on a failed reload. No fi
 
 Market-cap scale, price currency/adjustments, company-name match and PIT security identity remain
 unresolved. This provider response supplies no currency or market-cap unit evidence. Exactly one
-next implementation step: add auditable company/share-class reconciliation for these candidates
-before considering current identity promotion or expanding the mapping sample.
+next implementation step: collect independent issuer/share-class evidence for one queried candidate
+before proposing any current identity decision or expanding the mapping sample.
+
+## Reproducible company/share-class comparison
+
+The evidence panel now shows the original Finviz company beside each OpenFIGI name, identifiers and
+reported type. The read-only API adds a separate reconciliation report; the archived reference
+evidence remains unchanged. No new vendor request, write, selection or identity approval occurs.
+
+Policy `company-share-class-comparison-v1` distinguishes EXACT_TEXT, CASE_WHITESPACE_ONLY and
+DIFFERENT_TEXT. Only Unicode case folding and whitespace collapse are allowed; punctuation, legal
+suffixes, accents and class designations are preserved. These are text comparisons, not fuzzy
+company matches or identity verification. Even exact text with complete IDs requires review.
+
+Missing composite/share-class IDs and identifier reuse across different source tickers are flagged.
+Reuse is checked separately for FIGI, compositeFIGI and shareClassFIGI, within the selected batch
+only. Shared identifiers can be legitimate aliases; they are review evidence, not proof of a bad
+mapping. Multiple candidates and context mismatches remain unresolved, with every candidate retained.
+The original source has no independently verified share-class assignment to compare against.
+An absent candidate is NO_CANDIDATE_EVIDENCE, never a resolved identity or delisting determination.
+
+Each report includes both source IDs, raw hashes, retrieval times, policy version, every comparison
+and explicit zero promotions. Its `report_sha256` hashes canonical UTF-8 JSON (sorted keys plus a
+terminal newline), excluding the digest field itself. Recomputing it from the verified immutable
+archives audits the result without storing or publishing vendor rows. The CLI prints only summary
+counts, provenance and digest:
+
+```powershell
+uv run baghunter reconcile-reference --snapshot 84f34ecbc902a7c007e448a27afb83b93a7a5483fb1a5be5f48bbb2dac748567 --reference c713cfb8f3a2d9700defc22d9fa8d386095f7e9ebec913b3af5662fc47df58ae --mode EXTERNAL_UNVERIFIED
+```
+
+Executed offline on the saved ten-record sample: three CASE_WHITESPACE_ONLY, seven DIFFERENT_TEXT;
+no missing composite/share-class IDs and no shared identifiers within this batch. All ten require
+independent company and class evidence. Report SHA-256:
+e09210a1b88e2ed68bb10e1a2c5d5aa0df66b6d5b3be616370c4bcac7b90793d.
+This says nothing about unqueried observations or historical membership. No currency, market-cap
+scale, common-share eligibility or research gate is resolved by this comparison.

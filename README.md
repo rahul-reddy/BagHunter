@@ -104,6 +104,9 @@ remain visible. This saved snapshot supplies no historical research evidence or 
 The optional [OpenFIGI reference adapter](docs/REFERENCE.md) fetches at most ten current mapping
 candidates and exposes an explicitly selected batch under **Inspect reference evidence**. Its names,
 FIGIs and types remain candidates for reconciliation, separate from the original observations.
+The panel compares both company names and flags missing/shared identifiers. Offline
+`reconcile-reference` reproduces the source-bound comparison digest and prints summary counts;
+text agreement never approves an identity or share class. See the reference adapter guide above.
 
 ## Development workflow
 
