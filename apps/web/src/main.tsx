@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { FinvizBrowser } from './FinvizBrowser';
+import type { DailyRisk } from './DailyRiskPanel';
 import { PriceChart, ThesisStudio, Settings, ValidationTools, CohortExplorer, RunTools, usePreferences, percent } from './ResearchTools';
 
 type Fact = { metric: string; value: number; period_end: string; published_at: string;
@@ -22,7 +23,7 @@ export type Run = { run_id: string; asof: string; model_version: string; archive
   sources: {source_id: string; sha256: string; latest_source_timestamp: string;
     coverage: string; license_note: string; market_provider: {reason: string}}[];
   discovery?: {policy: Record<string, unknown>; policy_sha256: string; stage_counts: Record<string, number>; breadth: number | null; regime: string; benchmark_return_63d: number | null};
-  portfolio?: {policy: {capital: number; max_position: number; max_sector: number; participation: number; one_way_cost_bps: number}; ending_equity: number;
+  portfolio?: {daily_risk?: DailyRisk; daily_curve?: {date: string; equity: number; basis: string}[]; policy: {capital: number; max_position: number; max_sector: number; participation: number; one_way_cost_bps: number}; ending_equity: number;
     comparators: {selector: string; metrics: {total_return: number | null; max_drawdown: number | null}; executions: number; excluded: number; ending_equity: number}[];
     metrics: {total_return: number | null; max_drawdown: number | null; win_rate: number | null}; limitations: string[];
     rows: {decision: string; deployment_fraction: number; costs: number; turnover: number; ending_equity: number}[];

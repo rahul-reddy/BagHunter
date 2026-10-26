@@ -287,6 +287,18 @@ def report_download(run_id: str, report_name: str) -> Response:
             ["security_id", "ticker", "asof_time", "stage", "score", "completeness"]
             if report_name.startswith("baghunter")
             else list(rows[0])
+            if rows
+            else [
+                "security_id",
+                "anchor",
+                "horizon_years",
+                "outcome_method",
+                "max_multiple",
+                "terminal_total_return",
+                "max_drawdown",
+                "delisted",
+                "coverage_flag",
+            ]
         )
         stream = io.StringIO(newline="")
         writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")

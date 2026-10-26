@@ -7,7 +7,9 @@ documented in [Workspace](../docs/WORKSPACE.md) and [Completion audit](../docs/C
 | --- | --- | --- |
 | Expanded product workflows | PASS locally | Nine views; discovery, cohorts, thesis, settings, constrained validation, sources and reports |
 | Final runtime lint/types/build/backend/browser | PASS locally | Full QA: 240 backend / five Windows skips / ten browser tests; final UI hardening: lint/types/build and eleven browser tests; screenshots inspected |
-| Exact-head CI / independent review / guarded merge | PENDING | Required for the product PR |
+| PR #24 exact-head CI / independent review / guarded merge | PASS | 245 backend / 11 browser in Linux CI; Gemini approval; identical-tree merge 3df7113 |
+| Daily risk / structured calendar local QA | PASS | Full scripts/qa.ps1: 249 backend, five Windows skips, 13 browser; lint/types/build/demo/harness |
+| Daily risk / structured calendar CI and independent review | PENDING | Required on final PR head |
 | Original SEC vintages / PIT universe / delist actions / real identity | BLOCKED | External evidence not established; outputs remain fixture or quarantined |
 | Empirical holdout findings / verified investment theses | BLOCKED | Fixed inspected fixture is not an untouched real holdout; zero verified theses |
 | Deployment | NOT REQUESTED | Manual confirmed deployment only, from main |

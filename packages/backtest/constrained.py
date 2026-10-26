@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
+from packages.backtest.risk import daily_risk
 from packages.backtest.validation import performance
 from packages.research.features import eligible, snapshot
 from packages.research.outcomes import wealth_path
@@ -34,6 +35,7 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
     rows = []
     executions = []
     exclusions = []
+    curve: list[dict[str, Any]] = []
     cost_rate = policy.one_way_cost_bps / 10000
     instruments = {i.security_id: i for i in dataset.instruments}
     for index in range(260, min(1000, len(sessions) - 23), 42):
@@ -98,10 +100,16 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         if starting <= 0:
             break
         cash = capital
+        last_mark = curve[-1]["date"] if curve else ""
+        for day in sessions[: index + 1]:
+            if str(day) > last_mark and (curve or day == decision):
+                curve.append({"date": str(day), "equity": starting, "basis": "CASH_GAP"})
+        holdings: list[dict[str, Any]] = []
         terminal_cash = 0.0
         sector_allocated: dict[str, float] = {}
         deployed = 0.0
         fees = 0.0
+        sold = 0.0
         for f in candidates:
             sid = f["security_id"]
             first = lookup.get((sid, entry))
@@ -155,9 +163,28 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
             buy_notional = shares * first.open
             entry_cost = buy_notional * cost_rate
             exit_cost = shares * proceeds * cost_rate
+            fee_date = min(
+                (
+                    a.effective_date
+                    for a in events
+                    if a.kind == "delist" and entry < a.effective_date <= exit_day
+                ),
+                default=exit_day,
+            )
+            holdings.append(
+                {
+                    "shares": shares,
+                    "marks": dict(path),
+                    "delisted": delisted,
+                    "terminal": terminal,
+                    "fee_date": fee_date,
+                    "exit_cost": exit_cost,
+                }
+            )
             cash -= buy_notional + entry_cost
             terminal_cash += shares * terminal - exit_cost
             deployed += buy_notional
+            sold += shares * proceeds
             fees += entry_cost + exit_cost
             sector_allocated[sector] = sector_allocated.get(sector, 0) + buy_notional + entry_cost
             executions.append(
@@ -178,7 +205,22 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                     "delisted": delisted,
                 }
             )
+        for day in sessions[index + 1 : index + 23]:
+            equity = cash
+            for holding in holdings:
+                mark = holding["marks"].get(day)
+                if mark is None:
+                    if holding["delisted"] and day >= holding["fee_date"]:
+                        mark = holding["terminal"]
+                    else:
+                        raise ValueError("Missing daily portfolio mark; cannot infer flat equity")
+                equity += holding["shares"] * mark
+                if day >= holding["fee_date"]:
+                    equity -= holding["exit_cost"]
+            curve.append({"date": str(day), "equity": equity, "basis": "DAILY_CLOSE_AND_CASH"})
         capital = cash + terminal_cash
+        if not math.isclose(curve[-1]["equity"], capital, rel_tol=1e-12, abs_tol=1e-6):
+            raise ValueError("Daily portfolio marks do not reconcile to terminal cash")
         rows.append(
             {
                 "decision": str(decision),
@@ -188,7 +230,7 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                 "ending_equity": capital,
                 "deployment_fraction": deployed / starting,
                 "costs": fees,
-                "turnover": 2 * deployed / starting,
+                "turnover": (deployed + sold) / starting,
             }
         )
     return {
@@ -199,6 +241,8 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         "executions": executions,
         "exclusions": exclusions,
         "metrics": performance(rows, "net_return"),
+        "daily_curve": curve,
+        "daily_risk": daily_risk(curve),
         "ending_equity": capital,
         "limitations": [
             "Whole-share rounding; no leverage or borrowing",
