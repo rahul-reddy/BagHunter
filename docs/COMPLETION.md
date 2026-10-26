@@ -46,11 +46,11 @@ Do not equate this assessment with full goal completion. After review/merge, rea
 specifications and keep any independent software gaps in the active queue. Empirical gates stay
 BLOCKED until their actual evidence exists; a polished fixture app does not open them.
 
-Daily mark-to-market portfolio risk and the structured multi-event catalyst calendar are now
-implemented in feat/daily-risk-catalyst, with boundary and real-browser acceptance. Review and
-merge remain separate gates. Next audit items include useful source-bound research workflows for
-the owner's saved current Finviz observations, broader policy sensitivity diagnostics and final
-release packaging. No real provider beyond Finviz Elite is available (owner confirmation).
+Daily mark-to-market portfolio risk and the structured multi-event catalyst calendar passed
+Linux CI (254 backend / 13 browser), independent Gemini review and guarded merge as PR #25.
+Source-bound Finviz research drafts/dossiers and complete-archive reported-field filters are
+implemented in feat/observation-workspace; full QA/review remain separate gates. Next audit items
+include broader policy sensitivity diagnostics and final release packaging. No real provider beyond Finviz Elite is available (owner confirmation).
 
 Externally blocked acceptance: licensed historical PIT membership/bars/actions/delist coverage;
 verified real security identities, field units/currencies, original filing vintages and enough

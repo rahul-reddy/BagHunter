@@ -5,8 +5,10 @@ views, discovery/history, diagnostics, thesis scenarios/drafts, multi-anchor coh
 simulation/baselines, validation audits, policies, watchlists, archive comparisons/cache integrity,
 reports, saved-source selection and quarantined accession-bound SEC facts. Final acceptance and PR
 gates for PR #24 passed (245 backend / 11 browser in Linux CI; independent Gemini approval).
-Current increment adds daily marked risk, structured catalysts and filtered execution history;
-its final acceptance and PR gates are pending. Track software versus empirical acceptance separately in docs/COMPLETION.md.
+PR #25 daily marked risk/calendar gates passed: 254 backend / 13 browser in Linux CI,
+independent Gemini approval and identical-tree guarded merge 5922443. Current increment adds
+source-bound Finviz research drafts/dossiers and complete-archive filters; its final QA/PR gates
+are pending. Track software versus empirical acceptance separately in docs/COMPLETION.md.
 Missing data is not a reason to leave independent application work unfinished. Zero verified theses.
 
 ---

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ReferenceEvidence } from './ReferenceEvidence';
+import { ObservationDesk } from './ObservationDesk';
 
-type Observation = {
+export type Observation = {
   ticker: string; company: string; sector: string | null; industry: string | null;
   country: string | null; market_cap_reported: string | null; price_reported: string | null;
   pe_reported: string | null; change_percent_reported: string | null; volume_shares: string | null;
@@ -12,22 +13,27 @@ type SnapshotPage = {
     ingested_at: string; rows: number; missing: Record<string, number>; zero_pe_reported: number;
     flags: string[]; status: string; provider_observation_time: null };
   age_hours: number; stale: boolean; total: number; offset: number; limit: number;
+  facets?: {sectors: string[]; countries: string[]};
   observations: Observation[];
 };
+const emptyFilters = {sector: '', country: '', price_presence: 'ANY', min_volume: '', max_pe: ''};
 const reported = (value: string | number | null) => value === null ? 'Missing' : String(value);
 
 export function FinvizBrowser() {
   const [input, setInput] = useState('');
+  const [filters, setFilters] = useState(emptyFilters);
+  const [selected, setSelected] = useState<{key: string; row: Observation} | null>(null);
   const [snapshots, setSnapshots] = useState<{snapshot_id: string; mode: string; rows: number; retrieved_at: string}[]>([]);
   const [selection, setSelection] = useState(() => {try {const saved = sessionStorage.getItem('baghunter.finviz.selection') ?? ''; return /^(FIXTURE|EXTERNAL_UNVERIFIED):[a-f0-9]{64}$/.test(saved) ? saved : '';} catch {return '';}});
   useEffect(() => {const controller = new AbortController(); fetch('/api/finviz/snapshots', {signal: controller.signal}).then(async r => {if (r.ok) {const index = await r.json() as {snapshots: typeof snapshots}; if (Array.isArray(index.snapshots)) setSnapshots(index.snapshots);}}).catch(() => {}); return () => controller.abort();}, []);
-  const [request, setRequest] = useState({ q: '', offset: 0, revision: 0 });
+  const [request, setRequest] = useState({ q: '', offset: 0, revision: 0, filters: emptyFilters });
   const [result, setResult] = useState<{ key: string; data: SnapshotPage } | null>(null);
   const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
   const key = JSON.stringify([request, selection]);
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams({ q: request.q, offset: String(request.offset), limit: '50' });
+    Object.entries(request.filters).forEach(([name, value]) => {if (value) params.set(name, value);});
     if (selection) {const [mode, snapshot] = selection.split(':'); params.set('mode', mode); params.set('snapshot', snapshot);}
     fetch(`/api/finviz/observations?${params}`, { signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('Select a valid local Finviz snapshot using the setup guide.');
@@ -40,20 +46,27 @@ export function FinvizBrowser() {
       if (!controller.signal.aborted && error.name !== 'AbortError') setFailure({ key, message: error.message });
     });
     return () => controller.abort();
-  }, [key, request.q, request.offset, selection]);
+  }, [key, request.q, request.offset, request.filters, selection]);
   const data = result?.key === key ? result.data : null;
   const error = failure?.key === key ? failure.message : null;
   return <>
     <div className="warning" role="note"><strong>FINVIZ · SAVED OBSERVATIONS · RESEARCH ONLY</strong>
       <span>Not a live feed or candidate ranking. Security types and permanent identities remain unresolved.</span></div>
     <section className="panel"><h2>Snapshot explorer</h2>
-      <label>Saved Finviz snapshot<select value={selection} onChange={e => {setSelection(e.target.value); try {sessionStorage.setItem('baghunter.finviz.selection', e.target.value);} catch { /* Selection remains usable in memory. */ } setInput(''); setRequest({q: '', offset: 0, revision: 0});}}><option value="">Use configured source selection</option>{snapshots.map(s => <option key={`${s.mode}:${s.snapshot_id}`} value={`${s.mode}:${s.snapshot_id}`}>{s.mode} · {s.retrieved_at} · {s.rows} observations · {s.snapshot_id.slice(0, 12)}</option>)}</select></label><p>Choose an existing local archive explicitly. Selection revalidates its original source; no provider request or research activation occurs.</p>
+      <label>Saved Finviz snapshot<select value={selection} onChange={e => {setSelection(e.target.value); try {sessionStorage.setItem('baghunter.finviz.selection', e.target.value);} catch { /* Selection remains usable in memory. */ } setInput(''); setFilters(emptyFilters); setRequest({q: '', offset: 0, revision: 0, filters: emptyFilters});}}><option value="">Use configured source selection</option>{snapshots.map(s => <option key={`${s.mode}:${s.snapshot_id}`} value={`${s.mode}:${s.snapshot_id}`}>{s.mode} · {s.retrieved_at} · {s.rows} observations · {s.snapshot_id.slice(0, 12)}</option>)}</select></label><p>Choose an existing local archive explicitly. Selection revalidates its original source; no provider request or research activation occurs.</p>
       <p>Search reported ticker, company, sector or industry. Alphabetical order; no screening scores.</p>
       <form className="filters" onSubmit={event => {
-        event.preventDefault(); setRequest(previous => ({ q: input.trim(), offset: 0, revision: previous.revision + 1 }));
+        event.preventDefault(); setRequest(previous => ({ q: input.trim(), offset: 0, revision: previous.revision + 1, filters }));
       }}><label>Search Finviz observations<input value={input} maxLength={100} onChange={event => setInput(event.target.value)}
         placeholder="Ticker, company, sector or industry" /></label><button className="secondary" type="submit">Search observations</button>
+        <label>Reported sector<select aria-label="Reported sector" value={filters.sector} onChange={e => setFilters({...filters, sector: e.target.value})}><option value="">All reported sectors</option>{data?.facets?.sectors.map(v => <option key={v}>{v}</option>)}</select></label>
+        <label>Reported country<select aria-label="Reported country" value={filters.country} onChange={e => setFilters({...filters, country: e.target.value})}><option value="">All reported countries</option>{data?.facets?.countries.map(v => <option key={v}>{v}</option>)}</select></label>
+        <label>Reported price availability<select aria-label="Reported price availability" value={filters.price_presence} onChange={e => setFilters({...filters, price_presence: e.target.value})}><option value="ANY">Any price availability</option><option value="REPORTED">Price reported</option><option value="MISSING">Price missing</option></select></label>
+        <label>Minimum reported volume (shares)<input type="number" min="0" max="1e24" step="1" value={filters.min_volume} onChange={e => setFilters({...filters, min_volume: e.target.value})}/></label>
+        <label>Maximum positive reported P/E<input type="number" min="0" max="1e24" step="any" value={filters.max_pe} onChange={e => setFilters({...filters, max_pe: e.target.value})}/></label>
+        <button className="secondary" type="button" onClick={() => {setInput(''); setFilters(emptyFilters); setRequest(previous => ({q: '', offset: 0, revision: previous.revision + 1, filters: emptyFilters}));}}>Reset observation filters</button>
         <button className="secondary" type="button" onClick={() => setRequest(previous => ({ ...previous, revision: previous.revision + 1 }))}>Reload snapshot</button></form>
+      <p>Apply filters with Search observations. Missing volume or P/E is excluded when a numeric filter is active; reported zero/negative P/E is excluded from the positive P/E filter. These filters do not establish tradability or security eligibility.</p>
       {error ? <div role="alert"><h3>Finviz snapshot unavailable</h3><p>{error}</p>
         <p>Local setup: docs/FINVIZ.md. Existing fixture research remains in its own views.</p></div>
         : !data ? <p role="status">Loading selected snapshot…</p> : <>
@@ -68,7 +81,7 @@ export function FinvizBrowser() {
           <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable Finviz observations"><table><caption className="sr-only">Saved Finviz observations with unresolved identities</caption>
             <thead><tr>{['Ticker / company', 'Sector / industry', 'Market cap (reported scale)', 'Price (reported)', 'P/E (reported)', 'Change (%)', 'Volume (shares)', 'Identity / type'].map(title => <th key={title}>{title}</th>)}</tr></thead>
             <tbody>{data.observations.map(row => <tr key={row.ticker}>
-              <td>{row.ticker}<small className="observation-name">{row.company}</small></td>
+              <td><button className="security" aria-label={`Research observation ${row.ticker}`} onClick={() => setSelected({key, row})}>{row.ticker}</button><small className="observation-name">{row.company}</small></td>
               <td>{reported(row.sector)}<small className="observation-name">{reported(row.industry)}</small></td>
               <td>{reported(row.market_cap_reported)}</td><td>{reported(row.price_reported)}</td>
               <td>{row.pe_reported !== null && Number(row.pe_reported) === 0 ? '0 (reported; unresolved)' : reported(row.pe_reported)}</td>
@@ -79,6 +92,7 @@ export function FinvizBrowser() {
             onClick={() => setRequest(previous => ({ ...previous, offset: Math.max(0, previous.offset - data.limit) }))}>Previous observations</button>
             <button className="secondary" disabled={data.offset + data.limit >= data.total}
               onClick={() => setRequest(previous => ({ ...previous, offset: previous.offset + data.limit }))}>Next observations</button></div>
+          {selected?.key === key && <ObservationDesk key={`${data.coverage.mode}:${data.coverage.snapshot_id}:${selected.row.ticker}`} observation={selected.row} source={{mode: data.coverage.mode, snapshot_id: data.coverage.snapshot_id, source_sha256: data.coverage.source_sha256, retrieved_at: data.coverage.retrieved_at}} onClose={() => setSelected(null)}/>}
           <ReferenceEvidence key={data.coverage.snapshot_id} baseSnapshotId={data.coverage.snapshot_id} mode={data.coverage.mode} explicitSelection={Boolean(selection)}/>
           <details><summary>Source lineage and coverage gaps</summary>
             <p>Snapshot <span className="hash">{data.coverage.snapshot_id}</span></p>

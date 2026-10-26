@@ -5,8 +5,9 @@ import json
 import os
 import re
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import Response
@@ -115,6 +116,13 @@ def finviz_observations(
     limit: int = Query(default=50, ge=1, le=100),
     snapshot: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
     mode: str | None = None,
+    sector: str = Query(default="", max_length=512),
+    country: str = Query(default="", max_length=512),
+    price_presence: Literal["ANY", "REPORTED", "MISSING"] = "ANY",
+    min_volume: int | None = Query(default=None, ge=0, le=10**24),
+    max_pe: Annotated[
+        Decimal | None, Query(ge=0, le=10**24, max_digits=33, decimal_places=8)
+    ] = None,
 ) -> dict[str, Any]:
     snapshot_id = snapshot or os.environ.get("BAGHUNTER_FINVIZ_SNAPSHOT", "")
     mode = mode or os.environ.get("BAGHUNTER_FINVIZ_MODE", "EXTERNAL_UNVERIFIED")
@@ -133,6 +141,15 @@ def finviz_observations(
             for row in rows
             if needle
             in " ".join([row.ticker, row.company, row.sector or "", row.industry or ""]).casefold()
+            and (not sector or row.sector == sector)
+            and (not country or row.country == country)
+            and (price_presence != "REPORTED" or row.price_reported is not None)
+            and (price_presence != "MISSING" or row.price_reported is None)
+            and (
+                min_volume is None
+                or (row.volume_shares is not None and row.volume_shares >= min_volume)
+            )
+            and (max_pe is None or (row.pe_reported is not None and 0 < row.pe_reported <= max_pe))
         ),
         key=lambda row: row.ticker,
     )
@@ -146,6 +163,18 @@ def finviz_observations(
         "total": len(matching),
         "offset": offset,
         "limit": limit,
+        "facets": {
+            "sectors": sorted({row.sector for row in rows if row.sector}),
+            "countries": sorted({row.country for row in rows if row.country}),
+        },
+        "applied_filters": {
+            "q": q.strip(),
+            "sector": sector,
+            "country": country,
+            "price_presence": price_presence,
+            "min_volume": None if min_volume is None else str(min_volume),
+            "max_pe": None if max_pe is None else str(max_pe),
+        },
         "observations": [
             row.model_dump(mode="json")
             | {

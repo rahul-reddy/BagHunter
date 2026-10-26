@@ -397,3 +397,53 @@ def test_scalar_coverage_report_is_rejected_with_generic_unavailable(export, mon
     response = TestClient(app).get("/finviz/observations")
     assert response.status_code == 503
     assert "PRIVATE_SCALAR" not in response.text
+
+
+def test_reported_observation_filters_preserve_missingness_units_and_source(export, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from apps.api.main import app
+
+    report = ingest(export)
+    client = TestClient(app)
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_SNAPSHOT", report["snapshot_id"])
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_MODE", "FIXTURE")
+    endpoint = "/finviz/observations"
+    assert (
+        client.get(
+            endpoint + "?sector=Tech&country=USA&min_volume=0&max_pe=12.5&price_presence=REPORTED"
+        ).json()["total"]
+        == 1
+    )
+    assert client.get(endpoint + "?sector=tech").json()["total"] == 0  # exact reported category
+    assert client.get(endpoint + "?min_volume=1").json()["total"] == 0  # zero != missing
+    assert client.get(endpoint + "?max_pe=12.49").json()["total"] == 0
+    missing = client.get(endpoint + "?price_presence=MISSING").json()
+    assert [r["ticker"] for r in missing["observations"]] == ["DEMO-B"]
+    assert missing["facets"] == {"sectors": ["Tech"], "countries": ["USA"]}
+    assert missing["coverage"]["snapshot_id"] == report["snapshot_id"]
+    assert missing["observations"][0]["security_id"] is None
+    assert client.get(endpoint + "?min_volume=0").json()["applied_filters"]["min_volume"] == "0"
+    for query in (
+        "min_volume=-1",
+        "min_volume=1.5",
+        "min_volume=1000000000000000000000001",
+        "max_pe=NaN",
+        "max_pe=Infinity",
+        "max_pe=-1",
+        "price_presence=ELIGIBLE",
+    ):
+        assert client.get(endpoint + "?" + query).status_code == 422
+
+
+def test_positive_pe_filter_excludes_reported_zero_and_missing(export, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from apps.api.main import app
+
+    report = ingest(export, edit_rows=lambda rows: rows[0].__setitem__(7, "0"))
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_SNAPSHOT", report["snapshot_id"])
+    monkeypatch.setenv("BAGHUNTER_FINVIZ_MODE", "FIXTURE")
+    client = TestClient(app)
+    assert client.get("/finviz/observations").json()["total"] == 2
+    assert client.get("/finviz/observations?max_pe=20").json()["total"] == 0
