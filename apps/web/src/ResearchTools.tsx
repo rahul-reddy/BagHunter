@@ -24,7 +24,7 @@ export function PriceChart({candidate}: {candidate: Signal}) {
     <line x1="55" x2="790" y1={y(candidate.base_high_60d)} y2={y(candidate.base_high_60d)} stroke="#e5b56a" strokeDasharray="6 4"/>
     <polyline fill="none" stroke="#75e4cd" strokeWidth="2.5" points={points.map((p, i) => `${x(i)},${y(p.close)}`).join(' ')}/>
     {points.map((p, i) => <rect key={p.date} x={x(i)} y={285-(p.volume ?? 0)/volumeMax*55} width="3" height={(p.volume ?? 0)/volumeMax*55} fill="#688e9f"/>)}
-    {markers.map(h => {const i = points.findIndex(p => p.date === h.session); return i < 0 ? null : <circle key={h.asof} cx={x(i)} cy={y(h.close)} r="4" fill={h.stage === 'INVALIDATED' ? '#f0a49e' : '#e5b56a'}><title>{h.session}: {h.stage} · {h.reason}</title></circle>;})}
+    {markers.map(h => {const i = points.findIndex(p => p.date === h.session); return i < 0 || h.close == null ? null : <circle key={h.asof} cx={x(i)} cy={y(h.close)} r="4" fill={h.stage === 'INVALIDATED' ? '#f0a49e' : '#e5b56a'}><title>{h.session}: {h.stage} · {h.reason}</title></circle>;})}
     <text x="55" y="307" fill="#b8cbd4" fontSize="11">{points[0].date}</text><text x="670" y="307" fill="#b8cbd4" fontSize="11">{points.at(-1)?.date}</text>
   </svg><figcaption>FIXTURE raw USD prices and known volume · dashed amber: current prior-60-session base high (reference line, not historical base history). Dots: ignition, confirmation or invalidation. As-of {candidate.asof_time}; raw adjustment basis.</figcaption></figure>;
 }

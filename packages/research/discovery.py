@@ -11,6 +11,7 @@ from pydantic import Field, model_validator
 from packages.data.finviz import _json
 from packages.research.features import eligible, snapshot, symbol_at, utc_asof
 from packages.research.fundamentals import statement_ratios
+from packages.research.stage_evidence import classify_v2, filing_inflections
 from packages.research.technical import cross_section_evidence, technical_evidence
 from packages.shared.models import Dataset, Record
 from packages.shared.numeric import require_finite
@@ -19,13 +20,24 @@ STAGES = ("WATCH", "IGNITION", "EMERGING", "CONFIRMED", "EXTENDED/AGING", "INVAL
 
 
 class DiscoveryPolicy(Record):
-    version: Literal["discovery-v1-unvalidated"] = "discovery-v1-unvalidated"
+    version: Literal["discovery-v1-unvalidated", "discovery-v2-unvalidated"] = (
+        "discovery-v2-unvalidated"
+    )
     min_dollar_volume: float = Field(default=1_000_000, ge=0)
     min_price: float = Field(default=1, gt=0)
     ignition_relative_volume: float = Field(default=1.5, gt=0)
     max_base_width: float = Field(default=0.4, gt=0)
     max_ema_stretch: float = Field(default=0.25, gt=0)
     confirmation_sessions: int = Field(default=3, ge=1, le=20)
+    breakout_lookback: Literal[20, 60] = 60
+    min_base_duration_windows: int = Field(default=20, ge=1, le=252)
+    min_relative_rank: float = Field(default=0.8, ge=0, le=1)
+    max_base_stretch: float = Field(default=0.5, gt=0)
+    min_peer_participation: float = Field(default=0.5, ge=0, le=1)
+    min_inflection_signals: int = Field(default=2, ge=2, le=4)
+    min_inflection_filings: int = Field(default=2, ge=2, le=10)
+    invalidate_revenue_growth: float = Field(default=-0.2, le=0, ge=-1)
+    max_filing_age_days: int = Field(default=550, ge=1, le=3650)
     weights: dict[str, float] = Field(
         default_factory=lambda: {
             "price_volume": 0.2,
@@ -57,6 +69,8 @@ class DiscoveryPolicy(Record):
 def classify(
     feature: dict[str, Any], policy: DiscoveryPolicy, prior: str = "WATCH", streak: int = 0
 ) -> tuple[str, str]:
+    if policy.version == "discovery-v2-unvalidated":
+        return classify_v2(feature, policy, prior, streak)
     if not feature["eligible"] or feature["close"] < policy.min_price:
         return "INVALIDATED", "Outside configured eligibility/price floor"
     if feature["dollar_volume_20d"] < policy.min_dollar_volume:
@@ -110,7 +124,26 @@ def discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[
         raise ValueError("Discovery features exceed finite numeric bounds") from exc
 
 
-def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict[str, Any]:
+def ranking_snapshot(
+    dataset: Dataset, asof: datetime, policy: DiscoveryPolicy
+) -> list[dict[str, Any]]:
+    """Same dated score inputs as full discovery, without computing or claiming stage history."""
+    try:
+        result: list[dict[str, Any]] = _discover(dataset, asof, policy, include_history=False)[
+            "signals"
+        ]
+        for feature in result:
+            for field in ("stage", "stage_reason", "stage_history", "trigger_reference"):
+                feature.pop(field, None)
+        require_finite(result, "ranking snapshot")
+        return result
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Ranking features exceed finite numeric bounds") from exc
+
+
+def _discover(
+    dataset: Dataset, asof: datetime, policy: DiscoveryPolicy, *, include_history: bool = True
+) -> dict[str, Any]:
     asof = utc_asof(asof)
     sessions = sorted(
         {b.session for b in dataset.bars if b.available_at <= asof and b.session <= asof.date()}
@@ -120,8 +153,11 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
     histories: dict[str, list[dict[str, Any]]] = {}
     last: list[dict[str, Any]] = []
     benchmark = next((i for i in dataset.instruments if i.security_type == "benchmark"), None)
-    # Fixed lookback has an explicit WATCH initialization; no hidden state or outcome input.
-    for day in sessions[-21:]:
+    legacy = policy.version == "discovery-v1-unvalidated"
+    # v2 begins at the first possible 121-session observation, with no hidden warm start.
+    days = sessions[-1:] if not include_history else sessions[-21:] if legacy else sessions[120:]
+    triggers: dict[str, float] = {}
+    for day in days:
         clock = (
             asof if day == sessions[-1] else datetime(day.year, day.month, day.day, 23, tzinfo=UTC)
         )
@@ -129,12 +165,31 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
         benchmark_return = None
         if benchmark is not None:
             try:
-                benchmark_return = snapshot(benchmark, dataset.bars, [], clock)["return_63d"]
+                benchmark_point = snapshot(benchmark, dataset.bars, [], clock)
+                benchmark_return = (
+                    benchmark_point["return_63d"]
+                    if legacy or benchmark_point["price_session"] == str(day)
+                    else None
+                )
             except ValueError as exc:
                 if "insufficient price history" not in str(exc):
                     raise
         for instrument in dataset.instruments:
             if not eligible(instrument, clock):
+                if not legacy and instrument.security_id in histories:
+                    history = histories[instrument.security_id]
+                    history.append(
+                        {
+                            "asof": clock.isoformat(),
+                            "session": str(day),
+                            "stage": "INVALIDATED",
+                            "previous_stage": history[-1]["stage"],
+                            "reason": "Instrument no longer eligible at this clock",
+                            "close": None,
+                            "score": None,
+                            "trigger_reference": triggers.pop(instrument.security_id, None),
+                        }
+                    )
                 continue
             try:
                 f = snapshot(instrument, dataset.bars, dataset.facts, clock)
@@ -172,6 +227,13 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
             f["technical"] = technical_evidence(
                 known, instrument.security_id, clock, policy.max_base_width
             )
+            if not legacy:
+                f["filing_inflections"] = filing_inflections(
+                    dataset.facts, instrument.security_id, clock, policy.max_filing_age_days
+                )
+                f["breakout_reference"] = max(
+                    b.high for b in known[-policy.breakout_lookback - 1 : -1]
+                )
             f["chart"] = [
                 {
                     "date": str(b.session),
@@ -186,11 +248,48 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
             f["consolidation"] = f["base_width_60d"] <= policy.max_base_width
             require_finite(f, "discovery features before ranking")
             batch.append(f)
-        relative = cross_section_evidence(batch)
+        rank_pool = batch if legacy else [f for f in batch if f["price_session"] == str(day)]
+        relative = cross_section_evidence(rank_pool)
         for f in batch:
-            f["relative_evidence"] = relative[f["security_id"]]
-            peers = [p for p in batch if p["sector"] == f["sector"]]
-            breadth = mean(p["return_21d"] > 0 for p in peers) if len(peers) > 1 else None
+            if f["security_id"] in relative:
+                f["relative_evidence"] = relative[f["security_id"]]
+            else:
+                missing_rank = cross_section_evidence([f])[f["security_id"]]
+                missing_rank.update(
+                    {
+                        "scope": "NO_FRESH_PRICE_AT_CLOCK_NO_CURRENT_RANK",
+                        "universe_count": len(rank_pool),
+                        "sector_count": sum(
+                            bool(f["sector"].strip()) and p["sector"] == f["sector"]
+                            for p in rank_pool
+                        ),
+                        "references": next(iter(relative.values()))["references"]
+                        if relative
+                        else [],
+                    }
+                )
+                missing_rank["limitations"].append("Target has no fresh price at this clock")
+                f["relative_evidence"] = missing_rank
+            if not legacy:
+                f["trigger_reference"] = triggers.get(f["security_id"])
+            peers = [
+                p
+                for p in batch
+                if p["sector"] == f["sector"]
+                and (
+                    legacy
+                    or (
+                        f["sector"].strip()
+                        and p["security_id"] != f["security_id"]
+                        and p["price_session"] == str(day)
+                    )
+                )
+            ]
+            breadth = (
+                mean(p["return_21d"] > 0 for p in peers)
+                if len(peers) > (1 if legacy else 0)
+                else None
+            )
             f["sector_breadth"] = breadth
             f["sector_peer_count"] = len(peers)
             f["components"]["industry_breadth"] = None if breadth is None else breadth * 100
@@ -202,24 +301,60 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
                 sum(policy.weights[k] for k, v in f["components"].items() if v is not None), 4
             )
             f["missing_weight_penalty"] = round(100 * (1 - f["completeness"]), 4)
+            if not include_history:
+                continue
             history = histories.setdefault(f["security_id"], [])
             prior = history[-1]["stage"] if history else "WATCH"
             streak = 0
             for row in reversed(history):
                 if row["stage"] not in ("IGNITION", "EMERGING", "CONFIRMED"):
                     break
+                if not legacy and not row.get("strength_pass", False):
+                    break
                 streak += 1
+            evaluated_trigger = f.get("trigger_reference")
             stage, reason = classify(f, policy, prior, streak)
+            if not legacy:
+                if f["price_session"] != str(day):
+                    stage, reason = "WATCH", "No fresh price observation at this session"
+                elif stage == "IGNITION":
+                    triggers[f["security_id"]] = f["breakout_reference"]
+                elif stage == "INVALIDATED":
+                    triggers.pop(f["security_id"], None)
+                f["trigger_reference"] = triggers.get(f["security_id"])
             history.append(
                 {
                     "asof": clock.isoformat(),
-                    "session": f["price_session"],
+                    "session": f["price_session"] if legacy else str(day),
+                    **({"price_session": f["price_session"]} if not legacy else {}),
                     "stage": stage,
                     "previous_stage": prior,
                     "reason": reason,
                     "close": f["close"],
                     "score": f["score"],
                     "base_high_60d": f["base_high_60d"],
+                    **(
+                        {
+                            "trigger_reference": f["trigger_reference"],
+                            "evaluated_trigger_reference": evaluated_trigger,
+                            "breakout_reference": f["breakout_reference"],
+                            "base_duration_windows": f["technical"]["base_duration_windows"],
+                            "rank_percentile_63d": f["relative_evidence"]["rank_percentile_63d"],
+                            "filing_inflections": f["filing_inflections"],
+                            "fresh_price": f["price_session"] == str(day),
+                            "strength_pass": (
+                                f["price_session"] == str(day)
+                                and f["trigger_reference"] is not None
+                                and f["close"] >= f["trigger_reference"]
+                                and f["ema_8"] > f["ema_21"]
+                                and f["return_21d"] > 0
+                                and f["relative_strength_63d"] is not None
+                                and f["relative_strength_63d"] > 0
+                            ),
+                        }
+                        if not legacy
+                        else {}
+                    ),
                 }
             )
             f["stage"], f["stage_reason"] = stage, reason
@@ -232,6 +367,9 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
             f["limitations"] = [s for s in f["limitations"] if not s.startswith("Stages WATCH")]
             f["limitations"].append(
                 "Stage history initializes WATCH at the start of a 21-session window"
+                if legacy
+                else "Full history starts at the first available 121-session observation; "
+                "annual filing proxies, not verified catalysts"
             )
         last = batch
     return {
@@ -239,6 +377,8 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
         "policy_sha256": hashlib.sha256(_json(policy.model_dump(mode="json"))).hexdigest(),
         "signals": sorted(last, key=lambda f: (-f["score"], f["security_id"])),
         "stage_counts": dict(Counter(f["stage"] for f in last)),
+        "history_scope": "LAST_21_SESSIONS" if legacy else "FULL_KNOWABLE_HISTORY",
+        "history": histories,
         "breadth": mean(f["return_21d"] > 0 for f in last) if last else None,
         "benchmark_return_63d": benchmark_return,
         "regime": "UNAVAILABLE"

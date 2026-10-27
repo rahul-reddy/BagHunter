@@ -41,7 +41,7 @@ test('discovery filters, saved watchlist and candidate stage history', async ({p
   await page.getByLabel('Minimum relative volume').fill('0');
   await page.getByRole('button', {name: 'DEMO-A fx-compound'}).click();
   await expect(page.getByRole('heading', {name: 'Setup & stage history'})).toBeVisible();
-  await expect(page.getByRole('table', {name: 'Dated discovery stage history'}).getByRole('row')).toHaveCount(22);
+  await expect(page.getByRole('table', {name: 'Dated discovery stage history'}).getByRole('row')).toHaveCount(21);
   expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
 });
 

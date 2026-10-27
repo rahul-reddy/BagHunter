@@ -24,8 +24,10 @@ test('negative controls show frozen dated windows, null diagnostics and reproduc
   const parts: Buffer[] = []; const stream = await download.createReadStream();
   for await (const chunk of stream!) parts.push(Buffer.from(chunk));
   const data = JSON.parse(Buffer.concat(parts).toString());
-  expect(data.selector_model).toBe('discovery-v1-unvalidated');
+  expect(data.selector_model).toBe('discovery-v2-unvalidated');
   expect(data.selector_config_sha256).toMatch(/^[a-f0-9]{64}$/);
+  const run = await (await page.request.get('/api/runs/current')).json();
+  expect(data.selector_config_sha256).toBe(run.discovery.policy_sha256);
   await panel.getByLabel('Negative-control ranking', {exact: true}).selectOption('momentum');
   await expect(panel).toContainText('frozen-63d-momentum-v0');
   await panel.getByLabel('Negative-control ranking', {exact: true}).selectOption('discovery');

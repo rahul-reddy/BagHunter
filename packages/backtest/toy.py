@@ -6,7 +6,7 @@ This is a mechanical walk-forward screening demonstration, not a strategy valida
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from packages.research.discovery import DiscoveryPolicy, discover
+from packages.research.discovery import DiscoveryPolicy, ranking_snapshot
 from packages.research.features import eligible, snapshot
 from packages.shared.models import Dataset
 from packages.shared.numeric import require_finite
@@ -30,7 +30,7 @@ def evaluate(
                     candidates.append(features)
         candidates.sort(key=lambda f: (-f["return_63d"], f["security_id"]))
         policy = discovery_policy or DiscoveryPolicy()
-        discovered = discover(dataset, asof, policy)["signals"]
+        discovered = ranking_snapshot(dataset, asof, policy)
         discovery_candidates = [
             f
             for f in discovered

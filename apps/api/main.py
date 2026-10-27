@@ -18,7 +18,12 @@ from packages.data.reconciliation import inspect_reference
 from packages.data.run_archive import verify_integrity
 from packages.data.sec_statements import statement_analysis
 from packages.research.event_paths import event_report
-from packages.research.reports import candidate_memo, case_report, discovery_digest
+from packages.research.reports import (
+    candidate_memo,
+    case_report,
+    discovery_digest,
+    stage_history_report,
+)
 from packages.research.scenarios import Scenario, scenario
 from packages.research.sec_profile import financial_profile
 from packages.research.technical import technical_report
@@ -399,6 +404,7 @@ def report_download(run_id: str, report_name: str) -> Response:
             "discovery_negative_controls", {}
         ),
         "discovery_policy.json": data.get("discovery", {}).get("policy", {}),
+        "stage_history.json": stage_history_report(data),
         "discovery_sensitivity.json": data.get("discovery", {}).get("sensitivity", {}),
         "toy_backtest.json": data["backtest"],
         "portfolio.json": data.get("portfolio", {}),

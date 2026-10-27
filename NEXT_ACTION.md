@@ -1,3 +1,13 @@
+# Active implementation — full dated stage policy / 2026-10-27
+
+PR #37 financial metrics delivered as 50e12484475a, with 433 backend / 32 browser CI tests,
+independent approval and main real-source preview. Current feat/stage-policy adds full-history
+v2 rules and the history explorer. Finish current-source acceptance, exact-head CI, review,
+guarded merge and main preview; then implement remaining structured qualitative/peer/critic
+workflows. Full goal stays unfinished. Finviz + SEC suffice. Read STATUS.md and STAGE_POLICY.md.
+
+---
+
 # Active implementation — exact-period financial metrics / 2026-10-27
 
 PR #36 is delivered as 33d0c6a27842 with 416 backend / 31 browser CI tests, independent approval

@@ -1,3 +1,37 @@
+# Current handoff — full dated stage policy / 2026-10-27
+
+Owner resumed work after the requested pause. PR #37 merged through the guard as 50e12484475a:
+exact-head Linux CI passed 433 backend / 32 browser tests; Gemini high-effort approved with zero
+blocking findings. Full local QA passed 426 backend (seven Windows skips) / 32 browser. Main
+real-SEC preview passed dated inputs, missing gross profit, financial groups, export binding,
+keyboard and desktop/mobile accessibility. Source package and receipt are in ignored artifacts:
+BagHunter-source-50e12484475a.zip and test_results/financial-metrics-release-receipt.json.
+Finviz Elite + SEC remain the providers. Zero verified real investment theses; full app unfinished.
+
+Current feat/stage-policy implements discovery-v2-unvalidated with explicit breakout duration/rank
+gates, retained original triggers, price/filing invalidation, sustained strength, peer participation
+and multiple cited annual filing inflection kinds/accessions. Stale periods cannot advance stages.
+Full knowable session replay retains expired instruments. A history explorer paginates, inspects
+sources and exports all observations; the v1 algorithm remains explicitly selectable. See
+STAGE_POLICY.md. Default fixture replay measured 665 observations per instrument in 12.46 seconds
+before the final freshness/strength refinements; this is software timing, not empirical evidence.
+
+Current implementation: 26 stage tests and the reproduced legacy-export regression passed.
+Ranking-only evaluation now uses identical dated scores without repeatedly replaying histories;
+public discovery still archives full history. The six focused browser checks passed after fixing
+fixture-URI expectations and a real mobile pagination overflow. The initial full test process was
+stopped to address startup performance; its early legacy-export failure was reproduced and fixed
+without inventing a missing archive clock. Full scripts/qa.ps1 on 6141a1c passed 452 backend / seven Windows skips / 34 browser, plus
+locked installs, harness/skills, lint/format/types/build and demo. Further boundary inspection
+found that stale target/peer/benchmark prices could supply current ranks or confirmation inputs.
+The current fix excludes stale peers/rank references and makes stale benchmark returns missing;
+26 targeted stage tests and lint/types passed after that fix. Current-head CI/review are required;
+no complete current-revision QA or stage delivery is claimed yet.
+Then finish exact-head CI, independent review, guarded merge and main preview. Qualitative/peer/
+critic, robustness, operational and final release audits remain.
+
+---
+
 # Current handoff — exact-period financial metrics / 2026-10-27
 
 PR #36 merged as 33d0c6a27842 after exact-head CI passed 416 backend / 31 browser tests,

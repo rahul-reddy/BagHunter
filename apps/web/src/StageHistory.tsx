@@ -1,0 +1,19 @@
+import {useState} from 'react';
+import {download} from './downloads';
+
+export type StageHistoryRow = {asof: string; session: string; stage: string; reason: string; close: number | null; score: number | null; trigger_reference?: number | null; evaluated_trigger_reference?: number | null; breakout_reference?: number; base_duration_windows?: number; rank_percentile_63d?: number | null; filing_inflections?: {signals: {kind: string}[]; citations: {metric: string; period_end: string; accession: string; source_url: string; accepted_at: string; published_at: string}[]}};
+
+export function StageHistory({securityId, rows, allHistory, scope, asof, runId}: {securityId: string; rows: StageHistoryRow[]; allHistory?: Record<string, StageHistoryRow[]>; scope?: string; asof: string; runId: string}) {
+  const [selected, setSelected] = useState(securityId);
+  const [offset, setOffset] = useState(0);
+  const history = allHistory?.[selected] ?? rows;
+  const ordered = [...history].reverse();
+  const page = ordered.slice(offset, offset + 20);
+  const number = (value: number | null | undefined) => value == null ? 'Unavailable' : value.toLocaleString('en-US', {maximumFractionDigits: 2});
+  return <section className="stage-history" aria-label="Stage history explorer"><p>{scope ?? 'Legacy archived history'} · {history.length} dated observations. Latest first; missing observations and ineligible instruments stay explicit.</p>
+    {allHistory && <label>Stage history instrument<select aria-label="Stage history instrument" value={selected} onChange={event => {setSelected(event.target.value); setOffset(0);}}>{Object.keys(allHistory).sort().map(id => <option key={id}>{id}</option>)}</select></label>}
+    <p role="status">{history.length ? `History observations ${offset + 1}–${Math.min(offset + 20, history.length)} of ${history.length}` : 'No dated history in this archive.'}</p>
+    <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable stage history"><table><caption className="sr-only">Dated discovery stage history</caption><thead><tr><th>Session</th><th>Stage</th><th>Close</th><th>Score</th><th>Reason and evidence</th></tr></thead><tbody>{page.map(row => <tr key={row.asof}><td>{row.session}</td><td>{row.stage}</td><td>{number(row.close)}</td><td>{number(row.score)}</td><td className="wrap-cell">{row.reason}<details><summary>Stage evidence for {row.session}</summary><p>Evaluated original trigger: {number(row.evaluated_trigger_reference)} · retained trigger: {number(row.trigger_reference)} · current prior-window reference: {number(row.breakout_reference)} · base duration windows: {number(row.base_duration_windows)} · relative rank: {row.rank_percentile_63d == null ? 'Unavailable' : `${(row.rank_percentile_63d * 100).toFixed(1)}%`}</p><p>{row.filing_inflections?.signals.map(signal => signal.kind).join(', ') || 'No filing inflection signals in this archived observation.'}</p>{row.filing_inflections?.citations.map(c => <p key={`${c.metric}-${c.period_end}-${c.accession}`}><a href={c.source_url} target="_blank" rel="noreferrer">{c.metric} · {c.period_end} · {c.accession}</a><small>Accepted {c.accepted_at} · published {c.published_at}</small></p>)}</details></td></tr>)}</tbody></table></div>
+    <div className="pagination"><button className="secondary" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 20))}>Newer history observations</button><button className="secondary" disabled={offset + 20 >= history.length} onClick={() => setOffset(offset + 20)}>Older history observations</button><button className="secondary" onClick={() => download(`stage-history-${selected}.json`, JSON.stringify({run_id: runId, security_id: selected, asof, history_scope: scope ?? 'LEGACY', rows: history}, null, 2), 'application/json')}>Export complete instrument history</button><a href={`/api/runs/${runId}/reports/stage_history.json`}>Download all archived stage histories</a></div>
+  </section>;
+}
