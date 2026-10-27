@@ -14,7 +14,7 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from packages.backtest.constrained import PortfolioPolicy, simulate
+from packages.backtest.constrained import PortfolioPolicy, comparator_runs, simulate
 from packages.backtest.negative_controls import negative_controls
 from packages.backtest.toy import evaluate
 from packages.backtest.validation import diagnostics
@@ -159,20 +159,21 @@ def run(
         selector_config_sha256=discovery["policy_sha256"],
     )
     portfolio = simulate(dataset, portfolio_policy or PortfolioPolicy())
-    comparator_runs = [
-        simulate(dataset, portfolio_policy.model_copy(update={"selector": selector}))
-        for selector in ("momentum_12_1", "revenue_growth", "seeded_random")
-    ]
+    comparisons = comparator_runs(dataset, portfolio_policy)
+    portfolio["comparator_runs"] = comparisons
     portfolio["comparators"] = [
         {
+            "id": r["id"],
             "selector": r["policy"]["selector"],
+            "allocation": r["policy"]["allocation"],
+            "policy": r["policy"],
             "metrics": r["metrics"],
             "daily_risk": r["daily_risk"],
             "executions": len(r["executions"]),
             "excluded": len(r["exclusions"]),
             "ending_equity": r["ending_equity"],
         }
-        for r in comparator_runs
+        for r in comparisons
     ]
     payload: dict[str, Any] = {
         "run_id": run_key[:16],
@@ -227,6 +228,7 @@ def run(
             validation["discovery_negative_controls"],
         )
         dump(staging / "reports" / "portfolio.json", portfolio)
+        dump(staging / "reports" / "portfolio_comparators.json", portfolio["comparator_runs"])
         dump(staging / "reports" / "portfolio_policy.json", portfolio["policy"])
         dump(staging / "reports" / "cohort_grid.json", study["cohorts"])
         (staging / "reports" / "historical_cases.md").write_text(

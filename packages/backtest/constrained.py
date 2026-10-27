@@ -7,17 +7,21 @@ from typing import Any, Literal
 
 from pydantic import Field
 
+from packages.backtest.allocation import MODES, Allocation, allocation_targets, dated_volatility
 from packages.backtest.risk import daily_risk
 from packages.backtest.validation import performance
 from packages.research.features import eligible, snapshot
 from packages.research.outcomes import wealth_path
 from packages.shared.models import Dataset, Record
+from packages.shared.numeric import require_finite
 
 
 class PortfolioPolicy(Record):
     selector: Literal["momentum_63d", "momentum_12_1", "revenue_growth", "seeded_random"] = (
         "momentum_63d"
     )
+    allocation: Allocation = "cap_ranked"
+    volatility_window: Literal[20, 60] = 60
     seed: int = 7
     capital: float = Field(default=100_000, gt=0, le=1e12)
     max_position: float = Field(default=0.25, gt=0, le=1)
@@ -29,23 +33,47 @@ class PortfolioPolicy(Record):
 
 
 def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
+    try:
+        result = _simulate(dataset, policy)
+        require_finite(result, "constrained portfolio")
+        return result
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Constrained portfolio exceeds finite numeric bounds") from exc
+
+
+def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
     sessions = sorted({b.session for b in dataset.bars})
     lookup = {(b.security_id, b.session): b for b in dataset.bars}
     capital = policy.capital
     rows = []
     executions = []
     exclusions = []
+    allocation_ledger = []
     curve: list[dict[str, Any]] = []
     cost_rate = policy.one_way_cost_bps / 10000
     instruments = {i.security_id: i for i in dataset.instruments}
     for index in range(260, min(1000, len(sessions) - 23), 42):
+        if capital <= 0:
+            break
         decision, entry, exit_day = sessions[index], sessions[index + 1], sessions[index + 22]
         clock = datetime(decision.year, decision.month, decision.day, 23, tzinfo=UTC)
         candidates = []
         for instrument in dataset.instruments:
             if not eligible(instrument, clock):
                 continue
-            f = snapshot(instrument, dataset.bars, dataset.facts, clock)
+            try:
+                f = snapshot(instrument, dataset.bars, dataset.facts, clock)
+            except ValueError as exc:
+                if "insufficient price history" not in str(exc):
+                    raise
+                exclusions.append(
+                    {
+                        "decision": str(decision),
+                        "security_id": instrument.security_id,
+                        "reason": "INSUFFICIENT_DATED_SELECTION_HISTORY",
+                    }
+                )
+                continue
             if policy.selector == "momentum_12_1":
                 known = sorted(
                     (
@@ -94,11 +122,22 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                     }
                 )
                 continue
+            f["sector"] = instrument.sector
+            if policy.allocation == "inverse_volatility":
+                f["allocation_volatility"] = dated_volatility(
+                    dataset.bars, instrument.security_id, clock, policy.volatility_window
+                )
             candidates.append(f)
         candidates.sort(key=lambda f: (-f["selection_score"], f["security_id"]))
+        plan = allocation_targets(
+            candidates, policy.allocation, policy.max_position, policy.max_sector
+        )
+        allocation_ledger.append(
+            {"decision": str(decision), "asof_time": clock.isoformat(), **plan}
+        )
+        exclusions.extend({"decision": str(decision), **row} for row in plan["exclusions"])
+        targets = {row["security_id"]: row for row in plan["targets"]}
         starting = capital
-        if starting <= 0:
-            break
         cash = capital
         last_mark = curve[-1]["date"] if curve else ""
         for day in sessions[: index + 1]:
@@ -112,10 +151,12 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         sold = 0.0
         for f in candidates:
             sid = f["security_id"]
+            if sid not in targets or targets[sid]["planned_weight"] == 0:
+                continue
             first = lookup.get((sid, entry))
             sector = instruments[sid].sector
             budget = min(
-                starting * policy.max_position,
+                starting * targets[sid]["planned_weight"],
                 starting * policy.max_sector - sector_allocated.get(sector, 0),
                 f["dollar_volume_20d"] * policy.participation,
                 cash,
@@ -125,7 +166,9 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                     {"decision": str(decision), "security_id": sid, "reason": "MISSING_ENTRY"}
                 )
                 continue
-            shares = math.floor(budget / (first.open * (1 + cost_rate)))
+            unit_cost = first.open * (1 + cost_rate)
+            require_finite([budget, unit_cost], "execution budget and unit cost")
+            shares = math.floor(budget / unit_cost)
             if shares < 1:
                 exclusions.append(
                     {
@@ -198,6 +241,8 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                     "entry_price": first.open,
                     "entry_notional": buy_notional,
                     "starting_capital": starting,
+                    "requested_weight": targets[sid]["requested_weight"],
+                    "planned_weight": targets[sid]["planned_weight"],
                     "capacity_limit": f["dollar_volume_20d"] * policy.participation,
                     "entry_cost": entry_cost,
                     "exit_cost": exit_cost,
@@ -219,6 +264,12 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                     equity -= holding["exit_cost"]
             curve.append({"date": str(day), "equity": equity, "basis": "DAILY_CLOSE_AND_CASH"})
         capital = cash + terminal_cash
+        allocation_ledger[-1].update(
+            entry_cash_fraction=cash / starting,
+            realized_sector_weights={
+                key: value / starting for key, value in sorted(sector_allocated.items())
+            },
+        )
         if not math.isclose(curve[-1]["equity"], capital, rel_tol=1e-12, abs_tol=1e-6):
             raise ValueError("Daily portfolio marks do not reconcile to terminal cash")
         rows.append(
@@ -231,6 +282,10 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                 "deployment_fraction": deployed / starting,
                 "costs": fees,
                 "turnover": (deployed + sold) / starting,
+                "entry_cash_fraction": cash / starting,
+                "sector_entry_weights": {
+                    key: value / starting for key, value in sorted(sector_allocated.items())
+                },
             }
         )
     return {
@@ -240,15 +295,38 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         "rows": rows,
         "executions": executions,
         "exclusions": exclusions,
+        "allocation_ledger": allocation_ledger,
         "metrics": performance(rows, "net_return"),
         "daily_curve": curve,
         "daily_risk": daily_risk(curve),
         "ending_equity": capital,
         "limitations": [
             "Whole-share rounding; no leverage or borrowing",
+            "Allocation envelopes include entry costs; unfilled/capped targets stay in cash "
+            "without redistribution",
+            "Inverse volatility uses dated population simple-return volatility; "
+            "zero/missing risk is excluded",
+            "Sector-neutral allocation means equal-sector targets among available sectors; "
+            "realized weights can drift under caps/rounding",
             "Flat cash between independent windows; no cash yield",
             "Participation uses prior known 20-session dollar volume, not future execution volume",
             "Constant one-way costs combine commissions/spread/slippage; no calibrated impact",
             "Weekday fixture calendar; no real executable-return claim",
         ],
     }
+
+
+def comparator_runs(dataset: Dataset, policy: PortfolioPolicy) -> list[dict[str, Any]]:
+    """Predeclared one-axis variations; preserve every ledger, not only favorable summaries."""
+    variations = []
+    if policy.allocation != "cash":
+        for selector in ("momentum_63d", "momentum_12_1", "revenue_growth", "seeded_random"):
+            if selector != policy.selector:
+                variations.append({"selector": selector})
+    variations.extend({"allocation": mode} for mode in MODES if mode != policy.allocation)
+    result = []
+    for variation in variations:
+        changed = PortfolioPolicy.model_validate(policy.model_dump() | variation)
+        report = simulate(dataset, changed)
+        result.append({"id": f"{changed.selector}__{changed.allocation}", **report})
+    return result
