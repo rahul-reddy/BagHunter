@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ReferenceEvidence } from './ReferenceEvidence';
 import { ObservationDesk } from './ObservationDesk';
 
@@ -21,6 +21,7 @@ const reported = (value: string | number | null) => value === null ? 'Missing' :
 
 export function FinvizBrowser() {
   const [input, setInput] = useState('');
+  const researchOpener = useRef<HTMLButtonElement | null>(null);
   const [filters, setFilters] = useState(emptyFilters);
   const [selected, setSelected] = useState<{key: string; row: Observation} | null>(null);
   const [snapshots, setSnapshots] = useState<{snapshot_id: string; mode: string; rows: number; retrieved_at: string}[]>([]);
@@ -78,10 +79,11 @@ export function FinvizBrowser() {
             Volume: shares in current/last session. Change: reported percentage, not a backtest return.</p>
           <p role="status">{data.total === 0 ? 'No observations match this search.' :
             `Showing ${data.offset + 1}–${Math.min(data.offset + data.limit, data.total)} of ${data.total} observations`}</p>
+          {selected?.key === key && <ObservationDesk key={`${data.coverage.mode}:${data.coverage.snapshot_id}:${selected.row.ticker}`} observation={selected.row} source={{mode: data.coverage.mode, snapshot_id: data.coverage.snapshot_id, source_sha256: data.coverage.source_sha256, retrieved_at: data.coverage.retrieved_at}} onClose={() => {const opener = researchOpener.current; setSelected(null); requestAnimationFrame(() => {if (opener?.isConnected) opener.focus();});}}/>}
           <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable Finviz observations"><table><caption className="sr-only">Saved Finviz observations with unresolved identities</caption>
             <thead><tr>{['Ticker / company', 'Sector / industry', 'Market cap (reported scale)', 'Price (reported)', 'P/E (reported)', 'Change (%)', 'Volume (shares)', 'Identity / type'].map(title => <th key={title}>{title}</th>)}</tr></thead>
             <tbody>{data.observations.map(row => <tr key={row.ticker}>
-              <td><button className="security" aria-label={`Research observation ${row.ticker}`} onClick={() => setSelected({key, row})}>{row.ticker}</button><small className="observation-name">{row.company}</small></td>
+              <td><button className="security" aria-label={`Research observation ${row.ticker}`} onClick={event => {researchOpener.current = event.currentTarget; setSelected({key, row});}}>{row.ticker}</button><small className="observation-name">{row.company}</small></td>
               <td>{reported(row.sector)}<small className="observation-name">{reported(row.industry)}</small></td>
               <td>{reported(row.market_cap_reported)}</td><td>{reported(row.price_reported)}</td>
               <td>{row.pe_reported !== null && Number(row.pe_reported) === 0 ? '0 (reported; unresolved)' : reported(row.pe_reported)}</td>
@@ -92,7 +94,6 @@ export function FinvizBrowser() {
             onClick={() => setRequest(previous => ({ ...previous, offset: Math.max(0, previous.offset - data.limit) }))}>Previous observations</button>
             <button className="secondary" disabled={data.offset + data.limit >= data.total}
               onClick={() => setRequest(previous => ({ ...previous, offset: previous.offset + data.limit }))}>Next observations</button></div>
-          {selected?.key === key && <ObservationDesk key={`${data.coverage.mode}:${data.coverage.snapshot_id}:${selected.row.ticker}`} observation={selected.row} source={{mode: data.coverage.mode, snapshot_id: data.coverage.snapshot_id, source_sha256: data.coverage.source_sha256, retrieved_at: data.coverage.retrieved_at}} onClose={() => setSelected(null)}/>}
           <ReferenceEvidence key={data.coverage.snapshot_id} baseSnapshotId={data.coverage.snapshot_id} mode={data.coverage.mode} explicitSelection={Boolean(selection)}/>
           <details><summary>Source lineage and coverage gaps</summary>
             <p>Snapshot <span className="hash">{data.coverage.snapshot_id}</span></p>

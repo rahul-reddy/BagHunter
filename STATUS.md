@@ -1,3 +1,26 @@
+# Current handoff — research desk navigation / 2026-10-27
+
+PR #39 delivered as a95d99cad484: 459 backend / 39 browser CI tests, Claude approval with zero
+blockers, guarded merge and main actual Finviz/SEC preview. Source-bound packets, composed source
+clock floor, invalid-clock save/export, stale critic, save/load and desktop/mobile accessibility
+passed. Receipt: root artifacts/test_results/research-evidence-release-receipt.json.
+
+Current fix/research-navigation moves the observation desk ahead of the 50-row results table,
+focuses its heading on open, and restores the triggering button on close. Real-source screenshot
+inspection found the prior desk buried below all results. No source/ranking semantics change.
+Frontend lint/types and all 15 focused Finviz/company/research browser checks passed, including
+full-page last-row keyboard activation, desktop/mobile viewport and accessibility. Production
+build and exact-head CI/review/guarded merge remain required.
+
+Operations PR #40's test-isolation correction passed paired cancellation/rerun and run-index
+checks and received new-head Gemini approval; fresh CI is running. Robustness PR #41 received
+initial independent approval, but CI found an expected validation-schema mismatch. Its correction
+is under targeted verification and requires fresh CI/review. No full-app completion claim;
+final item-level specification/release audit and explicit empirical gates remain open.
+Finviz Elite + SEC are the provider scope. Zero verified real investment theses.
+
+---
+
 # Current handoff — structured research and critic packets / 2026-10-27
 
 Owner resumed the full application objective. PR #37 is delivered as 50e12484475a: 433 backend /
