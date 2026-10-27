@@ -16,3 +16,5 @@
 .portfolio-comparisons{overflow-wrap:anywhere}.portfolio-comparisons .filters label{min-width:0;max-width:100%}.portfolio-comparisons select{max-width:100%}
 
 .event-paths{overflow-wrap:anywhere}.event-paths .filters label{min-width:0;max-width:100%}.event-paths select{max-width:100%}.event-paths details{margin:18px 0}
+
+.panel li a,.panel p a{text-decoration:underline;text-underline-offset:2px}
