@@ -6,7 +6,8 @@ preview. Its private source package/receipt remain under root artifacts. PR #38 
 independent Gemini approval (zero blockers, one optional legacy-field advisory).
 The earlier full local stage QA passed 452 backend / seven Windows skips / 34 browser on 6141a1c;
 the final stale-target/peer/benchmark boundary fix passed 26 targeted tests and exact-head CI.
-Main source matches the reviewed stage tree; main stage preview remains to run. Finviz Elite + SEC are the provider scope.
+Main source matches the reviewed stage tree; main preview passed all 1,995 observations,
+872 citation cutoffs, archive/API exports, pagination, keyboard and desktop/mobile accessibility. Finviz Elite + SEC are the provider scope.
 
 Current feat/research-evidence is isolated in C:/dev_projects/BagHunter-research, rebased onto stage main
 3dd0de4. It adds source-bound qualitative categories/tags, explicit horizon/opportunity cost,
@@ -21,8 +22,10 @@ Executed: eight focused company/evidence checks passed, including desktop/mobile
 source failure/switching, typed-record/clock bounds, comparison exclusions, save/load and critic
 staleness. A broader 36-browser run on the main-50e1248 base passed. A final load-clock refinement
 avoids validating a saved issuer against an unrelated current selection; final lint/types/build
-and all eight focused checks passed before rebase. Do not claim combined acceptance against stage main
-until the rebased combined revision is tested. Independent review/CI/guarded merge
+and all eight focused checks passed before rebase. After rebasing onto 3dd0de4, frontend lint,
+types/build and the complete 38-browser suite passed on 6e6cb79. Only handoff prose changed
+after those checks. Backend source is identical to the reviewed stage main; this frontend-only
+change still requires its own exact-head CI. Independent review/CI/guarded merge
 and actual-source main preview remain. No full-app completion claim: robustness variants,
 resource/recovery/load operations, empirical source contracts and final item-level release audit
 are still open. Zero real investment theses are verified.
