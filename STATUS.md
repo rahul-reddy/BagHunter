@@ -21,8 +21,12 @@ Ranking-only evaluation now uses identical dated scores without repeatedly repla
 public discovery still archives full history. The six focused browser checks passed after fixing
 fixture-URI expectations and a real mobile pagination overflow. The initial full test process was
 stopped to address startup performance; its early legacy-export failure was reproduced and fixed
-without inventing a missing archive clock. Current scripts/qa.ps1 is running on frozen Python
-source after formatting. No complete current QA, CI, review or stage delivery is claimed yet.
+without inventing a missing archive clock. Full scripts/qa.ps1 on 6141a1c passed 452 backend / seven Windows skips / 34 browser, plus
+locked installs, harness/skills, lint/format/types/build and demo. Further boundary inspection
+found that stale target/peer/benchmark prices could supply current ranks or confirmation inputs.
+The current fix excludes stale peers/rank references and makes stale benchmark returns missing;
+26 targeted stage tests and lint/types passed after that fix. Current-head CI/review are required;
+no complete current-revision QA or stage delivery is claimed yet.
 Then finish exact-head CI, independent review, guarded merge and main preview. Qualitative/peer/
 critic, robustness, operational and final release audits remain.
 

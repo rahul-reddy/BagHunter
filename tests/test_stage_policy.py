@@ -219,6 +219,36 @@ def test_full_history_prefix_is_independent_of_later_data_and_tracks_expired_ins
             if r["asof"] <= first["signals"][0]["asof_time"]
         ] == rows
     assert all(len(rows) == 32 for rows in result["history"].values())
+    missing_id = short.instruments[0].security_id
+    missing = short.model_copy(
+        update={
+            "bars": [
+                b
+                for b in short.bars
+                if not (b.security_id == missing_id and b.session == sessions[151])
+            ]
+        }
+    )
+    incomplete = discover(missing, end, DiscoveryPolicy())
+    stale = next(s for s in incomplete["signals"] if s["security_id"] == missing_id)
+    assert stale["stage"] == "WATCH" and not stale["stage_history"][-1]["fresh_price"]
+    assert stale["relative_evidence"]["rank_percentile_63d"] is None
+    for signal in incomplete["signals"]:
+        assert missing_id not in {
+            r["security_id"] for r in signal["relative_evidence"]["references"]
+        }
+    benchmark_gap = short.model_copy(
+        update={
+            "bars": [
+                b
+                for b in short.bars
+                if not (b.security_id == "fx-market" and b.session == sessions[151])
+            ]
+        }
+    )
+    without_benchmark = discover(benchmark_gap, end, DiscoveryPolicy())
+    assert without_benchmark["benchmark_return_63d"] is None
+    assert all(s["relative_strength_63d"] is None for s in without_benchmark["signals"])
     target = short.instruments[0]
     expired = short.model_copy(
         update={

@@ -67,3 +67,7 @@ and all instrument records match the API download. Legacy windows are labeled as
 Walk-forward evaluation calls a separate ranking snapshot path: its dated score inputs match full
 discovery, but it omits stage fields and does not claim history. This avoids replaying the entire
 history at every evaluation date. The default public discovery call always retains full history.
+
+V2 relative-rank and peer-participation pools exclude instruments without a fresh price at that
+clock. A stale target has no current rank, and a stale benchmark produces missing relative strength.
+The raw prior price remains inspectable with its actual session; it does not count as fresh evidence.

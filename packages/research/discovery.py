@@ -165,7 +165,12 @@ def _discover(
         benchmark_return = None
         if benchmark is not None:
             try:
-                benchmark_return = snapshot(benchmark, dataset.bars, [], clock)["return_63d"]
+                benchmark_point = snapshot(benchmark, dataset.bars, [], clock)
+                benchmark_return = (
+                    benchmark_point["return_63d"]
+                    if legacy or benchmark_point["price_session"] == str(day)
+                    else None
+                )
             except ValueError as exc:
                 if "insufficient price history" not in str(exc):
                     raise
@@ -243,16 +248,42 @@ def _discover(
             f["consolidation"] = f["base_width_60d"] <= policy.max_base_width
             require_finite(f, "discovery features before ranking")
             batch.append(f)
-        relative = cross_section_evidence(batch)
+        rank_pool = batch if legacy else [f for f in batch if f["price_session"] == str(day)]
+        relative = cross_section_evidence(rank_pool)
         for f in batch:
-            f["relative_evidence"] = relative[f["security_id"]]
+            if f["security_id"] in relative:
+                f["relative_evidence"] = relative[f["security_id"]]
+            else:
+                missing_rank = cross_section_evidence([f])[f["security_id"]]
+                missing_rank.update(
+                    {
+                        "scope": "NO_FRESH_PRICE_AT_CLOCK_NO_CURRENT_RANK",
+                        "universe_count": len(rank_pool),
+                        "sector_count": sum(
+                            bool(f["sector"].strip()) and p["sector"] == f["sector"]
+                            for p in rank_pool
+                        ),
+                        "references": next(iter(relative.values()))["references"]
+                        if relative
+                        else [],
+                    }
+                )
+                missing_rank["limitations"].append("Target has no fresh price at this clock")
+                f["relative_evidence"] = missing_rank
             if not legacy:
                 f["trigger_reference"] = triggers.get(f["security_id"])
             peers = [
                 p
                 for p in batch
                 if p["sector"] == f["sector"]
-                and (legacy or (f["sector"].strip() and p["security_id"] != f["security_id"]))
+                and (
+                    legacy
+                    or (
+                        f["sector"].strip()
+                        and p["security_id"] != f["security_id"]
+                        and p["price_session"] == str(day)
+                    )
+                )
             ]
             breadth = (
                 mean(p["return_21d"] > 0 for p in peers)
