@@ -23,6 +23,7 @@ from packages.data.providers import UnconfiguredMarketProvider
 from packages.data.run_archive import verify_integrity, write_integrity
 from packages.research.cohorts import cohort_grid
 from packages.research.discovery import DiscoveryPolicy, discover
+from packages.research.event_paths import EventPathPolicy, event_report, event_rows, event_study
 from packages.research.features import VERSION, eligible, snapshot
 from packages.research.outcomes import matched_pairs, outcome
 from packages.research.reports import candidate_memo, case_report, discovery_digest
@@ -49,6 +50,7 @@ def run(
     seed: int = 7,
     policy: DiscoveryPolicy | None = None,
     portfolio_policy: PortfolioPolicy | None = None,
+    event_policy: EventPathPolicy | None = None,
 ) -> dict[str, Any]:
     if asof.utcoffset() is None:
         raise ValueError("asof must include timezone")
@@ -62,6 +64,7 @@ def run(
     checksum = hashlib.sha256(raw).hexdigest()
     policy = policy or DiscoveryPolicy()
     portfolio_policy = portfolio_policy or PortfolioPolicy(seed=seed)
+    event_policy = event_policy or EventPathPolicy(seed=seed)
     code_hash = hashlib.sha256()
     for module in sorted(Path(__file__).parent.rglob("*.py")):
         code_hash.update(module.relative_to(Path(__file__).parent).as_posix().encode())
@@ -73,8 +76,11 @@ def run(
     portfolio_digest = hashlib.sha256(
         json.dumps(portfolio_policy.model_dump(), sort_keys=True).encode()
     ).hexdigest()
+    event_digest = hashlib.sha256(
+        json.dumps(event_policy.model_dump(), sort_keys=True).encode()
+    ).hexdigest()
     run_key = hashlib.sha256(
-        f"{checksum}:{asof.isoformat()}:{seed}:{VERSION}:{code_digest}:{policy_digest}:{portfolio_digest}".encode()
+        f"{checksum}:{asof.isoformat()}:{seed}:{VERSION}:{code_digest}:{policy_digest}:{portfolio_digest}:{event_digest}".encode()
     ).hexdigest()
     target = output / "runs" / run_key[:16]
     if target.exists():
@@ -139,6 +145,7 @@ def run(
         ],
     }
     study["cohorts"] = cohort_grid(dataset)
+    study["event_paths"] = event_study(dataset, event_policy)
     backtest = evaluate(dataset, seed, policy)
     validation = diagnostics(backtest)
     validation["negative_controls"] = negative_controls(
@@ -217,6 +224,7 @@ def run(
             )
         table(staging / "gold" / "features.parquet", features)
         table(staging / "hindsight" / "labels.parquet", labels)
+        table(staging / "hindsight" / "event_paths.parquet", event_rows(study["event_paths"]))
         table(staging / "hindsight" / "cohort_pairs.parquet", pairs)
         dump(staging / "reports" / "source_manifest.json", source)
         dump(staging / "reports" / "toy_backtest.json", backtest)
@@ -231,6 +239,10 @@ def run(
         dump(staging / "reports" / "portfolio_comparators.json", portfolio["comparator_runs"])
         dump(staging / "reports" / "portfolio_policy.json", portfolio["policy"])
         dump(staging / "reports" / "cohort_grid.json", study["cohorts"])
+        dump(staging / "reports" / "event_paths.json", study["event_paths"])
+        (staging / "reports" / "event_paths.md").write_text(
+            event_report(study["event_paths"], payload["run_id"]), encoding="utf-8"
+        )
         (staging / "reports" / "historical_cases.md").write_text(
             case_report(payload), encoding="utf-8"
         )

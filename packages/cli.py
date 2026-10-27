@@ -20,6 +20,7 @@ from packages.data.reference import fetch_reference
 from packages.data.sec_facts import normalize_sec
 from packages.pipeline import DEFAULT_ASOF, run
 from packages.research.discovery import DiscoveryPolicy
+from packages.research.event_paths import EventPathPolicy
 
 
 def main() -> None:
@@ -32,6 +33,9 @@ def main() -> None:
         cmd.add_argument("--output", type=Path, default=Path("data/fixture/latest"))
         cmd.add_argument("--policy", type=Path, help="Local JSON discovery policy; fixture only")
         cmd.add_argument("--portfolio-policy", type=Path, help="Local JSON portfolio constraints")
+        cmd.add_argument(
+            "--event-policy", type=Path, help="Local JSON descriptive event-study policy"
+        )
     sec = sub.add_parser("sec-fetch", help="Raw real SEC submissions; not mixed with fixture")
     sec.add_argument("--cik", required=True)
     sec.add_argument("--output", type=Path, default=Path("data/real/sec/raw"))
@@ -250,8 +254,18 @@ def main() -> None:
                 if args.portfolio_policy
                 else None
             )
+            event_policy = (
+                EventPathPolicy.model_validate_json(_read(args.event_policy, 64 * 1024))
+                if args.event_policy
+                else None
+            )
             result = run(
-                args.output, datetime.fromisoformat(args.asof), args.seed, policy, portfolio_policy
+                args.output,
+                datetime.fromisoformat(args.asof),
+                args.seed,
+                policy,
+                portfolio_policy,
+                event_policy,
             )
         except (ValueError, OSError, TypeError, KeyError) as exc:
             print(

@@ -1,0 +1,7 @@
+{
+  "version": "calendar-event-paths-v1",
+  "anchor_rule": "FIRST_FIXTURE_WEEKDAY_EACH_QUARTER",
+  "horizon_years": 1,
+  "max_hit_threshold": 5,
+  "seed": 7
+}

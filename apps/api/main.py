@@ -17,6 +17,7 @@ from packages.data.provider_refresh import read_sec_bundle
 from packages.data.reconciliation import inspect_reference
 from packages.data.run_archive import verify_integrity
 from packages.data.sec_statements import statement_analysis
+from packages.research.event_paths import event_report
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 from packages.research.scenarios import Scenario, scenario
 from packages.research.sec_profile import financial_profile
@@ -404,7 +405,13 @@ def report_download(run_id: str, report_name: str) -> Response:
         "portfolio_comparators.json": data.get("portfolio", {}).get("comparator_runs", []),
         "portfolio_policy.json": data.get("portfolio", {}).get("policy", {}),
         "cohort_grid.json": data["study"].get("cohorts", {}),
+        "event_paths.json": data["study"].get("event_paths"),
     }
+    if report_name == "event_paths.md":
+        return Response(
+            event_report(data["study"].get("event_paths"), data["run_id"]),
+            media_type="text/markdown; charset=utf-8",
+        )
     if report_name in reports:
         return Response(
             json.dumps(reports[report_name], indent=2, allow_nan=False),

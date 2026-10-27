@@ -45,14 +45,21 @@ def facts_at(
 ) -> list[Fact]:
     if lag_hours < 0:
         raise ValueError("processing lag must be nonnegative")
+    asof = utc_asof(asof)
     return sorted(
         [
             f
             for f in facts
             if f.security_id == security_id
-            and max(f.accepted_at, f.published_at) + timedelta(hours=lag_hours) <= asof
+            and max(utc_asof(f.accepted_at), utc_asof(f.published_at)) + timedelta(hours=lag_hours)
+            <= asof
         ],
-        key=lambda f: (f.period_end, f.published_at, f.accepted_at, f.accession),
+        key=lambda f: (
+            f.period_end,
+            utc_asof(f.published_at),
+            utc_asof(f.accepted_at),
+            f.accession,
+        ),
     )
 
 

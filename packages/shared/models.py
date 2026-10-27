@@ -1,7 +1,7 @@
 """Validated raw records. Observation timestamps are UTC and never inferred from period ends."""
 
 import math
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -75,7 +75,9 @@ class Fact(Record):
     def valid_times(self) -> "Fact":
         if self.accepted_at.utcoffset() is None or self.published_at.utcoffset() is None:
             raise ValueError("timezone required")
-        if self.published_at < self.accepted_at or self.period_end > self.accepted_at.date():
+        accepted_utc = self.accepted_at.astimezone(UTC)
+        published_utc = self.published_at.astimezone(UTC)
+        if published_utc < accepted_utc or self.period_end > accepted_utc.date():
             raise ValueError("invalid filing timeline")
         if not math.isfinite(self.value):
             raise ValueError("nonfinite fact")

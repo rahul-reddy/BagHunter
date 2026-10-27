@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import shutil
 from datetime import UTC, datetime, timedelta
 
 import pyarrow.parquet as pq
@@ -18,6 +19,7 @@ from packages.data.run_archive import verify_integrity
 from packages.pipeline import DEFAULT_ASOF, run
 from packages.research.cohorts import cohort_grid
 from packages.research.discovery import DiscoveryPolicy, classify, discover
+from packages.research.event_paths import EventPathPolicy, event_rows
 from packages.research.fundamentals import statement_ratios
 from packages.research.scenarios import Scenario, scenario
 from packages.shared.models import Fact
@@ -202,6 +204,22 @@ def test_refresh_cache_revalidates_all_outputs_and_does_not_repair_corruption(wo
     report_path.write_bytes(original)
 
 
+def test_event_policy_has_an_independent_cache_key_and_retains_original_run(workspace, tmp_path):
+    root, before, _ = workspace
+    copied = tmp_path / "fixture"
+    shutil.copytree(root.parent, copied)
+    output = copied / root.name
+    old = json.loads((output / "runs" / before / "run.json").read_text())
+    settings = EventPathPolicy(max_hit_threshold=20)
+    changed = run(output, datetime.fromisoformat(DEFAULT_ASOF), event_policy=settings)
+    assert changed["run_id"] != before
+    fresh = json.loads((output / "runs" / changed["run_id"] / "run.json").read_text())
+    assert event_rows(fresh["study"]["event_paths"]) == event_rows(old["study"]["event_paths"])
+    assert sum(a["cases"] for a in old["study"]["event_paths"]["anchors"]) == 1
+    assert sum(a["cases"] for a in fresh["study"]["event_paths"]["anchors"]) == 0
+    assert run(output, datetime.fromisoformat(DEFAULT_ASOF), event_policy=settings)["cache_reused"]
+
+
 def test_cohort_grid_retains_missing_and_delisted_denominators():
     study = cohort_grid(fixture())
     first = next(
@@ -287,6 +305,17 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     assert comparison["policy_changed"] and len(comparison["changes"]) == 3
     assert client.get(f"/runs/{before}/compare/{after}").status_code == 422
     data = client.get(f"/runs/{after}").json()
+    paths = data["study"]["event_paths"]
+    assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
+    path_dir = root / "runs" / after
+    assert json.loads((path_dir / "reports" / "event_paths.json").read_text()) == paths
+    markdown = client.get(f"/runs/{after}/reports/event_paths.md")
+    assert markdown.text == (path_dir / "reports" / "event_paths.md").read_text()
+    assert after in markdown.text and "hindsight" in markdown.text
+    assert pq.read_table(path_dir / "hindsight" / "event_paths.parquet").num_rows == paths["points"]
+    assert not {"event_paths", "points", "outcome_group", "outcome"} & set(
+        pq.read_schema(path_dir / "gold" / "features.parquet").names
+    )
     comparisons = data["portfolio"]["comparator_runs"]
     exported_comparisons = client.get(f"/runs/{after}/reports/portfolio_comparators.json")
     saved_comparisons = root / "runs" / after / "reports" / "portfolio_comparators.json"
@@ -362,6 +391,8 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
         "portfolio.json",
         "portfolio_comparators.json",
         "cohort_grid.json",
+        "event_paths.json",
+        "event_paths.md",
     ]:
         response = client.get(f"/runs/{before}/reports/{name}")
         assert response.status_code == 200

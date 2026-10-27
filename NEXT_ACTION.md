@@ -1,3 +1,14 @@
+# Active implementation — historical event paths / 2026-10-27
+
+PR #34 merged as 00092299 with 402 backend / 28 browser tests, independent approval and main
+preview. Current feat/event-paths adds declared anchors, independently dated feature vectors,
+retrospective pairing, missingness, archived exports and a Museum explorer. Finish scripts/qa.ps1,
+exact-head CI, cross-review and guarded merge, then run the main preview. Next edit the SEC
+statement concept/derived-ratio contracts for remaining financial fields. Full goal stays active;
+Finviz + SEC suffice. Read STATUS.md, docs/EVENT_PATHS.md and docs/REMAINING_REQUIREMENTS.md.
+
+---
+
 # Active implementation — portfolio comparators / 2026-10-26
 
 PR #33 merged as ed0042ce with 391 backend / 26 browser tests, independent approval and main
