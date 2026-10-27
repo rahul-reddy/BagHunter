@@ -212,6 +212,32 @@ def test_refresh_cache_revalidates_all_outputs_and_does_not_repair_corruption(wo
     report_path.write_bytes(original)
 
 
+def test_interrupted_publication_preserves_active_archive_and_can_rerun(workspace, monkeypatch):
+    import packages.pipeline as pipeline
+
+    root, _, _ = workspace
+    pointer = (root / "CURRENT").read_bytes()
+    prior = set((root / "runs").iterdir())
+    original = pipeline.write_integrity
+
+    def interrupt(folder):
+        raise KeyboardInterrupt("Controlled cancellation before publication")
+
+    monkeypatch.setattr(pipeline, "write_integrity", interrupt)
+    with pytest.raises(KeyboardInterrupt):
+        run(root, datetime.fromisoformat(DEFAULT_ASOF), seed=19)
+    assert (root / "CURRENT").read_bytes() == pointer
+    assert set((root / "runs").iterdir()) == prior
+    assert not list(root.parent.glob("run-*"))
+    verify_integrity(root / "runs" / pointer.decode().strip())
+    monkeypatch.setattr(pipeline, "write_integrity", original)
+    completed = run(root, datetime.fromisoformat(DEFAULT_ASOF), seed=19)
+    assert completed["run_id"] != pointer.decode().strip()
+    assert (root / "CURRENT").read_text() == completed["run_id"]
+    verify_integrity(root / "runs" / completed["run_id"])
+    assert run(root, datetime.fromisoformat(DEFAULT_ASOF), seed=19)["cache_reused"]
+
+
 def test_event_policy_has_an_independent_cache_key_and_retains_original_run(workspace, tmp_path):
     root, before, _ = workspace
     copied = tmp_path / "fixture"

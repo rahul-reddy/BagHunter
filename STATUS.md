@@ -1,3 +1,27 @@
+# Current handoff — bounded operations acceptance / 2026-10-27
+
+Owner resumed full-app implementation. PR #38 stage policy delivered as 3dd0de4db22e with
+459 backend / 34 browser CI tests, independent review, guarded merge and main preview.
+PR #39 research head 21402d2 received independent Claude approval with zero blockers; fresh
+CI is running. feat/robustness is separate and full QA remains in progress.
+
+Current feat/operations adds scripts/operations_audit.py: bounded disk inventory, active fixture
+archive restore/checksum verification and optional twelve-request/four-worker local API smoke.
+It never changes CURRENT, contacts providers or starts services. The updated runbook distinguishes
+raw-source/browser backups, hard-kill staging, rerun/cache recovery and unsupported CPU checkpoints;
+it reconciles SEC parent-declared historical submissions support. No automatic cleanup or RAM cap.
+
+Current 12 operations unit tests and targeted lint/format passed. The script executed against
+main run 9f2cd71dec90f783: 46,810,552 archive bytes within 512 MiB, verified restore, twelve
+successful loopback requests at concurrency four in 3.58 seconds, maximum 0.51 seconds.
+These are local smoke measurements, not production capacity or an SLO. Controlled KeyboardInterrupt before publication preserved the prior pointer and archives, cleaned
+staging, then reran successfully and reused the verified cache (targeted test passed in 176.70s).
+Whole-repository lint/format passed. Fresh CI and independent review remain required.
+Full application completion still requires final item-by-item specification/release evidence.
+Finviz Elite + SEC remain the provider scope; zero real investment theses are verified.
+
+---
+
 # Current handoff — full dated stage policy / 2026-10-27
 
 Owner resumed work after the requested pause. PR #37 merged through the guard as 50e12484475a:
