@@ -1,5 +1,9 @@
 # Research model and acceptance boundaries
 
+Dated technical catalog continuation: see [TECHNICAL_FEATURES.md](TECHNICAL_FEATURES.md) for
+formulas, reference clocks, sector-proxy scope and missingness. Added diagnostics retain the
+existing unvalidated score/stage policy; current final gates are recorded in STATUS.md.
+
 BagHunter's shipped research feed is an inspected synthetic fixture, not a fitted investment
 model. The three fictional common shares and fictional market comparator cover weekday prices
 from 2019-01-01 through 2023-03-30. The default research clock is 2022-01-03 23:00 UTC. The legacy

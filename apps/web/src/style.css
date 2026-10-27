@@ -10,3 +10,5 @@
 .negative-controls{overflow-wrap:anywhere}
 
 .company-research,.company-evidence{overflow-wrap:anywhere}
+
+.technical-evidence{overflow-wrap:anywhere}.technical-evidence .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}.technical-evidence dd{margin:8px 0}.technical-evidence dt{font-size:12px;color:#b0c0c7}

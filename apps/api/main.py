@@ -20,6 +20,7 @@ from packages.data.sec_statements import statement_analysis
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 from packages.research.scenarios import Scenario, scenario
 from packages.research.sec_profile import financial_profile
+from packages.research.technical import technical_report
 
 app = FastAPI(title="BagHunter — research only", version="0.1.0")
 
@@ -389,6 +390,7 @@ def compare_runs(run_id: str, previous_id: str) -> dict[str, Any]:
 def report_download(run_id: str, report_name: str) -> Response:
     data = read_run(run_id)
     reports = {
+        "technical_evidence.json": technical_report(data),
         "source_manifest.json": data["sources"],
         "validation.json": data.get("validation", {}),
         "negative_controls.json": data.get("validation", {}).get("negative_controls", {}),

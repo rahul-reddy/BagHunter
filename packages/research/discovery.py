@@ -3,7 +3,7 @@
 import hashlib
 from collections import Counter
 from datetime import UTC, datetime
-from statistics import mean, pstdev
+from statistics import mean
 from typing import Any, Literal
 
 from pydantic import Field, model_validator
@@ -11,6 +11,7 @@ from pydantic import Field, model_validator
 from packages.data.finviz import _json
 from packages.research.features import eligible, snapshot, symbol_at, utc_asof
 from packages.research.fundamentals import statement_ratios
+from packages.research.technical import cross_section_evidence, technical_evidence
 from packages.shared.models import Dataset, Record
 from packages.shared.numeric import require_finite
 
@@ -168,28 +169,9 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
                 ),
                 key=lambda b: b.session,
             )
-            returns = [
-                known[j].close / known[j - 1].close - 1 for j in range(len(known) - 20, len(known))
-            ]
-            require_finite(returns, "daily feature returns")
-            closes = [b.close for b in known]
-            f["technical"] = {
-                "sma_20": mean(closes[-20:]),
-                "sma_50": mean(closes[-50:]),
-                "sma_200": mean(closes[-200:]) if len(closes) >= 200 else None,
-                "high_20_prior": max(b.high for b in known[-21:-1]),
-                "high_120_prior": max(b.high for b in known[-121:-1]),
-                "atr_20": mean(
-                    max(
-                        b.high - b.low,
-                        abs(b.high - known[j - 1].close),
-                        abs(b.low - known[j - 1].close),
-                    )
-                    for j, b in enumerate(known)
-                    if j >= len(known) - 20
-                ),
-                "stale_calendar_days": (clock.date() - known[-1].session).days,
-            }
+            f["technical"] = technical_evidence(
+                known, instrument.security_id, clock, policy.max_base_width
+            )
             f["chart"] = [
                 {
                     "date": str(b.session),
@@ -200,11 +182,13 @@ def _discover(dataset: Dataset, asof: datetime, policy: DiscoveryPolicy) -> dict
                 }
                 for b in known[-126:]
             ]
-            f["volatility_20d"] = pstdev(returns) * 252**0.5
+            f["volatility_20d"] = f["technical"]["volatility_20d"]
             f["consolidation"] = f["base_width_60d"] <= policy.max_base_width
             require_finite(f, "discovery features before ranking")
             batch.append(f)
+        relative = cross_section_evidence(batch)
         for f in batch:
+            f["relative_evidence"] = relative[f["security_id"]]
             peers = [p for p in batch if p["sector"] == f["sector"]]
             breadth = mean(p["return_21d"] > 0 for p in peers) if len(peers) > 1 else None
             f["sector_breadth"] = breadth

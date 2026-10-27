@@ -287,6 +287,19 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     assert comparison["policy_changed"] and len(comparison["changes"]) == 3
     assert client.get(f"/runs/{before}/compare/{after}").status_code == 422
     data = client.get(f"/runs/{after}").json()
+    technical = client.get(f"/runs/{after}/reports/technical_evidence.json").json()
+    saved = root / "runs" / after / "reports" / "technical_evidence.json"
+    assert technical == json.loads(saved.read_text())
+    assert technical["run_id"] == after and technical["asof"] == data["asof"]
+    for signal in data["signals"]:
+        evidence = signal["technical"]
+        assert evidence["policy"] == "technical-evidence-v1"
+        assert evidence["latest_available_at"] <= data["asof"]
+        assert signal["volatility_20d"] == evidence["volatility_20d"]
+        for reference in signal["relative_evidence"]["references"]:
+            assert reference["asof_time"] == data["asof"]
+            assert reference["latest_available_at"] <= data["asof"]
+            assert reference["source_ids"] == ["fixture-v1"]
     validation = diagnostics(data["backtest"])
     controls = negative_controls(
         data["backtest"]["rows"], datetime.fromisoformat(data["asof"]), data["seed"]
@@ -326,6 +339,7 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
         "historical_cohorts.csv",
         "source_manifest.json",
         "validation.json",
+        "technical_evidence.json",
         "negative_controls.json",
         "discovery_negative_controls.json",
         "research_limitations.md",
