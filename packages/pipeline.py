@@ -27,6 +27,7 @@ from packages.research.features import VERSION, eligible, snapshot
 from packages.research.outcomes import matched_pairs, outcome
 from packages.research.reports import candidate_memo, case_report, discovery_digest
 from packages.research.sensitivity import ranking_sensitivity
+from packages.research.technical import technical_report
 
 DEFAULT_ASOF = "2022-01-03T23:00:00+00:00"
 
@@ -219,6 +220,7 @@ def run(
         dump(staging / "reports" / "source_manifest.json", source)
         dump(staging / "reports" / "toy_backtest.json", backtest)
         dump(staging / "reports" / "validation.json", validation)
+        dump(staging / "reports" / "technical_evidence.json", technical_report(payload))
         dump(staging / "reports" / "negative_controls.json", validation["negative_controls"])
         dump(
             staging / "reports" / "discovery_negative_controls.json",

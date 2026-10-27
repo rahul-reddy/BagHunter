@@ -1,3 +1,13 @@
+# Active implementation — technical catalog / 2026-10-26
+
+PR #32 merged as 15f6406 with 376 backend / 24 browser tests, Gemini approval and main preview.
+Current feat/technical-catalog adds dated indicators, cross-section/sector proxies and explanation
+plus archived export. Finish current-revision QA, CI, independent review and guarded merge; verify
+main. Then implement risk-scaled/sector-neutral allocation comparators under the same constraints.
+Full goal stays active. Finviz + SEC suffice to continue; see STATUS.md and TECHNICAL_FEATURES.md.
+
+---
+
 # Active implementation — company research / 2026-10-26
 
 PR #31 merged as 993213b with 372 backend / 20 browser tests, Gemini approval and main preview.

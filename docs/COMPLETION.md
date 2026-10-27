@@ -1,5 +1,9 @@
 # BagHunter implementation completion audit
 
+Dated technical catalog continuation: see [TECHNICAL_FEATURES.md](TECHNICAL_FEATURES.md) for
+formulas, reference clocks, sector-proxy scope and missingness. Added diagnostics retain the
+existing unvalidated score/stage policy; current final gates are recorded in STATUS.md.
+
 The granular open-work register is [REMAINING_REQUIREMENTS.md](REMAINING_REQUIREMENTS.md).
 Current company-research work connects Finviz notes to explicitly selected SEC evidence,
 assumption scenarios and cited saved/exported drafts. This does not approve identities or certify

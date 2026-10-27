@@ -1,3 +1,28 @@
+# Current handoff — technical catalog / 2026-10-26
+
+Full application goal remains active. PR #32 merged as 15f6406aea94: exact-head Linux CI passed
+376 backend / 24 browser tests; Gemini approved with zero blockers. Main company-research preview,
+source-bound memos and mobile accessibility passed. Finviz + existing SEC configuration remain
+the provider stack; zero real verified investment theses.
+
+Current feat/technical-catalog adds dated 20/60 volatility/contraction, gaps, prior-high distances,
+EMA/SMA/ATR and bounded base-window duration with explicit missingness/censoring; cross-section
+and sector proxy ranks, participation and dispersion retain reference input clocks/source IDs.
+These diagnostics do not change score/stage policy. Candidate DNA and an archived JSON export
+explain formulas and legacy states. See docs/TECHNICAL_FEATURES.md.
+
+Final frozen-source local acceptance passed 384 backend tests (seven Windows skips), 26 browser
+tests, locked installs, workflow/skill checks, backend lint/format/types and frontend lint/types/build.
+The first QA run exposed a minimal legacy archive without an asof field; fixed, covered by the
+existing legacy CSV export plus new report test, and the complete backend suite rerun passed.
+The browser harness successfully rebuilt the final fixture pipeline. Only handoff prose changed
+after these checks. Exact-head CI, independent review and guarded merge are the delivery gates;
+the PR audit trail records their final results. Next implement risk-scaled and sector-neutral
+comparator allocation variants after delivery. Overall completion still requires the granular
+remaining-work audit; data gaps do not block independent software work.
+
+---
+
 # Current handoff — company research workflow / 2026-10-26
 
 Full application goal remains active. PR #31 merged as 993213b1f372: exact-head Linux CI passed

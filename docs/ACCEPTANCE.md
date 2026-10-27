@@ -1,5 +1,9 @@
 # Full specification acceptance and known issues
 
+Dated technical catalog continuation: see [TECHNICAL_FEATURES.md](TECHNICAL_FEATURES.md) for
+formulas, reference clocks, sector-proxy scope and missingness. Added diagnostics retain the
+existing unvalidated score/stage policy; current final gates are recorded in STATUS.md.
+
 Area-level PASS labels below are bounded software assessments, not full-spec completion proof.
 See [remaining requirements](REMAINING_REQUIREMENTS.md) for concrete unfinished software and
 [company research](COMPANY_RESEARCH.md) for the current source-bound workflow and pending gates.
