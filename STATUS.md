@@ -19,9 +19,16 @@ unsupported independent adjusted prices stay unavailable. No empirical validatio
 Executed on the implementation: 15 focused robustness/sensitivity tests passed, with source/policy
 binding, nonfinite/invalid policies, lag cutoffs, action missingness and recovery boundaries.
 Frontend lint/types/build and all 36 browser tests passed (before integration of PR #39).
-Full local QA's backend run is still in progress; it reported an old signature assertion that
-did not allow the new keyword-only filing lag. The corrected boundary test explicitly permits
-only that lag, preserves the 24-hour default and rejects outcome arguments; its rerun passed.
+Full local QA's backend run completed with 463 passes / seven Windows skips / two failures.
+The old signature assertion is fixed and its rerun passed. The second failure was the validation
+report's complete-schema equality assertion, which omitted the newly archived robustness field.
+Initial exact-head CI confirmed only that remaining mismatch (471 passed / one failed); current
+expected-report assembly now includes the separately source/disk/API-verified robustness report.
+Both affected integration/boundary tests now pass together (98.71s); fresh full CI/review remain
+required. No application calculation changed for these assertion/schema compatibility fixes.
+After integration with PR #39, frontend lint/types/build and all 11 focused combined
+company/research/robustness browser checks passed. Gemini approved 531de7e with zero blockers;
+that approval does not cover subsequent fixes.
 No complete current-revision acceptance pass is claimed. Finish backend results, integrate main,
 then exact-head CI, independent review, guarded merge and main preview. Finviz Elite + SEC remain
 the provider scope; zero real investment theses are verified. Final item-by-item specification

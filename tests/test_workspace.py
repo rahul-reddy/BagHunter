@@ -382,7 +382,11 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     )
     assert (
         validation
-        | {"negative_controls": controls, "discovery_negative_controls": discovery_controls}
+        | {
+            "negative_controls": controls,
+            "discovery_negative_controls": discovery_controls,
+            "robustness": stress,
+        }
         == data["validation"]
     )
     assert discovery_controls["selector_config_sha256"] == data["discovery"]["policy_sha256"]
