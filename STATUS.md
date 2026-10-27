@@ -16,7 +16,11 @@ main run 9f2cd71dec90f783: 46,810,552 archive bytes within 512 MiB, verified res
 successful loopback requests at concurrency four in 3.58 seconds, maximum 0.51 seconds.
 These are local smoke measurements, not production capacity or an SLO. Controlled KeyboardInterrupt before publication preserved the prior pointer and archives, cleaned
 staging, then reran successfully and reused the verified cache (targeted test passed in 176.70s).
-Whole-repository lint/format passed. Fresh CI and independent review remain required.
+Whole-repository lint/format passed. Initial CI on 5f44c2b found one test-isolation failure
+(471 backend tests passed): the cancellation test added a third run to shared workspace state.
+The fix copies that fixture into its own temporary archive; both cancellation/rerun and the
+subsequent run-index/scenario test now pass together. Fresh exact-head CI/review are required;
+Gemini approved the original head with zero blockers, which does not cover this fix.
 Full application completion still requires final item-by-item specification/release evidence.
 Finviz Elite + SEC remain the provider scope; zero real investment theses are verified.
 

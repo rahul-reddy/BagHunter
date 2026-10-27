@@ -212,10 +212,14 @@ def test_refresh_cache_revalidates_all_outputs_and_does_not_repair_corruption(wo
     report_path.write_bytes(original)
 
 
-def test_interrupted_publication_preserves_active_archive_and_can_rerun(workspace, monkeypatch):
+def test_interrupted_publication_preserves_active_archive_and_can_rerun(
+    workspace, monkeypatch, tmp_path
+):
     import packages.pipeline as pipeline
 
-    root, _, _ = workspace
+    source, _, _ = workspace
+    shutil.copytree(source.parent, tmp_path / "fixture")
+    root = tmp_path / "fixture" / source.name
     pointer = (root / "CURRENT").read_bytes()
     prior = set((root / "runs").iterdir())
     original = pipeline.write_integrity
