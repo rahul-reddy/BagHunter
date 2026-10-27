@@ -30,7 +30,7 @@ export function CompanyEvidencePicker({bundleId, onSelect, onVerified, onUseReve
       if (!response.ok) throw new Error('Selected SEC issuer evidence failed verification. Clear or reload the attachment.');
       const data = await response.json() as CompanyEvidence;
       if (data.bundle_id !== bundleId || !data.financial_profile || data.financial_profile.asof !== data.manifest.asof || data.financial_profile.security_id !== data.manifest.security_id || data.manifest.security_id !== `sec-cik-${data.manifest.cik}-unverified`) throw new Error('Issuer evidence does not match the selected archive and clock.');
-      if (!controller.signal.aborted) {const selected = {bundle_id:data.bundle_id, issuer:data.issuer, manifest:data.manifest, financial_profile:data.financial_profile}; setResult({key, data:selected}); onVerified(selected);}
+      if (!controller.signal.aborted) {const selected = {bundle_id:data.bundle_id, ...(data.issuer ? {issuer:data.issuer} : {}), manifest:data.manifest, financial_profile:data.financial_profile}; setResult({key, data:selected}); onVerified(selected);}
     }).catch((error: Error) => {if (!controller.signal.aborted) {setFailure({key, error: error.message}); onVerified(null);}});
     return () => controller.abort();
   }, [bundleId, key, onVerified]);

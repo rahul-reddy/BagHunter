@@ -107,7 +107,7 @@ test('failed or switched issuer verification cannot export stale evidence or sce
   expect(exported.issuer_evidence).toBeNull(); expect(exported.scenarios).toBeNull();
   await page.getByLabel('Research starting revenue (USD assumption)',{exact:true}).fill('1'.repeat(101));
   await page.getByRole('button',{name:'Save observation draft',exact:true}).click();
-  await expect(page.getByText('Draft contains an invalid date or assumption value. Correct it before saving.',{exact:true})).toBeVisible();
+  await expect(page.getByText('Cannot save research draft: Invalid saved assumptions',{exact:true})).toBeVisible();
   expect(await page.evaluate(key => localStorage.getItem(key),`baghunter.observation.v1.EXTERNAL_UNVERIFIED.${snapshot}.FICT`)).toBeNull();
 });
 
@@ -140,4 +140,19 @@ test('saved-draft and numeric parsing preserve missingness and reject source/con
   expect(restoreResearch(valid,checksum,sourceContext).bundleId).toBe(first);
   for (const changed of [{...valid,source_sha256:'wrong'},{...valid,source_context:{...sourceContext,ticker:'OTHER'}},{...valid,sec_bundle_id:'../.env'},{...valid,draft:{...emptyNotes,review_date:'2023-02-30'}},{...valid,scenario_assumptions:{...emptyAssumptions,revenue:'Infinity'}}]) expect(() => restoreResearch(changed,checksum,sourceContext)).toThrow();
   expect(parseAssumptions({...emptyAssumptions,net_debt:'0'})).toBeNull();
+});
+
+test('legacy issuer metadata stays absent without disabling a source-bound critic packet', async ({page}) => {
+  const legacy = evidence(); Reflect.deleteProperty(legacy, 'issuer');
+  await page.route('**/api/sec/bundles/*?**', route => route.fulfill({json:legacy}));
+  await setup(page);
+  await page.getByLabel('Attach saved SEC issuer evidence',{exact:true}).selectOption(first);
+  await expect(page.getByText('Selected SEC filer:',{exact:false})).toContainText('Name unavailable');
+  await page.getByLabel('Primary research author',{exact:true}).fill('Primary researcher');
+  await page.getByText('Separately attributed adversarial critique',{exact:true}).click();
+  await expect(page.getByRole('button',{name:'Export separate critic request',exact:true})).toBeEnabled();
+  const packet = JSON.parse((await downloadText(page,'Export separate critic request')).text);
+  expect(packet.context.issuer_evidence.bundle_id).toBe(first);
+  expect(packet.context.issuer_evidence.issuer).toBeUndefined();
+  expect(packet.request_digest).toMatch(/^[a-f0-9]{64}$/);
 });

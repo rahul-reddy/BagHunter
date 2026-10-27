@@ -1,3 +1,4 @@
+import {validateWorkspace, researchEvidenceMemo, type ResearchWorkspace} from './researchEvidence';
 import type {Observation} from './FinvizBrowser';
 import type {CompanyEvidence} from './CompanyEvidence';
 
@@ -16,19 +17,20 @@ export function parseAssumptions(values: AssumptionStrings): ScenarioInputs | nu
 }
 
 export function restoreResearch(value: unknown, checksum: string, context: {mode: string; snapshot_id: string; ticker: string}) {
-  const saved = value as {schema?: string; source_sha256?: string; source_context?: typeof context; draft?: ObservationNotes; sec_bundle_id?: string; scenario_assumptions?: AssumptionStrings} | null;
-  if (!saved || saved.source_sha256 !== checksum || !saved.draft || (saved.schema && saved.schema !== 'observation-research-v2') || Object.keys(saved.draft).length !== Object.keys(emptyNotes).length || Object.keys(emptyNotes).some(key => typeof saved.draft![key as keyof ObservationNotes] !== 'string' || saved.draft![key as keyof ObservationNotes].length > 5000)) throw new Error('Invalid observation draft');
+  const saved = value as {schema?: string; source_sha256?: string; source_context?: typeof context; draft?: ObservationNotes; sec_bundle_id?: string; scenario_assumptions?: AssumptionStrings; research_workspace?: unknown} | null;
+  if (!saved || saved.source_sha256 !== checksum || !saved.draft || (saved.schema && !['observation-research-v2', 'observation-research-v3'].includes(saved.schema)) || Object.keys(saved.draft).length !== Object.keys(emptyNotes).length || Object.keys(emptyNotes).some(key => typeof saved.draft![key as keyof ObservationNotes] !== 'string' || saved.draft![key as keyof ObservationNotes].length > 5000)) throw new Error('Invalid observation draft');
   const date = saved.draft.review_date;
-  if (saved.schema === 'observation-research-v2' && (!saved.source_context || Object.entries(context).some(([key, expected]) => saved.source_context![key as keyof typeof context] !== expected))) throw new Error('Saved observation context mismatch');
+  if (['observation-research-v2', 'observation-research-v3'].includes(saved.schema ?? '') && (!saved.source_context || Object.entries(context).some(([key, expected]) => saved.source_context![key as keyof typeof context] !== expected))) throw new Error('Saved observation context mismatch');
   if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0,10) !== date)) throw new Error('Invalid review date');
   const bundleId = saved.sec_bundle_id ?? '';
   if (typeof bundleId !== 'string' || (bundleId && !/^[a-f0-9]{64}$/.test(bundleId))) throw new Error('Invalid saved issuer archive');
   const inputs = saved.scenario_assumptions ?? {...emptyAssumptions};
   if (!inputs || Object.keys(inputs).length !== Object.keys(emptyAssumptions).length || Object.keys(emptyAssumptions).some(key => typeof inputs[key as keyof AssumptionStrings] !== 'string' || inputs[key as keyof AssumptionStrings].length > 100 || (inputs[key as keyof AssumptionStrings] !== '' && !Number.isFinite(Number(inputs[key as keyof AssumptionStrings]))))) throw new Error('Invalid saved assumptions');
-  return {draft: saved.draft, bundleId, inputs};
+  const workspace = saved.schema === 'observation-research-v3' ? validateWorkspace(saved.research_workspace) : null;
+  return {draft: saved.draft, bundleId, inputs, workspace};
 }
 
-export function observationMemo(source: ObservationSource, observation: Observation, draft: ObservationNotes, evidence: CompanyEvidence | null, scenarios: CompanyScenario[] | null): string {
+export function observationMemo(source: ObservationSource, observation: Observation, draft: ObservationNotes, evidence: CompanyEvidence | null, scenarios: CompanyScenario[] | null, workspace: ResearchWorkspace | null = null, reviewDigest: string | null = null): string {
   const rows = [`# ${source.mode === 'FIXTURE' ? 'FIXTURE' : 'UNVERIFIED'} observation research — ${observation.ticker}`, '',
     '**User research draft; not a verified investment thesis or forecast.**', '',
     `Reported company: ${observation.company}. Sector: ${observation.sector ?? 'Unavailable'}. Industry: ${observation.industry ?? 'Unavailable'}.`,
@@ -50,6 +52,7 @@ export function observationMemo(source: ObservationSource, observation: Observat
   rows.push('', '## Assumption scenarios', '', 'These inputs are user assumptions. They do not establish the observation’s identity, currency, class share count or expected return. No probabilities are assigned. Net debt is held constant; no discount-rate, financing, tax or dividend model.');
   if (scenarios?.length) for (const scenario of scenarios) rows.push('', `### ${scenario.name}`, `Assumptions: ${JSON.stringify(scenario.assumptions)}`, `Modeled enterprise value ${scenario.value.enterprise_value}; equity value ${scenario.value.equity_value}; diluted shares ${scenario.value.diluted_shares}; per-share value ${scenario.value.per_share_value}; annualized change ${scenario.value.annualized_change}.`, scenario.value.status);
   else rows.push('No current calculation. Saved inputs require recalculation after loading or changing source/assumptions.');
+  if (workspace) rows.push(...researchEvidenceMemo(workspace, reviewDigest));
   rows.push('', '## Limits', '', '- No permanent identity assignment, eligibility approval, screening score or historical activation.', '- SEC aggregate extraction vintages are not certified; a current Finviz snapshot is not a historical investable universe.', '- Source clocks remain separate; this memo does not merge them into a certified point-in-time profile.', '- Independent factual critique, class/share verification, current prices/units and historical coverage remain unresolved.', '- Zero verified investment-thesis status is changed by saving or exporting this draft.');
   return rows.join('\n') + '\n';
 }

@@ -1,3 +1,38 @@
+# Current handoff — structured research and critic packets / 2026-10-27
+
+Owner resumed the full application objective. PR #37 is delivered as 50e12484475a: 433 backend /
+32 browser tests in exact-head CI, independent Gemini approval, guarded merge and main real-source
+preview. Its private source package/receipt remain under root artifacts. PR #38 stage policy merged as 3dd0de4db22e after 459 backend / 34 browser CI tests and
+independent Gemini approval (zero blockers, one optional legacy-field advisory).
+The earlier full local stage QA passed 452 backend / seven Windows skips / 34 browser on 6141a1c;
+the final stale-target/peer/benchmark boundary fix passed 26 targeted tests and exact-head CI.
+Main source matches the reviewed stage tree; main preview passed all 1,995 observations,
+872 citation cutoffs, archive/API exports, pagination, keyboard and desktop/mobile accessibility. Finviz Elite + SEC are the provider scope.
+
+Current feat/research-evidence is isolated in C:/dev_projects/BagHunter-research, rebased onto stage main
+3dd0de4. It adds source-bound qualitative categories/tags, explicit horizon/opportunity cost,
+cited same-basis/currency peer bands with retained exclusions, and separately attributed critic
+request/response packets. Canonical fingerprints bind sources, notes, assumptions and results;
+edits make attached reviews stale. No model calls, independent factual verification, verified
+identity/thesis promotion or scoring changes occur. V3 saves preserve the existing browser key;
+legacy notes/v2 records remain readable. Source verification and research clocks gate exports.
+See docs/RESEARCH_EVIDENCE.md.
+
+Executed: original head 6130929 passed exact-head CI with 459 backend / 38 browser tests.
+Claude Opus independently approved with zero blocking findings and five advisories. The current
+fixes prevent future/incomplete duplicate peers from changing a current comparison, validate
+canonical finite JSON before fingerprinting, reject invalid-clock saves, preserve absent legacy
+issuer metadata, and cover future critic citations. Current frontend lint/types/build and all
+nine focused company/research browser checks passed, including desktop/mobile accessibility,
+legacy evidence, source switching, saves and stale critic packets. These source changes require
+fresh exact-head CI and independent review; the earlier approval does not cover them.
+Then guarded merge and actual-source main preview. Robustness is in a separate worktree with
+full QA running. Resource/recovery/load operations and the final item-level audit remain open.
+Finviz Elite + SEC remain the provider scope. Zero verified real investment theses; no full-app
+completion claim.
+
+---
+
 # Current handoff — full dated stage policy / 2026-10-27
 
 Owner resumed work after the requested pause. PR #37 merged through the guard as 50e12484475a:
