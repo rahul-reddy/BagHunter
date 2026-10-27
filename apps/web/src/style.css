@@ -20,3 +20,5 @@
 .panel li a,.panel p a{text-decoration:underline;text-underline-offset:2px}
 
 .stage-history{min-width:0;overflow-wrap:anywhere}.stage-history .pagination{flex-wrap:wrap}.stage-history select{max-width:100%}
+
+.research-evidence{min-width:0;overflow-wrap:anywhere}.research-evidence details{margin:20px 0}.research-evidence select{max-width:100%}.research-evidence li{margin:16px 0}.research-evidence button{margin:6px 6px 6px 0}

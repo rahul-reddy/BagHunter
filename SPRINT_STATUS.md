@@ -1,3 +1,14 @@
+# Active implementation — source-bound research and critique / 2026-10-27
+
+PR #37 delivered financial metrics; PR #38 stage gates/full history merged as 3dd0de4 with 459 backend / 34 browser CI tests
+and independent approval. Current research-evidence work is in its own checkout on main
+50e1248. Finish targeted frontend checks, then rebase onto delivered stage main, verify the
+combined revision, open its PR and complete CI/review/guarded merge plus main preview. Continue
+robustness, operations and the final full-spec audit. See STATUS.md and docs/RESEARCH_EVIDENCE.md.
+The full objective stays unfinished; Finviz + SEC suffice for independent software progress.
+
+---
+
 # Active implementation — full dated stage policy / 2026-10-27
 
 PR #37 financial metrics delivered as 50e12484475a, with 433 backend / 32 browser CI tests,
