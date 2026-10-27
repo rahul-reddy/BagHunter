@@ -1,5 +1,9 @@
 # Full specification acceptance and known issues
 
+Historical event-path continuation: [EVENT_PATHS.md](EVENT_PATHS.md) defines declared quarterly
+anchors, independently dated vectors, retrospective matching and missing/delisted cohorts. Later
+points stay descriptive hindsight outside gold predictors. Current final gates are in STATUS.md.
+
 Portfolio allocation continuation: [PORTFOLIO_COMPARATORS.md](PORTFOLIO_COMPARATORS.md) defines
 equal/risk/sector-target/cash variations, dated inputs, constraints and full ledger evidence.
 Fixture comparisons and sector proxies do not establish empirical efficacy; final gates are in STATUS.md.

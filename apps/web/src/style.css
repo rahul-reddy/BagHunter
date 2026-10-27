@@ -14,3 +14,5 @@
 .technical-evidence{overflow-wrap:anywhere}.technical-evidence .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}.technical-evidence dd{margin:8px 0}.technical-evidence dt{font-size:12px;color:#b0c0c7}
 
 .portfolio-comparisons{overflow-wrap:anywhere}.portfolio-comparisons .filters label{min-width:0;max-width:100%}.portfolio-comparisons select{max-width:100%}
+
+.event-paths{overflow-wrap:anywhere}.event-paths .filters label{min-width:0;max-width:100%}.event-paths select{max-width:100%}.event-paths details{margin:18px 0}

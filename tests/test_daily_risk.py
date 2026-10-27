@@ -116,3 +116,8 @@ def test_empty_legacy_cohort_export_preserves_header(tmp_path, monkeypatch):
     assert response.status_code == 200
     assert response.text.startswith("security_id,anchor,horizon_years")
     assert len(response.text.splitlines()) == 1
+    client = TestClient(app)
+    assert client.get(f"/runs/{'1' * 16}/reports/event_paths.json").json() is None
+    assert (
+        "unavailable in this archive" in client.get(f"/runs/{'1' * 16}/reports/event_paths.md").text
+    )

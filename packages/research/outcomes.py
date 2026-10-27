@@ -1,10 +1,11 @@
 """Hindsight outputs live here, isolated from predictor assembly."""
 
+import math
 import random
 from datetime import date, datetime
 from typing import Any
 
-from packages.research.features import eligible
+from packages.research.features import eligible, utc_asof
 from packages.shared.models import Action, Bar, Instrument
 
 
@@ -82,17 +83,30 @@ def outcome(
 
 
 def matched_pairs(
-    instruments: list[Instrument], labels: list[dict[str, Any]], asof: datetime, seed: int
+    instruments: list[Instrument],
+    labels: list[dict[str, Any]],
+    asof: datetime,
+    seed: int,
+    *,
+    horizon_years: int = 1,
+    max_hit_threshold: float = 5,
 ) -> list[dict[str, Any]]:
+    asof = utc_asof(asof)
+    if (
+        horizon_years not in (1, 2, 3, 5)
+        or not math.isfinite(max_hit_threshold)
+        or not 1 <= max_hit_threshold <= 100
+    ):
+        raise ValueError("Bounded matching horizon/threshold required")
     pool = {i.security_id: i for i in instruments if eligible(i, asof)}
     labels = [
         row
         for row in labels
         if row["anchor"] == str(asof.date())
-        and row["horizon_years"] == 1
+        and row["horizon_years"] == horizon_years
         and row["max_multiple"] is not None
     ]
-    cases = [row for row in labels if row["max_multiple"] >= 5]
+    cases = [row for row in labels if row["max_multiple"] >= max_hit_threshold]
     rng = random.Random(seed)
     pairs = []
     for case in cases:
@@ -104,7 +118,7 @@ def matched_pairs(
             [
                 row["security_id"]
                 for row in labels
-                if row["max_multiple"] < 5
+                if row["max_multiple"] < max_hit_threshold
                 and row["security_id"] in pool
                 and (
                     pool[row["security_id"]].sector,
@@ -123,6 +137,8 @@ def matched_pairs(
                     "control_security_id": rng.choice(controls),
                     "strata": strata,
                     "matching_seed": seed,
+                    "horizon_years": horizon_years,
+                    "max_hit_threshold": max_hit_threshold,
                     "control_sampling_probability": 1 / len(controls),
                     "control_weight": len(controls),
                     "scope": "Retrospective fixture case/control; NOT population hit rates",

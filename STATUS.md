@@ -1,3 +1,32 @@
+# Current handoff — historical event paths / 2026-10-27
+
+Full application goal remains active. PR #34 merged as 00092299e256: exact-head Linux CI passed
+402 backend / 28 browser tests; Gemini approved with zero findings, and main allocation explorer
+passed shared constraints, cash/source clocks, exports and desktop/mobile keyboard/accessibility.
+Finviz + SEC remain the stack, with zero real verified investment theses.
+
+Current feat/event-paths implements declared quarterly fixture-weekday anchors, all eligible
+member vectors at -120/-60/-20/0/+20, missing/unmatched/delisted cohort accounting and configurable
+horizon/threshold matching. Vectors are built before outcome grouping. Later points are explicit
+hindsight; no discovery scores/stages or label fields enter these vectors. JSON/Markdown and
+hindsight Parquet, run-bound API exports, a Museum path/citation explorer and an event-policy CLI
+are implemented. Policy content is part of the run/cache fingerprint. See docs/EVENT_PATHS.md.
+
+The first acceptance process was stopped to fix reproduced offset/fold clock defects. On the
+corrected core, the subsequent full backend run passed 408 tests with seven Windows skips and
+one Markdown API/archive ordering mismatch. Canonical outcome serialization fixes that mismatch;
+default numeric policy content is canonical too. Final corrected-source verification passed all
+47 event/workspace/legacy tests (including the failing API/archive case and independent cache-key
+checks), all 30 browser tests, backend lint/format/types and frontend lint/types/build. Locked
+installs and workflow/skill checks passed. Browser startup rebuilt the final fixture pipeline;
+CLI event-policy startup was verified. Only handoff prose changed after these checks.
+Complete-suite CI on the exact PR head and independent review are required before guarded merge.
+This checkpoint does not claim the interrupted/failed local qa.ps1 command passed. Next finish those gates, verify main, then extend the remaining
+financial concept/period arithmetic contracts. Broader qualitative evolution, stages/history,
+robustness and final item-by-item release audit remain open. No full-app completion claim.
+
+---
+
 # Current handoff — portfolio comparators / 2026-10-26
 
 Full application goal remains active. PR #33 merged as ed0042ce0f7e: Linux CI passed 391 backend /
