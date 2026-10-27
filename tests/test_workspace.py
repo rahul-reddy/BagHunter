@@ -70,7 +70,15 @@ def setup_feature(**changes):
     ],
 )
 def test_all_stage_boundaries(changes, prior, streak, expected):
-    assert classify(setup_feature(**changes), DiscoveryPolicy(), prior, streak)[0] == expected
+    assert (
+        classify(
+            setup_feature(**changes),
+            DiscoveryPolicy(version="discovery-v1-unvalidated"),
+            prior,
+            streak,
+        )[0]
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -92,7 +100,7 @@ def test_policy_rejects_invalid_thresholds_and_weights(changes):
 def test_discovery_future_invariance_and_real_history():
     dataset = fixture()
     cutoff = datetime.fromisoformat(DEFAULT_ASOF)
-    policy = DiscoveryPolicy()
+    policy = DiscoveryPolicy(version="discovery-v1-unvalidated")
     expected = discover(dataset, cutoff, policy)
     changed = dataset.model_copy(
         update={
@@ -308,6 +316,10 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
     path_dir = root / "runs" / after
+    history = client.get(f"/runs/{after}/reports/stage_history.json").json()
+    assert history == json.loads((path_dir / "reports" / "stage_history.json").read_text())
+    assert history["run_id"] == after and history["history_scope"] == "FULL_KNOWABLE_HISTORY"
+    assert history["histories"] == data["discovery"]["history"]
     assert json.loads((path_dir / "reports" / "event_paths.json").read_text()) == paths
     markdown = client.get(f"/runs/{after}/reports/event_paths.md")
     assert markdown.text == (path_dir / "reports" / "event_paths.md").read_text()

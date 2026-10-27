@@ -3,6 +3,20 @@
 from typing import Any
 
 
+def stage_history_report(run: dict[str, Any]) -> dict[str, Any]:
+    discovery = run.get("discovery", {})
+    histories = discovery.get("history")
+    return {
+        "run_id": run["run_id"],
+        "asof": run.get("asof"),
+        "policy": discovery.get("policy"),
+        "history_scope": discovery.get("history_scope", "LEGACY_ARCHIVED_WINDOW"),
+        "histories": histories
+        if histories is not None
+        else {s["security_id"]: s.get("stage_history", []) for s in run["signals"]},
+    }
+
+
 def candidate_memo(run: dict[str, Any], security_id: str) -> str:
     candidate = next((f for f in run["signals"] if f["security_id"] == security_id), None)
     if candidate is None:

@@ -118,6 +118,9 @@ def test_empty_legacy_cohort_export_preserves_header(tmp_path, monkeypatch):
     assert len(response.text.splitlines()) == 1
     client = TestClient(app)
     assert client.get(f"/runs/{'1' * 16}/reports/event_paths.json").json() is None
+    history = client.get(f"/runs/{'1' * 16}/reports/stage_history.json").json()
+    assert history["asof"] is None and history["histories"] == {}
+    assert history["history_scope"] == "LEGACY_ARCHIVED_WINDOW"
     assert (
         "unavailable in this archive" in client.get(f"/runs/{'1' * 16}/reports/event_paths.md").text
     )

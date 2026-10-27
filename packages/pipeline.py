@@ -26,7 +26,12 @@ from packages.research.discovery import DiscoveryPolicy, discover
 from packages.research.event_paths import EventPathPolicy, event_report, event_rows, event_study
 from packages.research.features import VERSION, eligible, snapshot
 from packages.research.outcomes import matched_pairs, outcome
-from packages.research.reports import candidate_memo, case_report, discovery_digest
+from packages.research.reports import (
+    candidate_memo,
+    case_report,
+    discovery_digest,
+    stage_history_report,
+)
 from packages.research.sensitivity import ranking_sensitivity
 from packages.research.technical import technical_report
 
@@ -255,6 +260,7 @@ def run(
             path.write_text(candidate_memo(payload, feature["security_id"]), encoding="utf-8")
         table(staging / "hindsight" / "multi_anchor_labels.parquet", study["cohorts"]["labels"])
         dump(staging / "reports" / "discovery_policy.json", discovery["policy"])
+        dump(staging / "reports" / "stage_history.json", stage_history_report(payload))
         dump(staging / "reports" / "discovery_sensitivity.json", discovery["sensitivity"])
         with (staging / "reports" / "historical_cohorts.csv").open(
             "w", newline="", encoding="utf-8"

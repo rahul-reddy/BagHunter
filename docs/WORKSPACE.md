@@ -74,9 +74,12 @@ max_ema_stretch, confirmation_sessions and six score weights. Weights sum to one
 null; weight is not redistributed. Quality arithmetic requires dated operating and cashflow margins,
 so it stays missing in the revenue-only fixture. Annual growth requires comparable 330–400-day ends.
 
-Six deterministic, unvalidated stage rules use a 21-session history initialized at WATCH. Ignition
-requires a prior 60-session high, volume, liquidity and base width. Confirmation requires sustained
-trend, dated growth, relative strength and breadth. Insufficient peer breadth remains null.
+The default discovery-v2-unvalidated policy replays full knowable history. Ignition requires a
+configured prior 20/60-session breakout, volume, liquidity, width, duration and relative rank.
+Advancement must hold the original trigger; confirmation requires sustained strength, self-excluded
+sector peers and multiple dated annual filing inflections/accessions. Stale evidence stays missing.
+The explicit discovery-v1-unvalidated option retains its legacy 21-session algorithm. See
+[Stage policy](STAGE_POLICY.md) for every threshold, formula and scope.
 No future outcome label enters discovery. Financial revisions obey publication plus processing lag.
 
 Portfolio fields: capital, max_position, max_sector, participation, min_dollar_volume, min_price,
