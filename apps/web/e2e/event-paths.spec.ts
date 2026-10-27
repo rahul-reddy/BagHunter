@@ -49,3 +49,21 @@ test('legacy museum archives do not invent event paths', async ({page}) => {
   await expect(panel.getByText(/Event paths unavailable in this archive/)).toBeVisible();
   await expect(panel.getByLabel('Event anchor',{exact:true})).toHaveCount(0);
 });
+
+
+test('expanded historical citations remain distinguishable on desktop and mobile',async ({page})=>{
+  await page.goto('/');
+  await page.getByRole('button',{name:'100-Bagger Museum',exact:true}).click();
+  const panel=page.getByRole('region',{name:'Historical event paths',exact:true});
+  await panel.getByLabel('Event anchor',{exact:true}).selectOption('2020-01-01');
+  await panel.getByLabel('Inspect path offset',{exact:true}).selectOption('20');
+  await panel.getByText('fx-compound · selected offset +20 · dated evidence',{exact:true}).click();
+  await expect(panel.locator('details[open]').first().getByRole('link',{name:/fixture source ledger/}).first()).toBeVisible();
+  const historical=page.getByRole('heading',{name:'Evidence at the historical anchor',exact:true}).locator('..');
+  await historical.locator('summary').first().click();
+  await expect(historical.locator('details[open]').first().getByRole('link').first()).toBeVisible();
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await page.setViewportSize({width:390,height:844});
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

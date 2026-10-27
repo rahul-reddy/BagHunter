@@ -1,3 +1,13 @@
+# Active fix — expanded citation accessibility / 2026-10-27
+
+PR #35 merged as 23837405 with 416 backend / 30 browser CI tests and independent approval.
+Main preview exposed a source-link styling failure while event evidence was expanded. Finish
+fix/event-source-links verification, CI, independent review and guarded merge; rerun the main
+preview before declaring this increment delivered. Then extend packages/data/sec_statements.py
+financial concepts and exact-period ratios. Full goal stays active. See STATUS.md.
+
+---
+
 # Active implementation — historical event paths / 2026-10-27
 
 PR #34 merged as 00092299 with 402 backend / 28 browser tests, independent approval and main

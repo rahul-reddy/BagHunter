@@ -1,3 +1,22 @@
+# Current handoff — expanded event citation accessibility / 2026-10-27
+
+PR #35 merged as 238374053e1f after exact-head CI passed 416 backend / 30 browser tests and
+Gemini approved with zero blockers (one future multi-control key advisory). The local main source
+matches the reviewed tree and CLI event-policy startup produced run 4cc8957815b46228. Full-app
+goal remains active; Finviz + SEC are the stack and zero real investment theses are verified.
+
+The main preview then found an accessibility failure with an expanded historical citation: its
+inline link relied on color alone. Earlier browser scans happened after changing to a missing
+point, which hid that link. Current fix/event-source-links adds visible underlines for inline research-content links and
+regression scans at desktop/mobile with both event and legacy anchor citations expanded. Final local frontend lint/types/build and all three event-path browser tests passed,
+including expanded event/legacy citations at desktop/mobile. An initial combined test exceeded
+its timeout; splitting the new regression preserves coverage and the existing timeout. CI,
+independent review, guarded merge and a repeated main preview remain required. Original
+price/filing archives and numeric research logic are unchanged. After delivery, continue the SEC
+financial concept/ratio contracts per docs/REMAINING_REQUIREMENTS.md.
+
+---
+
 # Current handoff — historical event paths / 2026-10-27
 
 Full application goal remains active. PR #34 merged as 00092299e256: exact-head Linux CI passed
