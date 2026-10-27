@@ -1,3 +1,15 @@
+# Active implementation — retained robustness diagnostics / 2026-10-27
+
+PR #38 is delivered as 3dd0de4db22e with 459 backend / 34 browser CI tests and main preview.
+PR #39 research workflow advisory fixes are receiving fresh checks in BagHunter-research.
+Current feat/robustness implements twelve stresses, recovery diagnostics and feature ablations;
+15 focused tests passed and full QA is running. Finish QA, exact-head CI, independent review,
+guarded merge and main preview; then operations/resource/recovery and full specification audit.
+Read STATUS.md and docs/ROBUSTNESS.md. Finviz Elite + SEC remain the provider scope; full goal
+is unfinished and no verified real thesis or empirical robustness is claimed.
+
+---
+
 # Active implementation — source-bound research and critique / 2026-10-27
 
 PR #37 delivered financial metrics; PR #38 stage gates/full history merged as 3dd0de4 with 459 backend / 34 browser CI tests

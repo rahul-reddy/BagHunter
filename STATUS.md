@@ -1,3 +1,34 @@
+# Current handoff — failure-oriented robustness / 2026-10-27
+
+Full-app work resumed. PR #38 stage policy delivered as 3dd0de4db22e: exact-head CI
+459 backend / 34 browser tests, independent approval and guarded merge. Main preview passed
+1,995 dated observations, 872 citation cutoffs, exports and desktop/mobile accessibility.
+PR #39 structured research delivered as a95d99cad484: updated head 21402d2 passed
+459 backend / 39 browser CI tests, Claude independently approved with zero blockers, and main
+real Finviz/SEC preview passed source clocks, canonical critic packets, stale-review/save/load,
+export binding and desktop/mobile accessibility. Source archive/receipt are in root artifacts.
+Operations PR #40 has independent approval; a test-isolation fix requires fresh verification.
+
+
+Current feat/robustness adds twelve retained source-bound stress attempts, constrained
+name/sector/cap-bucket exclusions, explicit filing processing lags, known-delist assumptions,
+recovery metrics, six frozen-weight feature ablations, archived JSON/Markdown and the browser
+inspection view. See docs/ROBUSTNESS.md. Highest-contribution removals are hindsight diagnostics;
+unsupported independent adjusted prices stay unavailable. No empirical validation is claimed.
+
+Executed on the implementation: 15 focused robustness/sensitivity tests passed, with source/policy
+binding, nonfinite/invalid policies, lag cutoffs, action missingness and recovery boundaries.
+Frontend lint/types/build and all 36 browser tests passed (before integration of PR #39).
+Full local QA's backend run is still in progress; it reported an old signature assertion that
+did not allow the new keyword-only filing lag. The corrected boundary test explicitly permits
+only that lag, preserves the 24-hour default and rejects outcome arguments; its rerun passed.
+No complete current-revision acceptance pass is claimed. Finish backend results, integrate main,
+then exact-head CI, independent review, guarded merge and main preview. Finviz Elite + SEC remain
+the provider scope; zero real investment theses are verified. Final item-by-item specification
+and release audit remain open. Full goal remains unfinished.
+
+---
+
 # Current handoff — structured research and critic packets / 2026-10-27
 
 Owner resumed the full application objective. PR #37 is delivered as 50e12484475a: 433 backend /

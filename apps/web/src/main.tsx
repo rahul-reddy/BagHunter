@@ -1,3 +1,4 @@
+import type {RobustnessReport} from './RobustnessLab';
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
@@ -35,7 +36,7 @@ export type Run = { run_id: string; asof: string; model_version: string; archive
     metrics: {total_return: number | null; max_drawdown: number | null; win_rate: number | null}; limitations: string[];
     rows: {decision: string; deployment_fraction: number; costs: number; turnover: number; ending_equity: number}[];
     executions: {decision: string; security_id: string; sector: string; shares: number; entry_notional: number; starting_capital: number; capacity_limit: number; entry_cost: number; exit_cost: number; delisted: boolean}[]};
-  validation?: {discovery_negative_controls?: NegativeControlReport; negative_controls?: NegativeControlReport; metrics: Record<string, {windows: number; total_return: number | null; cagr: number | null; max_drawdown: number | null; win_rate: number | null; payoff_ratio: number | null}>;
+  validation?: {robustness?: RobustnessReport | null; discovery_negative_controls?: NegativeControlReport; negative_controls?: NegativeControlReport; metrics: Record<string, {windows: number; total_return: number | null; cagr: number | null; max_drawdown: number | null; win_rate: number | null; payoff_ratio: number | null}>;
     holdout_status: string; partitions: {train: string[]; validation: string[]; holdout: string[]; purged: string[]; embargo_days: number};
     cost_sensitivity: {round_trip_bps: number; total_return: number | null; max_drawdown: number | null}[];
     paired_window_bootstrap: {resamples: number; mean_excess_versus_equal_weight: number | null; interval_95: number[] | null}};

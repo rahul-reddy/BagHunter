@@ -21,7 +21,7 @@ def ranking_sensitivity(signals: list[dict[str, Any]], policy: DiscoveryPolicy) 
             for value in signal["components"].values()
         ):
             raise ValueError("Invalid sensitivity component")
-    variants = [
+    base_variants = [
         ("frozen_policy", policy.weights, policy.min_dollar_volume),
         ("equal_factor_weights", {k: 1 / len(names) for k in names}, policy.min_dollar_volume),
         (
@@ -37,9 +37,15 @@ def ranking_sensitivity(signals: list[dict[str, Any]], policy: DiscoveryPolicy) 
         ("liquidity_floor_2x", policy.weights, policy.min_dollar_volume * 2),
         ("liquidity_floor_10x", policy.weights, policy.min_dollar_volume * 10),
     ]
+    variants: list[tuple[str, dict[str, float], float, str | None]] = [
+        (name, weights, floor, None) for name, weights, floor in base_variants
+    ]
+    variants.extend(
+        (f"without_{family}", policy.weights, policy.min_dollar_volume, family) for family in names
+    )
     output: list[dict[str, Any]] = []
     baseline: dict[str, int] = {}
-    for name, weights, floor in variants:
+    for name, weights, floor, ablated in variants:
         if not math.isfinite(floor):
             raise ValueError("Sensitivity liquidity threshold exceeds finite bounds")
         ranked = sorted(
@@ -47,10 +53,20 @@ def ranking_sensitivity(signals: list[dict[str, Any]], policy: DiscoveryPolicy) 
                 {
                     "security_id": s["security_id"],
                     "score": round(
-                        sum(weights[k] * v for k, v in s["components"].items() if v is not None), 4
+                        sum(
+                            weights[k] * v
+                            for k, v in s["components"].items()
+                            if v is not None and k != ablated
+                        ),
+                        4,
                     ),
                     "factor_coverage": round(
-                        sum(weights[k] for k, v in s["components"].items() if v is not None), 4
+                        sum(
+                            weights[k]
+                            for k, v in s["components"].items()
+                            if v is not None and k != ablated
+                        ),
+                        4,
                     ),
                 }
                 for s in signals
@@ -66,9 +82,11 @@ def ranking_sensitivity(signals: list[dict[str, Any]], policy: DiscoveryPolicy) 
             row["rank"] = i + 1
             prior = baseline.get(row["security_id"])
             row["rank_change"] = prior - i - 1 if prior is not None else None
+            row["missing_weight_penalty"] = round(100 * (1 - row["factor_coverage"]), 4)
         output.append(
             {
                 "name": name,
+                "ablated_component": ablated,
                 "weights": weights,
                 "min_dollar_volume": floor,
                 "ranked": ranked,
@@ -76,6 +94,7 @@ def ranking_sensitivity(signals: list[dict[str, Any]], policy: DiscoveryPolicy) 
             }
         )
     return {
+        "policy": "ranking-sensitivity-v2-ablations",
         "status": "ASOF_RANKING_DIAGNOSTIC_NOT_PERFORMANCE_VALIDATION",
         "variants": output,
         "limitations": [
@@ -84,6 +103,8 @@ def ranking_sensitivity(signals: list[dict[str, Any]], policy: DiscoveryPolicy) 
             "Equal-factor weights explicitly allocate one sixth to each family",
             "Ordinal ties resolve by permanent ID; rank changes are not statistical evidence",
             "Stricter liquidity filters change the comparison universe",
+            "Leave-one-family-out ablations retain frozen weights; "
+            "removed inputs add missing-weight penalty",
             "No selected best policy, return sensitivity, calibration or investment inference",
         ],
     }

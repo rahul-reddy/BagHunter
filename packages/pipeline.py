@@ -16,6 +16,7 @@ import pyarrow.parquet as pq
 
 from packages.backtest.constrained import PortfolioPolicy, comparator_runs, simulate
 from packages.backtest.negative_controls import negative_controls
+from packages.backtest.robustness import robustness, robustness_markdown
 from packages.backtest.toy import evaluate
 from packages.backtest.validation import diagnostics
 from packages.data.fixture import fixture
@@ -171,6 +172,7 @@ def run(
         selector_config_sha256=discovery["policy_sha256"],
     )
     portfolio = simulate(dataset, portfolio_policy or PortfolioPolicy())
+    validation["robustness"] = robustness(dataset, portfolio_policy, portfolio)
     comparisons = comparator_runs(dataset, portfolio_policy)
     portfolio["comparator_runs"] = comparisons
     portfolio["comparators"] = [
@@ -234,6 +236,10 @@ def run(
         dump(staging / "reports" / "source_manifest.json", source)
         dump(staging / "reports" / "toy_backtest.json", backtest)
         dump(staging / "reports" / "validation.json", validation)
+        dump(staging / "reports" / "robustness.json", validation["robustness"])
+        (staging / "reports" / "robustness.md").write_text(
+            robustness_markdown(validation["robustness"], payload["run_id"]), encoding="utf-8"
+        )
         dump(staging / "reports" / "technical_evidence.json", technical_report(payload))
         dump(staging / "reports" / "negative_controls.json", validation["negative_controls"])
         dump(

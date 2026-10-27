@@ -316,6 +316,13 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
     path_dir = root / "runs" / after
+    stress = client.get(f"/runs/{after}/reports/robustness.json").json()
+    assert stress == data["validation"]["robustness"]
+    assert stress == json.loads((path_dir / "reports" / "robustness.json").read_text())
+    assert stress["dataset_sha256"] == data["sources"][0]["sha256"]
+    stress_markdown = client.get(f"/runs/{after}/reports/robustness.md").text
+    assert stress_markdown == (path_dir / "reports" / "robustness.md").read_text()
+    assert after in stress_markdown and "EX_POST_CONTRIBUTION_DIAGNOSTIC" in stress_markdown
     history = client.get(f"/runs/{after}/reports/stage_history.json").json()
     assert history == json.loads((path_dir / "reports" / "stage_history.json").read_text())
     assert history["run_id"] == after and history["history_scope"] == "FULL_KNOWABLE_HISTORY"
