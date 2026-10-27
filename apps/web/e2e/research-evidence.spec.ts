@@ -1,6 +1,6 @@
 import {test, expect, type Page} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import {compareTime, awareTime, criticStatus, distinctReviewer, emptyWorkspace, evidenceStatus, parseCritic, peerBands, requestDigest, validateWorkspace, type PeerItem, type QualitativeItem} from '../src/researchEvidence';
+import {canonicalContext, compareTime, awareTime, criticStatus, distinctReviewer, emptyWorkspace, evidenceStatus, parseCritic, peerBands, requestDigest, validateWorkspace, type PeerItem, type QualitativeItem} from '../src/researchEvidence';
 import {emptyAssumptions, emptyNotes, restoreResearch} from '../src/observationResearch';
 
 const asof = '2023-06-01T00:00:00Z', snapshot = 'a'.repeat(64), checksum = 'b'.repeat(64);
@@ -35,6 +35,13 @@ test('peer bands retain incompatible, future, missing, zero and duplicate exclus
   expect(duplicates.groups).toEqual([]);
   expect(duplicates.excluded.every(row => row.reason === 'DUPLICATE_PEER_COMPANY_IN_COMPARISON')).toBe(true);
   expect(peerBands({...workspace, peers:[peer('bad','NaN')]}).groups).toEqual([]);
+  const eligible = peer('known','10',{company:'Same firm'});
+  const future = peer('future','99',{company:'Same firm',published_at:'2023-07-01T00:00:00Z'});
+  const incomplete = peer('incomplete','77',{company:'Same firm',source_url:''});
+  const baseline = peerBands({...workspace,peers:[eligible]});
+  const guarded = peerBands({...workspace,peers:[eligible,future,incomplete]});
+  expect(guarded.groups).toEqual(baseline.groups);
+  expect(guarded.excluded.map(row => row.reason)).toEqual(['FUTURE_AT_RESEARCH_CLOCK','INCOMPLETE_COMPARISON_OR_DATED_SOURCE']);
   expect(evidenceStatus({...qualitative(), kind:'LLM_JUDGMENT'}, asof)).toBe('ATTRIBUTED_JUDGMENT_NOT_VERIFIED_FACT');
   expect(evidenceStatus({...qualitative(), published_at:'2023-07-01T00:00:00Z'}, asof)).toBe('FUTURE_AT_RESEARCH_CLOCK');
 });
@@ -45,6 +52,9 @@ test('critic fingerprints are canonical, source-bound and never certify independ
   expect(digest).not.toBe(await requestDigest({source:{id:'one',hash:'changed'},input:{b:2,a:1}}));
   await expect(requestDigest({value:NaN})).rejects.toThrow();
   await expect(requestDigest({value:undefined})).rejects.toThrow();
+  expect(() => canonicalContext({value:NaN})).toThrow();
+  expect(() => canonicalContext(new Date())).toThrow();
+  expect(() => canonicalContext(new Array(1))).toThrow();
   const review = parseCritic({schema:'research-critic-v1',request_digest:digest,reviewer:'Separate critic',reviewer_kind:'HUMAN',counterargument:'Fictional counterargument',evidence_gaps:'Unknown customer concentration',falsification:'Contract cancelled',citations:[{url:'https://www.sec.gov/Archives/fixture.htm',published_at:'2023-03-01T12:00:00Z'}]});
   const workspace = {...emptyWorkspace(asof),author:'Primary researcher',critic:review};
   expect(criticStatus(workspace,digest)).toBe('MATCHES_REQUEST_INDEPENDENCE_NOT_VERIFIED');
@@ -52,6 +62,7 @@ test('critic fingerprints are canonical, source-bound and never certify independ
   expect(distinctReviewer(' Primary researcher ','primary RESEARCHER')).toBe(false);
   expect(criticStatus({...workspace,critic:{...review,reviewer:'PRIMARY RESEARCHER'}},digest)).toBe('DISTINCT_ATTRIBUTION_REQUIRED');
   expect(criticStatus({...workspace,critic:{...review,citations:[]}},digest)).toBe('CRITIC_SOURCES_MISSING');
+  expect(criticStatus({...workspace,critic:{...review,citations:[{...review.citations[0],published_at:'2023-06-01T00:00:00.000000001Z'}]}},digest)).toBe('FUTURE_CRITIC_SOURCE');
 });
 
 async function setup(page: Page) {
@@ -76,6 +87,8 @@ test('source-bound structured research, peer bands and separate critique persist
   await page.getByLabel('Primary research author',{exact:true}).fill('Primary researcher');
   await page.getByLabel('Time to thesis (months assumption)',{exact:true}).fill('0');
   await expect(page.getByRole('button',{name:'Export observation dossier',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Save observation draft',exact:true}).click();
+  await expect(page.getByText('Cannot save research draft:',{exact:false})).toBeVisible();
   await page.getByLabel('Time to thesis (months assumption)',{exact:true}).fill('24');
   await page.getByLabel('Time-to-thesis milestones and conditions',{exact:true}).fill('Fictional product must reach a cited milestone.');
   await page.getByLabel('Opportunity cost and alternative use of capital',{exact:true}).fill('Compare this assumption with holding cash; returns remain unknown.');

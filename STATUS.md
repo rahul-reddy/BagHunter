@@ -18,17 +18,18 @@ identity/thesis promotion or scoring changes occur. V3 saves preserve the existi
 legacy notes/v2 records remain readable. Source verification and research clocks gate exports.
 See docs/RESEARCH_EVIDENCE.md.
 
-Executed: eight focused company/evidence checks passed, including desktop/mobile accessibility,
-source failure/switching, typed-record/clock bounds, comparison exclusions, save/load and critic
-staleness. A broader 36-browser run on the main-50e1248 base passed. A final load-clock refinement
-avoids validating a saved issuer against an unrelated current selection; final lint/types/build
-and all eight focused checks passed before rebase. After rebasing onto 3dd0de4, frontend lint,
-types/build and the complete 38-browser suite passed on 6e6cb79. Only handoff prose changed
-after those checks. Backend source is identical to the reviewed stage main; this frontend-only
-change still requires its own exact-head CI. Independent review/CI/guarded merge
-and actual-source main preview remain. No full-app completion claim: robustness variants,
-resource/recovery/load operations, empirical source contracts and final item-level release audit
-are still open. Zero real investment theses are verified.
+Executed: original head 6130929 passed exact-head CI with 459 backend / 38 browser tests.
+Claude Opus independently approved with zero blocking findings and five advisories. The current
+fixes prevent future/incomplete duplicate peers from changing a current comparison, validate
+canonical finite JSON before fingerprinting, reject invalid-clock saves, preserve absent legacy
+issuer metadata, and cover future critic citations. Current frontend lint/types/build and all
+nine focused company/research browser checks passed, including desktop/mobile accessibility,
+legacy evidence, source switching, saves and stale critic packets. These source changes require
+fresh exact-head CI and independent review; the earlier approval does not cover them.
+Then guarded merge and actual-source main preview. Robustness is in a separate worktree with
+full QA running. Resource/recovery/load operations and the final item-level audit remain open.
+Finviz Elite + SEC remain the provider scope. Zero verified real investment theses; no full-app
+completion claim.
 
 ---
 

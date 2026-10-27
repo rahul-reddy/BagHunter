@@ -30,7 +30,7 @@ Missing details, future sources and zero multiples are excluded with reasons. Ne
 or malformed multiples reject. The bounded range is zero to 1,000,000; each workspace holds at most
 50 peers and 50 qualitative entries. Original input strings/citations remain in exports.
 
-`peer-comparisons-v1` reports count/minimum/median/maximum. Repeated normalized company names in
+`peer-comparisons-v1` reports count/minimum/median/maximum. Among otherwise eligible contemporaneous entries, repeated normalized company names in
 the same comparison group are all excluded, so the same company is not silently double-weighted.
 Normalization here only ignores case/whitespace; it does not assign security identities. One peer
 is one comparison, not a representative valuation band. User transcriptions and selected sample

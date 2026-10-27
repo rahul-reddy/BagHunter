@@ -1,11 +1,11 @@
 import {useEffect, useState} from 'react';
 import {download} from './downloads';
-import {categories, researchStatusLabel, criticStatus, distinctReviewer, evidenceStatus, parseCritic, peerBands, requestDigest, validateWorkspace, type QualitativeItem, type PeerItem, type ResearchWorkspace} from './researchEvidence';
+import {canonicalContext, categories, researchStatusLabel, criticStatus, distinctReviewer, evidenceStatus, parseCritic, peerBands, requestDigest, validateWorkspace, type QualitativeItem, type PeerItem, type ResearchWorkspace} from './researchEvidence';
 
 export function useResearchDigest(context: unknown) {
-  const key = JSON.stringify(context);
+  const key = (() => {try {return canonicalContext(context);} catch {return null;}})();
   const [result, setResult] = useState<{key: string; digest: string} | null>(null);
-  useEffect(() => {let cancelled = false; requestDigest(JSON.parse(key)).then(digest => {if (!cancelled) setResult({key, digest});}).catch(() => {if (!cancelled) setResult(null);}); return () => {cancelled = true;};}, [key]);
+  useEffect(() => {if (key === null) return; let cancelled = false; requestDigest(JSON.parse(key)).then(digest => {if (!cancelled) setResult({key, digest});}).catch(() => {if (!cancelled) setResult(null);}); return () => {cancelled = true;};}, [key]);
   return result?.key === key ? result.digest : null;
 }
 const judgmentLabels = {PRIMARY_SOURCE_TRANSCRIPTION: 'Primary-source transcription (unverified)', HUMAN_JUDGMENT: 'Human judgment', LLM_JUDGMENT: 'LLM judgment', ASSUMPTION: 'Assumption'};

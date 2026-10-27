@@ -54,10 +54,17 @@ export function peerBands(workspace: ResearchWorkspace) {
   const groups = new Map<string, number[]>();
   const excluded: {id: string; reason: string}[] = [];
   const signature = (peer: PeerItem) => JSON.stringify([peer.metric, peer.basis, peer.currency, peer.company.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US')]);
+  const eligibility = (peer: PeerItem): string | null => {
+    if (!awareTime(workspace.research_asof)) return 'INVALID_RESEARCH_CLOCK';
+    if (!/^(?:\d+\.?\d*|\.\d+)$/.test(peer.multiple) || !Number.isFinite(Number(peer.multiple)) || Number(peer.multiple) > 1_000_000) return 'INVALID_OR_MISSING_MULTIPLE';
+    if (!peer.company.trim() || !peer.basis.trim() || !peer.currency.trim() || !peer.rationale.trim() || !sourceUrl(peer.source_url) || !awareTime(peer.published_at)) return 'INCOMPLETE_COMPARISON_OR_DATED_SOURCE';
+    if (compareTime(peer.published_at, workspace.research_asof) > 0) return 'FUTURE_AT_RESEARCH_CLOCK';
+    return Number(peer.multiple) <= 0 ? 'NONPOSITIVE_MULTIPLE' : null;
+  };
   const counts = new Map<string, number>();
-  for (const peer of workspace.peers) counts.set(signature(peer), (counts.get(signature(peer)) ?? 0) + 1);
+  for (const peer of workspace.peers.filter(peer => eligibility(peer) === null)) counts.set(signature(peer), (counts.get(signature(peer)) ?? 0) + 1);
   for (const peer of workspace.peers) {
-    const reason = !awareTime(workspace.research_asof) ? 'INVALID_RESEARCH_CLOCK' : !/^(?:\d+\.?\d*|\.\d+)$/.test(peer.multiple) || !Number.isFinite(Number(peer.multiple)) || Number(peer.multiple) > 1_000_000 ? 'INVALID_OR_MISSING_MULTIPLE' : !peer.company.trim() || !peer.basis.trim() || !peer.currency.trim() || !peer.rationale.trim() || !sourceUrl(peer.source_url) || !awareTime(peer.published_at) ? 'INCOMPLETE_COMPARISON_OR_DATED_SOURCE' : compareTime(peer.published_at, workspace.research_asof) > 0 ? 'FUTURE_AT_RESEARCH_CLOCK' : Number(peer.multiple) <= 0 ? 'NONPOSITIVE_MULTIPLE' : null;
+    const reason = eligibility(peer);
     if (reason) {excluded.push({id: peer.id, reason}); continue;}
     if ((counts.get(signature(peer)) ?? 0) > 1) {excluded.push({id: peer.id, reason: 'DUPLICATE_PEER_COMPANY_IN_COMPARISON'}); continue;}
     const key = JSON.stringify([peer.metric, peer.basis, peer.currency]);
@@ -68,12 +75,20 @@ export function peerBands(workspace: ResearchWorkspace) {
 
 function canonical(value: unknown): unknown {
   if (value === undefined || ['function', 'symbol', 'bigint'].includes(typeof value) || (typeof value === 'number' && !Number.isFinite(value))) throw new Error('Critic context must contain finite JSON data.');
-  if (Array.isArray(value)) return value.map(canonical);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, item]) => [key, canonical(item)]));
+  if (Array.isArray(value)) return Array.from(value, canonical);
+  if (value && typeof value === 'object') {
+    if (![Object.prototype, null].includes(Object.getPrototypeOf(value))) throw new Error('Critic context requires plain JSON objects.');
+    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, item]) => [key, canonical(item)]));
+  }
   return value;
 }
+export function canonicalContext(value: unknown): string {
+  const encoded = JSON.stringify(canonical(value));
+  if (encoded === undefined) throw new Error('Critic context must contain JSON data.');
+  return encoded;
+}
 export async function requestDigest(value: unknown): Promise<string> {
-  const bytes = new TextEncoder().encode(JSON.stringify(canonical(value)));
+  const bytes = new TextEncoder().encode(canonicalContext(value));
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }

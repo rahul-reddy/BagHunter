@@ -26,18 +26,19 @@ export function ObservationDesk({observation, source, onClose}: {observation: Ob
   const calculationKey = JSON.stringify([contextKey, inputs]);
   const scenarios = ready && calculation?.key === calculationKey ? calculation.scenarios : null;
   const sourceClocks = [source.retrieved_at, ...(attached ? [attached.manifest.asof, attached.manifest.submissions.retrieved_at, attached.manifest.companyfacts.retrieved_at] : [])];
-  const earliestAsOf = sourceClocks.every(awareTime) ? sourceClocks.reduce((left, right) => compareTime(left, right) < 0 ? right : left) : '';
+  const minimumResearchClock = sourceClocks.every(awareTime) ? sourceClocks.reduce((left, right) => compareTime(left, right) < 0 ? right : left) : '';
   let workspaceIssue = '';
-  try {if (!earliestAsOf) throw new Error('Selected source clock is unavailable.'); validateWorkspace(workspace, earliestAsOf);} catch (error) {workspaceIssue = (error as Error).message;}
+  try {if (!minimumResearchClock) throw new Error('Selected source clock is unavailable.'); validateWorkspace(workspace, minimumResearchClock);} catch (error) {workspaceIssue = (error as Error).message;}
   const exportReady = ready && !workspaceIssue;
   const criticContext = {source, observation, draft, scenario_assumptions: inputs, scenarios, sec_bundle_id: bundleId, issuer_evidence: attached, workspace: {...workspace, critic: null}};
   const reviewDigest = useResearchDigest(criticContext);
   const prefix = `${source.mode === 'FIXTURE' ? 'FIXTURE' : 'UNVERIFIED'}-${observation.ticker}`;
   const sourceContext = {mode:source.mode, snapshot_id:source.snapshot_id, ticker:observation.ticker};
   const save = () => {
+    if (workspaceIssue) {setMessage(`Cannot save research draft: ${workspaceIssue}`); return;}
     const payload = {schema:'observation-research-v3', source_sha256:source.source_sha256, source_context:sourceContext, draft, sec_bundle_id:bundleId, scenario_assumptions:inputs, research_workspace:workspace};
-    try {validateWorkspace(workspace, earliestAsOf); restoreResearch(payload, source.source_sha256, sourceContext);}
-    catch {setMessage('Draft contains an invalid date or assumption value. Correct it before saving.'); return;}
+    try {validateWorkspace(workspace, minimumResearchClock); restoreResearch(payload, source.source_sha256, sourceContext);}
+    catch (error) {setMessage(`Cannot save research draft: ${(error as Error).message}`); return;}
     try {localStorage.setItem(storageKey, JSON.stringify(payload)); setMessage('Observation draft saved for this exact snapshot and ticker. Evidence and calculations are reverified when loaded.');}
     catch {setMessage('Browser storage unavailable. Export the dossier to preserve this draft.');}
   };
