@@ -1,3 +1,32 @@
+# Current handoff — portfolio comparators / 2026-10-26
+
+Full application goal remains active. PR #33 merged as ed0042ce0f7e: Linux CI passed 391 backend /
+26 browser tests, Gemini approved with zero blockers, and main preview passed source-bound export,
+publication, keyboard and desktop/mobile accessibility checks. Finviz + SEC remain the providers;
+zero real verified investment theses. Prior technical catalog delivery is complete within scope.
+
+Current feat/portfolio-comparators separates ranking and allocation. New equal-weight,
+inverse-volatility, equal-sector target and cash variations share the existing execution and
+accounting engine. Target inputs/weights, clipped envelopes, source clocks, execution/exclusion
+ledgers, daily risk and residual cash stay archived. The default legacy allocation is unchanged.
+Validation Lab inspects comparison/decision targets and requested versus realized sector weights;
+legacy summaries remain readable. Sector targets are a declared available-sector proxy, with
+benchmark sector history unavailable. See docs/PORTFOLIO_COMPARATORS.md.
+
+Full local scripts/qa.ps1 passed on the final implementation: 395 backend tests (seven Windows
+skips), 28 browser tests, locked installs, workflow/skill checks, backend lint/format/types,
+frontend lint/types/build and demo cache verification. New boundaries cover arithmetic, zero/missing
+risk, publication cutoffs, caps, costs, cash, missing entries, future-target invariance and archived
+API/export agreement. Browser flows cover target/fill/sector/cash inspection, legacy summaries,
+exports and desktop/mobile accessibility. Only handoff prose changed after these checks.
+Exact-head CI, independent review and guarded merge are the delivery gates; their final evidence
+belongs in the PR audit trail. Next deliver and verify main, then implement pre-event case/control
+paths and remaining financial concepts. The expanded open-work register also identifies stage
+criteria/history, qualitative/peer/critic workflows and operational evidence still to finish.
+The full specification audit, robustness variants and release matrix remain open.
+
+---
+
 # Current handoff — technical catalog / 2026-10-26
 
 Full application goal remains active. PR #32 merged as 15f6406aea94: exact-head Linux CI passed

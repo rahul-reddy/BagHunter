@@ -1,5 +1,9 @@
 # Research model and acceptance boundaries
 
+Portfolio allocation continuation: [PORTFOLIO_COMPARATORS.md](PORTFOLIO_COMPARATORS.md) defines
+equal/risk/sector-target/cash variations, dated inputs, constraints and full ledger evidence.
+Fixture comparisons and sector proxies do not establish empirical efficacy; final gates are in STATUS.md.
+
 Dated technical catalog continuation: see [TECHNICAL_FEATURES.md](TECHNICAL_FEATURES.md) for
 formulas, reference clocks, sector-proxy scope and missingness. Added diagnostics retain the
 existing unvalidated score/stage policy; current final gates are recorded in STATUS.md.

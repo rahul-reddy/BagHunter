@@ -287,6 +287,20 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     assert comparison["policy_changed"] and len(comparison["changes"]) == 3
     assert client.get(f"/runs/{before}/compare/{after}").status_code == 422
     data = client.get(f"/runs/{after}").json()
+    comparisons = data["portfolio"]["comparator_runs"]
+    exported_comparisons = client.get(f"/runs/{after}/reports/portfolio_comparators.json")
+    saved_comparisons = root / "runs" / after / "reports" / "portfolio_comparators.json"
+    assert exported_comparisons.json() == comparisons == json.loads(saved_comparisons.read_text())
+    assert len(comparisons) == len({r["id"] for r in comparisons}) == 7
+    for comparison in comparisons:
+        for key, value in data["portfolio"]["policy"].items():
+            if key not in ("allocation", "selector"):
+                assert comparison["policy"][key] == value
+        for plan in comparison["allocation_ledger"]:
+            for target in plan["targets"]:
+                assert target["latest_included_publication"] <= plan["asof_time"]
+                if target["volatility"]:
+                    assert target["volatility"]["latest_available_at"] <= plan["asof_time"]
     technical = client.get(f"/runs/{after}/reports/technical_evidence.json").json()
     saved = root / "runs" / after / "reports" / "technical_evidence.json"
     assert technical == json.loads(saved.read_text())
@@ -346,6 +360,7 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
         "historical_cases.md",
         "discovery_digest.md",
         "portfolio.json",
+        "portfolio_comparators.json",
         "cohort_grid.json",
     ]:
         response = client.get(f"/runs/{before}/reports/{name}")

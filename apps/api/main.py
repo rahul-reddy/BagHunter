@@ -401,6 +401,7 @@ def report_download(run_id: str, report_name: str) -> Response:
         "discovery_sensitivity.json": data.get("discovery", {}).get("sensitivity", {}),
         "toy_backtest.json": data["backtest"],
         "portfolio.json": data.get("portfolio", {}),
+        "portfolio_comparators.json": data.get("portfolio", {}).get("comparator_runs", []),
         "portfolio_policy.json": data.get("portfolio", {}).get("policy", {}),
         "cohort_grid.json": data["study"].get("cohorts", {}),
     }

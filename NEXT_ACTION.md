@@ -1,3 +1,14 @@
+# Active implementation — portfolio comparators / 2026-10-26
+
+PR #33 merged as ed0042ce with 391 backend / 26 browser tests, independent approval and main
+preview. Current feat/portfolio-comparators adds allocation variants, source-bound target ledgers,
+shared execution constraints and visible cash/sector drift. Finish final QA, CI, independent review
+and guarded merge, then verify main. Continue pre-event paths, financial concepts and robustness
+variants against docs/REMAINING_REQUIREMENTS.md. Finviz + SEC suffice; full goal stays active.
+Read STATUS.md and docs/PORTFOLIO_COMPARATORS.md.
+
+---
+
 # Active implementation — technical catalog / 2026-10-26
 
 PR #32 merged as 15f6406 with 376 backend / 24 browser tests, Gemini approval and main preview.
