@@ -2,21 +2,27 @@
 
 import hashlib
 import json
-import math
 import re
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from packages.data.sec_facts import accession_metadata
+from packages.data.statement_metrics import analyze
 from packages.shared.models import Fact
 
-POLICY = "sec-statements-v1"
+POLICY = "sec-statements-v2-period-metrics"
 MAX_ANALYSIS_PERIODS = 1000
 # Exact standard concepts and units. Components are never silently combined into total debt.
 CONCEPTS = {
     "Revenues": ("revenue", "USD", False),
     "RevenueFromContractWithCustomerExcludingAssessedTax": ("revenue", "USD", False),
     "SalesRevenueNet": ("revenue", "USD", False),
+    "GrossProfit": ("gross_profit", "USD", False),
+    "CostOfRevenue": ("cost_of_revenue", "USD", False),
+    "CostOfGoodsAndServicesSold": ("goods_services_cost", "USD", False),
+    "ShareBasedCompensation": ("stock_compensation", "USD", False),
+    "AssetsCurrent": ("current_assets", "USD", True),
+    "LiabilitiesCurrent": ("current_liabilities", "USD", True),
     "OperatingIncomeLoss": ("operating_income", "USD", False),
     "NetIncomeLoss": ("net_income", "USD", False),
     "NetCashProvidedByUsedInOperatingActivities": ("operating_cashflow", "USD", False),
@@ -159,6 +165,11 @@ def normalize_statements(
             "No YTD subtraction, inferred fourth quarter, custom concepts or currency conversion",
             "Weighted diluted shares are period averages, not class shares or ownership dilution",
             "PPE cash payments are a narrow capex proxy; CFO minus PPE is not standardized FCF",
+            "Computed ratios require exact periods, compatible units and the same accession",
+            "Reported-cost margins are separate proxies, not replacements for missing GrossProfit",
+            "Revenue/share uses aggregate period-average shares; class applicability is unknown",
+            "Four-quarter sums require four directly reported contiguous quarters; no inferred Q4",
+            "Working capital/current ratio describe reported balances, not solvency forecasts",
             "Debt components and parent equity are reported separately, never total debt estimates",
             "CIK entity evidence does not assign a permanent security or approve research inputs",
         ],
@@ -167,80 +178,5 @@ def normalize_statements(
 
 def statement_analysis(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Latest knowable metrics, with exact-period alignment and conservative arithmetic."""
-    latest: dict[tuple[str, str, str | None, str], dict[str, Any]] = {}
-    for fact in report["facts"]:
-        key = (fact["metric"], fact["basis"], fact["period_start"], fact["period_end"])
-        previous = latest.get(key)
-        if previous is None or tuple(
-            fact[k] for k in ("published_at", "accepted_at", "accession")
-        ) > tuple(previous[k] for k in ("published_at", "accepted_at", "accession")):
-            latest[key] = fact
-    periods: dict[tuple[str, str | None, str], dict[str, dict[str, Any]]] = {}
-    for (_, basis, start, end), fact in latest.items():
-        periods.setdefault((basis, start, end), {})[fact["metric"]] = fact
-    if len(periods) > MAX_ANALYSIS_PERIODS:
-        raise ValueError("Statement analysis period count exceeds bound")
-    result = []
-    for (basis, start, end), facts in sorted(
-        periods.items(), key=lambda x: (x[0][0], x[0][2], x[0][1] or ""), reverse=True
-    ):
-        values: dict[str, float | None] = {k: f["value"] for k, f in facts.items()}
-        revenue = values.get("revenue")
-        for metric, output in (
-            ("operating_income", "operating_margin"),
-            ("net_income", "net_margin"),
-            ("operating_cashflow", "cashflow_margin"),
-        ):
-            amount = values.get(metric)
-            value = (
-                amount / revenue
-                if amount is not None and revenue is not None and revenue > 0
-                else None
-            )
-            values[output] = value if value is not None and math.isfinite(value) else None
-        cfo, ppe = facts.get("operating_cashflow"), facts.get("ppe_payments")
-        fcf = (
-            cfo["value"] - ppe["value"]
-            if cfo and ppe and cfo["accession"] == ppe["accession"] and ppe["value"] >= 0
-            else None
-        )
-        values["cfo_less_ppe"] = fcf if fcf is not None and math.isfinite(fcf) else None
-        citations = list(facts.values())
-        for metric, output in (
-            ("revenue", "revenue_yoy"),
-            ("diluted_weighted_shares", "weighted_shares_yoy"),
-        ):
-            candidates = [
-                prior
-                for (other_basis, other_start, other_end), prior_facts in periods.items()
-                if other_basis == basis
-                and start
-                and other_start
-                and 330 <= (date.fromisoformat(end) - date.fromisoformat(other_end)).days <= 400
-                and abs(
-                    (date.fromisoformat(end) - date.fromisoformat(start)).days
-                    - (date.fromisoformat(other_end) - date.fromisoformat(other_start)).days
-                )
-                <= 15
-                and (prior := prior_facts.get(metric)) is not None
-            ]
-            current = facts.get(metric)
-            value = None
-            if len(candidates) == 1 and current and candidates[0]["value"] > 0:
-                prior = candidates[0]
-                ratio = current["value"] / prior["value"] - 1
-                value = ratio if math.isfinite(ratio) else None
-                citations.append(prior)
-            values[output] = value
-        result.append(
-            {
-                "basis": basis,
-                "period_start": start,
-                "period_end": end,
-                "values": values,
-                "citations": list(
-                    {(f["metric"], f["period_end"], f["accession"]): f for f in citations}.values()
-                ),
-            }
-        )
-    return result
+    contracts = {metric: (unit, instant) for metric, unit, instant in CONCEPTS.values()}
+    return analyze(report, contracts, MAX_ANALYSIS_PERIODS)

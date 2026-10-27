@@ -1,3 +1,33 @@
+# Current handoff — exact-period financial metrics / 2026-10-27
+
+PR #36 merged as 33d0c6a27842 after exact-head CI passed 416 backend / 31 browser tests,
+Gemini approved with zero findings, and main expanded-citation desktop/mobile preview passed.
+Full-app goal remains active; Finviz Elite + SEC are the stack. No more credentials or provider
+subscription are needed to continue software work. Zero real investment theses are verified.
+
+Current feat/financial-concepts adds sec-statements-v2-period-metrics: typed gross profit,
+reported costs, noncash share compensation and current balances; exact-period/same-filing ratios,
+margin changes, revenue per weighted share, cash conversion, working capital and direct-quarter
+trailing growth. Every derivation keeps method, availability reason and cited input identities.
+GrossProfit and the two reported-cost proxies remain separate. No inferred Q4, class assignment,
+score/stage change or rewrite of original SEC bundles. New grouped UI preserves the overview,
+missing values, evidence and current-page export. See docs/SEC_STATEMENTS.md.
+
+Executed on current implementation: 38 targeted statement tests, both statement browser tests
+(desktop/mobile accessibility, evidence and export), backend lint/format/types and frontend
+lint/types/build passed. Full scripts/qa.ps1 is in progress at this checkpoint; no full-suite
+pass is claimed. Exact-head CI, independent review, guarded merge and main preview remain.
+Saved real history source interpretation produced 2,836 facts / 187 periods in 0.46 seconds:
+74 compensation/revenue, 71 working-capital/current-ratio and 111 revenue/weighted-share periods.
+No reported GrossProfit or contiguous four-quarter total is available in that archive. Separate
+reported-cost proxies have 56/55 periods. Counts are software coverage, never market findings.
+
+Next finish current acceptance/delivery, then version the complete stage criteria and full signal
+history. Qualitative/peer/critic workflows, robustness variants, operations and the final item-by-item
+release audit remain open per docs/REMAINING_REQUIREMENTS.md. Do not close the full goal here.
+
+---
+
 # Current handoff — expanded event citation accessibility / 2026-10-27
 
 PR #35 merged as 238374053e1f after exact-head CI passed 416 backend / 30 browser tests and

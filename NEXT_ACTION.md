@@ -1,3 +1,15 @@
+# Active implementation — exact-period financial metrics / 2026-10-27
+
+PR #36 is delivered as 33d0c6a27842 with 416 backend / 31 browser CI tests, independent approval
+and main preview. Current feat/financial-concepts implements typed SEC concepts, conservative
+exact-period/same-filing arithmetic, derivation reasons/citations and financial metric groups.
+Targeted backend/browser and lint/type/build checks passed; full QA is running. Finish exact-head
+CI, independent review, guarded merge and main real-source preview. Then implement complete
+versioned stage rules and full dated history. Full goal stays active; Finviz + SEC suffice.
+Read STATUS.md, docs/SEC_STATEMENTS.md and docs/REMAINING_REQUIREMENTS.md.
+
+---
+
 # Active fix — expanded citation accessibility / 2026-10-27
 
 PR #35 merged as 23837405 with 416 backend / 30 browser CI tests and independent approval.

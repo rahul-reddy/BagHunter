@@ -1,3 +1,13 @@
+# Active implementation — exact-period financial metrics / 2026-10-27
+
+PR #36 delivered expanded-citation accessibility with 416 backend / 31 browser CI tests,
+independent approval and main preview. The current financial-concepts branch extends SEC
+statements and financial metric views. Targeted checks passed; full QA, CI/review/merge and
+main preview remain at this checkpoint. This is a verified-software milestone in progress,
+not completion of Sprint 7/9 empirical requirements or the full app. See STATUS.md.
+
+---
+
 # Active fix — expanded citation accessibility / 2026-10-27
 
 PR #35 merged as 23837405 with 416 backend / 30 browser CI tests and independent approval.
