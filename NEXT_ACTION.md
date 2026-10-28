@@ -1,3 +1,17 @@
+# Active implementation — report completeness / 2026-10-28
+
+Main 7a104f7e5f4f delivers Thesis Studio evidence with 485 backend / 44 browser CI tests,
+independent approval and main previews. Current feat/report-completeness adds cited filing clocks,
+independent historical anchor inputs and explicit interval digests. Twelve unit boundary tests,
+archive/API integration, six combined browsers and the final unknown-policy comparison case passed
+at their recorded revisions. Finish final-source gates, exact-head CI/review/guarded merge and
+main report preview. The reproducible notebook is committed locally in BagHunter-research; merge
+it onto delivered report main, rerun cells, then deliver through its own CI/review/guard.
+Complete the specification audit's target schema/field/classification/release gaps afterward.
+Finviz Elite + SEC remain scope; zero verified real theses. Full goal remains active. See STATUS.md.
+
+---
+
 # Active implementation — Thesis Studio evidence / 2026-10-28
 
 Main b8c40001ab51 includes delivered source-bound research, twelve robustness attempts and

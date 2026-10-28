@@ -6,23 +6,34 @@ test('run comparison clears stale requests and rejects response binding mismatch
   const current = await (await page.request.get('/api/runs/current')).json() as {run_id: string; asof: string};
   const first = '1'.repeat(16), second = '2'.repeat(16);
   await page.route('**/api/runs', route => route.fulfill({json: [current, {run_id: first, asof: '2020-01-01'}, {run_id: second, asof: '2021-01-01'}]}));
-  let mismatch = false;
+  let mismatch = false, sameClock = false, unknownPolicy = false;
   await page.route('**/api/runs/*/compare/*', async route => {
     const previous = route.request().url().split('/').at(-1)!;
     if (previous === first) await new Promise(resolve => setTimeout(resolve, 300));
     return route.fulfill({json: {run_id: current.run_id, previous_id: mismatch ? first : previous,
-      policy_changed: false, changes: [{security_id: previous === first ? 'OLDER RESPONSE' : 'LATEST RESPONSE', change: 'RETAINED', before_stage: 'WATCH', after_stage: 'EMERGING', score_change: 1}]}});
+      asof:current.asof,previous_asof:sameClock ? current.asof : '2021-01-01T00:00:00Z',policy_changed: unknownPolicy ? null : false, changes: [{security_id: previous === first ? 'OLDER RESPONSE' : 'LATEST RESPONSE', change: 'RETAINED', before_stage: 'WATCH', after_stage: 'EMERGING', score_change: 1}]}});
   });
   await page.goto('/');
   await page.getByLabel('Compare against saved run').selectOption(first);
   await page.getByLabel('Compare against saved run').selectOption(second);
   await expect(page.getByText('LATEST RESPONSE', {exact: false})).toBeVisible();
   await expect(page.getByText('OLDER RESPONSE', {exact: false})).toHaveCount(0);
+  await expect(page.getByRole('link',{name:'Download interval discovery digest',exact:true})).toHaveAttribute('href',`/api/runs/${current.run_id}/reports/discovery_digest.md?previous=${second}`);
+  sameClock = true;
+  await page.getByLabel('Compare against saved run').selectOption('');
+  await page.getByLabel('Compare against saved run').selectOption(second);
+  await expect(page.getByText('An interval digest requires a verified earlier comparison clock.',{exact:false})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Download interval discovery digest',exact:true})).toHaveCount(0);
+  unknownPolicy = true;
+  await page.getByLabel('Compare against saved run').selectOption('');
+  await page.getByLabel('Compare against saved run').selectOption(second);
+  await expect(page.getByText('Policy comparison unavailable: an archived fingerprint is missing.',{exact:true})).toBeVisible();
   mismatch = true;
   await page.getByLabel('Compare against saved run').selectOption('');
   await page.getByLabel('Compare against saved run').selectOption(second);
   await expect(page.getByRole('alert')).toContainText('different run selection');
   await expect(page.getByText('LATEST RESPONSE', {exact: false})).toHaveCount(0);
+  await expect(page.getByRole('link',{name:'Download interval discovery digest',exact:true})).toHaveCount(0);
 });
 
 test('discovery filters, saved watchlist and candidate stage history', async ({page}) => {

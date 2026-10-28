@@ -383,19 +383,28 @@ def compare_runs(run_id: str, previous_id: str) -> dict[str, Any]:
                 "score_change": right["score"] - left["score"] if right and left else None,
             }
         )
+    new_policy = new.get("discovery", {}).get("policy_sha256")
+    old_policy = old.get("discovery", {}).get("policy_sha256")
     return {
         "run_id": run_id,
         "previous_id": previous_id,
+        "asof": new["asof"],
+        "previous_asof": old["asof"],
         "mode": "FIXTURE",
-        "policy_changed": new.get("discovery", {}).get("policy_sha256")
-        != old.get("discovery", {}).get("policy_sha256"),
+        "policy_changed": new_policy != old_policy if new_policy and old_policy else None,
         "changes": rows,
     }
 
 
 @app.get("/runs/{run_id}/reports/{report_name}")
-def report_download(run_id: str, report_name: str) -> Response:
+def report_download(
+    run_id: str,
+    report_name: str,
+    previous: str | None = Query(default=None, pattern=r"^[a-f0-9]{16}$"),
+) -> Response:
     data = read_run(run_id)
+    if previous is not None and report_name != "discovery_digest.md":
+        raise HTTPException(422, "A prior run applies only to the discovery digest")
     reports = {
         "technical_evidence.json": technical_report(data),
         "source_manifest.json": data["sources"],
@@ -467,7 +476,24 @@ def report_download(run_id: str, report_name: str) -> Response:
             media_type="text/markdown; charset=utf-8",
         )
     if report_name in ("historical_cases.md", "discovery_digest.md"):
-        text = case_report(data) if report_name == "historical_cases.md" else discovery_digest(data)
+        prior = read_run(previous) if previous is not None else None
+        try:
+            if prior is not None:
+                old_clock = datetime.fromisoformat(prior["asof"])
+                new_clock = datetime.fromisoformat(data["asof"])
+                if old_clock.utcoffset() is None or new_clock.utcoffset() is None:
+                    raise ValueError("Missing archived report timezone")
+                if prior["mode"] != data["mode"] or old_clock >= new_clock:
+                    raise HTTPException(
+                        422, "Digest comparison must use an earlier run in the same mode"
+                    )
+            text = (
+                case_report(data)
+                if report_name == "historical_cases.md"
+                else discovery_digest(data, prior)
+            )
+        except (ValueError, TypeError, KeyError):
+            raise HTTPException(503, "Archived report evidence failed verification") from None
         return Response(
             text,
             media_type="text/markdown; charset=utf-8",
@@ -481,9 +507,12 @@ def dossier_download(run_id: str, security_id: str) -> Response:
     if not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", security_id):
         raise HTTPException(404, "Invalid security ID")
     try:
-        text = candidate_memo(read_run(run_id), security_id)
-    except ValueError:
-        raise HTTPException(404, "No candidate in this run") from None
+        data = read_run(run_id)
+        if not any(s["security_id"] == security_id for s in data["signals"]):
+            raise HTTPException(404, "No candidate in this run")
+        text = candidate_memo(data, security_id)
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(503, "Archived dossier evidence failed verification") from None
     return Response(
         text,
         media_type="text/markdown; charset=utf-8",
