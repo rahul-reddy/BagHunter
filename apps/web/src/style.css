@@ -26,3 +26,5 @@
 .robustness-lab{overflow-wrap:anywhere}.robustness-lab select{max-width:100%}.robustness-lab .pagination{flex-wrap:wrap}
 
 .table-scroll{position:relative}
+
+.outcome-classification{min-width:0;overflow-wrap:anywhere}.outcome-classification .pagination{flex-wrap:wrap}.outcome-classification .filters label{min-width:0;max-width:100%}.outcome-classification select{max-width:100%}

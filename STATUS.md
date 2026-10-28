@@ -1,3 +1,24 @@
+# Current handoff — frozen multibagger classification / 2026-10-28
+
+Current feat/outcome-classification adds frozen annual rank snapshots, all 1/2/3/5Y by 5x/10x
+attempts, explicit missing/unmatured outcomes, fixed-budget confusion counts and three common-
+population comparators. No probability calibration or empirical success is inferred. Reports are
+archived and exposed in Validation Lab with provenance, filters, downloads and unavailable reasons.
+See docs/CLASSIFICATION.md. Finviz Elite + SEC remain scope; zero verified real theses.
+
+Executed: 21 core boundary tests passed. The integrated archive/API workspace test found a policy
+fingerprint encoding mismatch, which was corrected to the discovery canonical serialization;
+all 22 focused tests then passed. Backend lint/types passed; formatting was corrected afterward.
+Frontend lint/types/build passed before the final mobile layout change. Both classification
+browser tests now pass, including desktop/mobile Axe and keyboard checks, after adding exact
+filter labels and wrapping pagination buttons. Source packages stayed frozen during pipeline tests.
+
+Integrate delivered report/notebook main, rerun current-source gates and archive integration,
+then exact-head CI, independent review, guarded delivery and main acceptance. Full schema/field
+reconciliation and per-item release audit remain open. The completion goal stays active.
+
+---
+
 # Current handoff — comparison accessibility regression / 2026-10-28
 
 PR #45 delivered as 7ae07125f2f3 with 498 backend / 44 browser CI tests and independent
@@ -10,6 +31,7 @@ Finish exact-head CI/review/guarded
 merge and the full main report preview. Notebook PR #46 delivered as f0311d809451; its main seven-cell execution passed. Classification and mandatory
 schema reconciliation remain underway. Finviz Elite + SEC suffice. Full goal stays active;
 zero verified real theses.
+
 
 ---
 
@@ -95,6 +117,7 @@ cells executed with provenance/PIT/cache/label/stress assertions and four failur
 receipt tests passed. The phase-one specification audit draft is in BagHunter-operations/docs/
 SPECIFICATION_AUDIT.md. Mandatory schema/field contracts, classification metric scope and final
 per-item release proof remain open; do not hide these independent software gaps as data blockers.
+
 
 ---
 

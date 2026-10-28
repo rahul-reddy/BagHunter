@@ -12,6 +12,7 @@ from typing import Annotated, Any, Literal
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import Response
 
+from packages.backtest.classification import classification_markdown
 from packages.backtest.robustness import robustness_markdown
 from packages.data.finviz import _read, read_snapshot
 from packages.data.provider_refresh import read_sec_bundle
@@ -409,6 +410,7 @@ def report_download(
         "technical_evidence.json": technical_report(data),
         "source_manifest.json": data["sources"],
         "validation.json": data.get("validation", {}),
+        "classification.json": data.get("validation", {}).get("classification"),
         "negative_controls.json": data.get("validation", {}).get("negative_controls", {}),
         "discovery_negative_controls.json": data.get("validation", {}).get(
             "discovery_negative_controls", {}
@@ -424,6 +426,13 @@ def report_download(
         "cohort_grid.json": data["study"].get("cohorts", {}),
         "event_paths.json": data["study"].get("event_paths"),
     }
+    if report_name == "classification.md":
+        return Response(
+            classification_markdown(
+                data.get("validation", {}).get("classification"), data["run_id"]
+            ),
+            media_type="text/markdown; charset=utf-8",
+        )
     if report_name == "robustness.md":
         return Response(
             robustness_markdown(data.get("validation", {}).get("robustness"), data["run_id"]),
