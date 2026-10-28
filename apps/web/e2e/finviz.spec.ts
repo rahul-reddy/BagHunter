@@ -31,6 +31,28 @@ const referenceEvidence = { reference_id: 'd'.repeat(64), base_snapshot_id: cove
       { ticker: 'DEMO-Y', source_company: 'Imaginary company', disposition: 'NO_CANDIDATE_EVIDENCE', candidates: [] },
     ] } };
 
+test('research desk opens before a full results page with keyboard focus and returns to its opener', async ({page}) => {
+  await page.route('**/api/finviz/observations?**', route => route.fulfill({json:{coverage,
+    age_hours:1,stale:false,total:50,offset:0,limit:50,
+    observations:Array.from({length:50},(_,i) => observation(`DEMO-${i}`,`Fictional company ${i}`))}}));
+  await page.goto('/');
+  await page.getByRole('button',{name:'Finviz Observations',exact:true}).click();
+  const opener = page.getByRole('button',{name:'Research observation DEMO-49',exact:true});
+  await opener.focus(); await page.keyboard.press('Enter');
+  const heading = page.getByRole('heading',{name:'DEMO-49 · Observation research desk',exact:true});
+  await expect(heading).toBeFocused(); await expect(heading).toBeInViewport();
+  const desk = page.getByRole('region',{name:'Research workspace for observation DEMO-49',exact:true});
+  const table = page.getByRole('region',{name:'Scrollable Finviz observations',exact:true});
+  expect(await desk.evaluate((node) => Boolean(node.compareDocumentPosition(document.querySelector('[aria-label="Scrollable Finviz observations"]')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  await page.getByRole('button',{name:'Close observation desk',exact:true}).click();
+  await expect(opener).toBeFocused(); await expect(desk).toHaveCount(0);
+  await page.setViewportSize({width:390,height:844});
+  await opener.click(); await expect(heading).toBeFocused(); await expect(heading).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(table).toBeAttached();
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+});
+
 test('explicit saved snapshot selection validates source binding without environment setup', async ({page}) => {
   await page.route('**/api/finviz/snapshots', route => route.fulfill({json: {snapshots: [{snapshot_id: coverage.snapshot_id, mode: 'FIXTURE', rows: 51, retrieved_at: coverage.retrieved_at}]}}));
   let mismatch = false;

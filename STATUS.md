@@ -4,7 +4,10 @@ Owner resumed full-app implementation. PR #38 stage policy delivered as 3dd0de4d
 459 backend / 34 browser CI tests, independent review, guarded merge and main preview.
 PR #39 research delivered as a95d99cad484 with 459 backend / 39 browser CI tests,
 Claude approval and actual-source main preview. PR #41 robustness delivered as 67311dadd6de: exact-head CI 472 backend / 41 browser,
-Gemini approval with zero blockers and guarded merge. Main preview is in progress.
+Gemini approval with zero blockers and guarded merge. Main robustness preview passed source-bound reports, all twelve retained attempts,
+lag and ablation inspection, missing-series handling, keyboard and desktop/mobile accessibility.
+PR #42 navigation delivered as b8c40001ab51 with 472 backend / 42 browser CI tests, independent
+approval and guarded merge; navigation main preview is running.
 
 Current feat/operations adds scripts/operations_audit.py: bounded disk inventory, active fixture
 archive restore/checksum verification and optional twelve-request/four-worker local API smoke.
@@ -25,6 +28,28 @@ Gemini approved 6b14f9d with zero blockers and exact-head CI passed 472 backend 
 tests. Merging current research main resolves the handoff conflict and requires fresh CI/review.
 Full application completion still requires final item-by-item specification/release evidence.
 Finviz Elite + SEC remain the provider scope; zero real investment theses are verified.
+
+---
+
+# Current handoff — research desk navigation / 2026-10-27
+
+PR #39 delivered as a95d99cad484: 459 backend / 39 browser CI tests, Claude approval with zero
+blockers, guarded merge and main actual Finviz/SEC preview. Source-bound packets, composed source
+clock floor, invalid-clock save/export, stale critic, save/load and desktop/mobile accessibility
+passed. Receipt: root artifacts/test_results/research-evidence-release-receipt.json.
+
+Current fix/research-navigation moves the observation desk ahead of the 50-row results table,
+focuses its heading on open, and restores the triggering button on close. Real-source screenshot
+inspection found the prior desk buried below all results. No source/ranking semantics change.
+Frontend lint/types and all 15 focused Finviz/company/research browser checks passed, including
+full-page last-row keyboard activation, desktop/mobile viewport and accessibility. Production
+build and exact-head CI/review/guarded merge remain required.
+
+Operations PR #40's test-isolation correction passed paired cancellation/rerun and run-index
+checks and received new-head Gemini approval; fresh CI is running. Robustness PR #41 delivered as 67311dadd6de after exact-head CI passed 472 backend /
+41 browser tests, Gemini approval with zero blockers and guarded merge. Main preview is running. No full-app completion claim;
+final item-level specification/release audit and explicit empirical gates remain open.
+Finviz Elite + SEC are the provider scope. Zero verified real investment theses.
 
 ---
 
