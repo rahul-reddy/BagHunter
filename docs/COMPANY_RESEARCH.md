@@ -45,3 +45,8 @@ UNVERIFIED status. No draft changes the verified-thesis count. Snapshots have se
 
 Tests cover calculator responses, context binding, reload/recalculation, failed evidence, late
 responses, legacy notes, export content and desktop/mobile accessibility. Current gates: STATUS.md.
+
+Structured source categories, cited peer comparisons, horizon/opportunity-cost assumptions and
+separately attributed critic packets are documented in [Research evidence](RESEARCH_EVIDENCE.md).
+New v3 records preserve the existing storage key and read older records. These additions do not
+verify an investment thesis or activate research predictors.
