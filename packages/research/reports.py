@@ -1,5 +1,6 @@
 """Source-attributed fixture reports. Missing evidence is never filled with an invented thesis."""
 
+import json
 from collections import Counter
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -162,10 +163,12 @@ def case_report(run: dict[str, Any]) -> str:
                         f"terminal return {label['terminal_total_return']}; "
                         f"drawdown {label['max_drawdown']}; {label['coverage_flag']}"
                     )
+        strata = pair.get("strata")
+        strata_text = json.dumps(strata) if strata is not None else "Unavailable"
         lines.extend(
             [
                 "",
-                f"Matching strata {pair.get('strata', 'Unavailable')}; "
+                f"Matching strata {strata_text}; "
                 f"sampling probability {pair.get('control_sampling_probability', 'Unavailable')}.",
                 "Sector matching is an explicit industry proxy. Different later paths do not "
                 "establish a causal business explanation; no sourced customer/contract/catalyst "
