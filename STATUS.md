@@ -1,3 +1,18 @@
+# Current handoff — comparison accessibility regression / 2026-10-28
+
+PR #45 delivered as 7ae07125f2f3 with 498 backend / 44 browser CI tests and independent
+approval. Main saved/API report equality and interval downloads passed, but the open comparison
+introduced a heading-order violation: its h3 followed the page h1 without an h2. This branch
+uses h2 and extends the real-browser comparison test with desktop/mobile accessibility scans.
+
+Frontend lint/types/build and the enriched desktop/mobile comparison browser test passed.
+Finish exact-head CI/review/guarded
+merge and the full main report preview. Notebook PR #46 delivered as f0311d809451; its main seven-cell execution passed. Classification and mandatory
+schema reconciliation remain underway. Finviz Elite + SEC suffice. Full goal stays active;
+zero verified real theses.
+
+---
+
 # Current handoff — reproducible research notebook / 2026-10-28
 
 PR #45 delivered the report archive/API serialization correction as 7ae07125f2f3 after
@@ -19,6 +34,7 @@ checks, then exact-head CI, independent review, guarded merge and actual main ex
 Classification integration in BagHunter-thesis found mismatched policy hash encoding and
 is being corrected; 21 core boundary tests passed. Mandatory schema/field reconciliation
 and full per-item release proof remain open. The full completion goal remains active.
+
 
 ---
 
