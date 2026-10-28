@@ -19,6 +19,11 @@ test('run comparison clears stale requests and rejects response binding mismatch
   await expect(page.getByText('LATEST RESPONSE', {exact: false})).toBeVisible();
   await expect(page.getByText('OLDER RESPONSE', {exact: false})).toHaveCount(0);
   await expect(page.getByRole('link',{name:'Download interval discovery digest',exact:true})).toHaveAttribute('href',`/api/runs/${current.run_id}/reports/discovery_digest.md?previous=${second}`);
+  await expect(page.getByRole('heading',{name:'Changes since comparison run',level:2,exact:true})).toBeVisible();
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
   sameClock = true;
   await page.getByLabel('Compare against saved run').selectOption('');
   await page.getByLabel('Compare against saved run').selectOption(second);
