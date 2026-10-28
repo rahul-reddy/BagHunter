@@ -69,10 +69,15 @@ def assert_pit(publications: list[datetime], asof: datetime) -> None:
 
 
 def snapshot(
-    instrument: Instrument, bars: list[Bar], facts: list[Fact], asof: datetime
+    instrument: Instrument,
+    bars: list[Bar],
+    facts: list[Fact],
+    asof: datetime,
+    *,
+    lag_hours: int = 24,
 ) -> dict[str, Any]:
     try:
-        result = _snapshot(instrument, bars, facts, asof)
+        result = _snapshot(instrument, bars, facts, asof, lag_hours=lag_hours)
         require_finite(result, "feature snapshot")
         return result
     except (OverflowError, ZeroDivisionError) as exc:
@@ -80,8 +85,15 @@ def snapshot(
 
 
 def _snapshot(
-    instrument: Instrument, bars: list[Bar], facts: list[Fact], asof: datetime
+    instrument: Instrument,
+    bars: list[Bar],
+    facts: list[Fact],
+    asof: datetime,
+    *,
+    lag_hours: int = 24,
 ) -> dict[str, Any]:
+    if type(lag_hours) is not int or not 24 <= lag_hours <= 720:
+        raise ValueError("Feature processing lag must be an integer from 24 to 720 hours")
     asof = utc_asof(asof)
     history = sorted(
         [
@@ -97,7 +109,7 @@ def _snapshot(
         raise ValueError("duplicate bar sessions")
     if len(history) < 121:
         raise ValueError("insufficient price history (121 sessions required)")
-    known = facts_at(facts, instrument.security_id, asof)
+    known = facts_at(facts, instrument.security_id, asof, lag_hours=lag_hours)
     assert_pit([b.available_at for b in history] + [f.published_at for f in known], asof)
     closes = [b.close for b in history]
     returns = {f"return_{n}d": closes[-1] / closes[-1 - n] - 1 for n in (1, 5, 21, 63)}
@@ -160,6 +172,7 @@ def _snapshot(
         "asof_time": asof.isoformat(),
         "latest_included_publication": latest.isoformat(),
         "feature_version": VERSION,
+        "processing_lag_hours": lag_hours,
         "source_ids": sorted({b.source_id for b in history} | {f.source_id for f in known}),
         "close": closes[-1],
         **returns,

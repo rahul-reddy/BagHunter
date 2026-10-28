@@ -51,6 +51,14 @@ def test_weight_arithmetic_missingness_and_stricter_liquidity():
     assert price[0]["rank_change"] == 1 and price[1]["rank_change"] == -1
     assert [r["security_id"] for r in variants["liquidity_floor_2x"]["ranked"]] == ["b"]
     assert variants["liquidity_floor_10x"]["ranked"] == []
+    removed = variants["without_price_volume"]
+    assert removed["weights"] == policy.weights
+    assert removed["ablated_component"] == "price_volume"
+    assert [r["score"] for r in removed["ranked"]] == [25, 0]
+    assert all(
+        r["factor_coverage"] == 0.25 and r["missing_weight_penalty"] == 75
+        for r in removed["ranked"]
+    )
     assert result == ranking_sensitivity(data, policy)
     # An unavailable family stays zero with zero covered weight, not a synthesized observation.
     missing = [{**data[0], "components": dict.fromkeys(policy.weights)}]
@@ -86,4 +94,4 @@ def test_sensitivity_reports_bind_run_and_policy_is_reusable(tmp_path, monkeypat
         )
     )
     assert response.json() == archived
-    assert len(response.json()["variants"]) == 6
+    assert len(response.json()["variants"]) == 12

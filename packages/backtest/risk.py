@@ -28,10 +28,14 @@ def _daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
         raise ValueError("Positive initial equity required")
     peak = values[0]
     drawdown = 0.0
+    trough_index: int | None = None
+    recovery_level: float | None = None
     underwater = longest = 0
-    for value in values:
+    for index, value in enumerate(values):
         peak = max(peak, value)
-        drawdown = min(drawdown, value / peak - 1)
+        current_drawdown = value / peak - 1
+        if current_drawdown < drawdown:
+            drawdown, trough_index, recovery_level = current_drawdown, index, peak
         underwater = underwater + 1 if value < peak else 0
         longest = max(longest, underwater)
     days = (dates[-1] - dates[0]).days
@@ -40,6 +44,17 @@ def _daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
     ]
     require_finite(returns, "daily equity returns")
     exhausted = any(value == 0 for value in values[:-1])
+    recovery_index = next(
+        (
+            index
+            for index, value in enumerate(values)
+            if trough_index is not None
+            and index > trough_index
+            and recovery_level is not None
+            and value >= recovery_level
+        ),
+        None,
+    )
     sd = stdev(returns) if len(returns) >= 2 and not exhausted else None
     downside = (
         math.sqrt(mean(min(v, 0) ** 2 for v in returns)) if returns and not exhausted else None
@@ -49,12 +64,26 @@ def _daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "status": "FIXTURE_DAILY_CLOSE_MARKS_NOT_EMPIRICAL_VALIDATION",
         "observations": len(values),
+        "return_observations": len(returns),
         "period_start": str(dates[0]),
         "period_end": str(dates[-1]),
         "total_return": values[-1] / values[0] - 1,
         "cagr": (values[-1] / values[0]) ** (365.25 / days) - 1 if days else None,
         "max_drawdown": drawdown,
         "maximum_underwater_sessions": longest,
+        "underwater_sessions_at_end": underwater,
+        "max_drawdown_recovery_sessions": 0
+        if trough_index is None
+        else (
+            recovery_index - trough_index if recovery_index is not None and not exhausted else None
+        ),
+        "drawdown_recovery_status": "UNDEFINED_AFTER_EQUITY_EXHAUSTION"
+        if exhausted
+        else "NO_DRAWDOWN"
+        if trough_index is None
+        else "UNRECOVERED_AT_END"
+        if recovery_index is None
+        else "RECOVERED",
         "annualized_volatility": sd * math.sqrt(252) if sd is not None else None,
         "sharpe_zero_risk_free": average / sd * math.sqrt(252)
         if average is not None and sd
@@ -75,5 +104,9 @@ def _daily_risk(curve: list[dict[str, Any]]) -> dict[str, Any]:
             "252 sessions/year for volatility and ratios; zero risk-free/target return",
             "Calendar-day CAGR; fixture weekdays are not an exchange calendar",
             "Close-to-close drawdown excludes intraday extrema",
+            "Recovery counts observed closes from the earliest deepest trough to its prior peak; "
+            "an unfinished recovery stays unavailable",
+            "Daily tail is the lower 5% order statistic; skewness uses the population "
+            "standardized third moment, not a forecast",
         ],
     }

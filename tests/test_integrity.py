@@ -72,7 +72,12 @@ def test_snapshot_does_not_change_with_future_observations(dataset):
 def test_predictor_has_no_outcome_argument():
     import inspect
 
-    assert set(inspect.signature(snapshot).parameters) == {"instrument", "bars", "facts", "asof"}
+    parameters = inspect.signature(snapshot).parameters
+    assert set(parameters) == {"instrument", "bars", "facts", "asof", "lag_hours"}
+    assert parameters["lag_hours"].kind == inspect.Parameter.KEYWORD_ONLY
+    assert parameters["lag_hours"].default == 24
+    with pytest.raises(TypeError):
+        snapshot(None, [], [], datetime.fromisoformat(DEFAULT_ASOF), outcomes=[])
 
 
 def test_missing_factors_are_null_and_penalized(dataset):
