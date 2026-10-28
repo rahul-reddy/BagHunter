@@ -1,5 +1,7 @@
 /** Source-bound operator research. These records never enter scoring or verified facts. */
-export const categories = ['Industry catalyst', 'Customer concentration', 'Product release', 'Contract quality', 'Management incentives', 'Competitive moat', 'Narrative saturation', 'Capital raises', 'Market size assumptions', 'Sector cycle'] as const;
+export const riskTopics = ['Liquidity','Dilution and ATM offerings','Customer concentration','Refinancing','Accounting quality','Binary catalysts','Insider/promoter incentives','Governance','Momentum crowding','Industry cycles','Technology obsolescence','Macro rates','Data/vendor limitations','Regime drift','Backtest overfitting','Source licensing'] as const;
+const qualitativeTopics = ['Industry catalyst', 'Customer concentration', 'Product release', 'Contract quality', 'Management incentives', 'Competitive moat', 'Narrative saturation', 'Capital raises', 'Market size assumptions', 'Sector cycle'] as const;
+export const categories = [...qualitativeTopics,...riskTopics.filter(topic => topic !== 'Customer concentration')] as const;
 export type Judgment = 'PRIMARY_SOURCE_TRANSCRIPTION' | 'HUMAN_JUDGMENT' | 'LLM_JUDGMENT' | 'ASSUMPTION';
 export type QualitativeItem = {id: string; category: typeof categories[number]; statement: string; kind: Judgment; attribution: string; source_url: string; published_at: string; disconfirmation: string};
 export type PeerItem = {id: string; company: string; metric: 'P_E' | 'EV_REVENUE' | 'EV_OPERATING_INCOME'; basis: string; currency: string; multiple: string; source_url: string; published_at: string; rationale: string};
@@ -124,10 +126,16 @@ export function criticStatus(workspace: ResearchWorkspace, digest: string | null
   return 'MATCHES_REQUEST_INDEPENDENCE_NOT_VERIFIED';
 }
 
+export function riskRegister(workspace: ResearchWorkspace) {
+  return riskTopics.map(topic => {const records = workspace.qualitative.filter(item => item.category === topic);return {topic,records:records.length,status:records.length ? 'ATTRIBUTED_RISK_ASSERTIONS_NOT_VERIFIED' : 'NOT_ASSESSED',evidence:records.map(item => ({id:item.id,status:evidenceStatus(item,workspace.research_asof)}))};});
+}
+
 export function researchEvidenceMemo(workspace: ResearchWorkspace, reviewDigest: string | null): string[] {
   const rows = ['', '## Structured primary-source research and attributed judgments', `Research author: ${workspace.author || 'Not supplied'}; research clock: ${workspace.research_asof}.`, 'All entries are operator assertions; source attribution does not independently verify their content.'];
   for (const item of workspace.qualitative) rows.push(`- ${item.category} [${item.kind}; ${evidenceStatus(item, workspace.research_asof)}] ${item.statement}; attribution ${item.attribution || 'missing'}; published ${item.published_at || 'unknown'}; ${item.source_url || 'source missing'}; disconfirmation: ${item.disconfirmation || 'missing'}`);
-  rows.push('', '## Peer comparison bands', JSON.stringify(peerBands(workspace)), ...workspace.peers.map(peer => `- ${peer.company}: ${peer.multiple || 'missing'} ${peer.metric}; basis ${peer.basis}; currency ${peer.currency}; published ${peer.published_at || 'unknown'}; ${peer.source_url || 'missing source'}; rationale ${peer.rationale || 'missing'}`), '', '## Time to thesis and opportunity cost', `Horizon assumption: ${workspace.time_to_thesis_months || 'missing'} months; conditions: ${workspace.time_to_thesis_conditions || 'missing'}.`, `Opportunity cost / alternatives: ${workspace.opportunity_cost || 'Not supplied'}`, '', '## Separately attributed critic');
+  rows.push('', '## Peer comparison bands', JSON.stringify(peerBands(workspace)), ...workspace.peers.map(peer => `- ${peer.company}: ${peer.multiple || 'missing'} ${peer.metric}; basis ${peer.basis}; currency ${peer.currency}; published ${peer.published_at || 'unknown'}; ${peer.source_url || 'missing source'}; rationale ${peer.rationale || 'missing'}`), '', '## Time to thesis and opportunity cost', `Horizon assumption: ${workspace.time_to_thesis_months || 'missing'} months; conditions: ${workspace.time_to_thesis_conditions || 'missing'}.`, `Opportunity cost / alternatives: ${workspace.opportunity_cost || 'Not supplied'}`);
+  rows.push('', '## Risk register coverage', 'Unassessed topics are missing research, not absent risk.', ...riskRegister(workspace).map(row => `- ${row.topic}: ${row.records} records; ${row.status}; ${row.evidence.map(e => `${e.id}: ${e.status}`).join('; ')}`));
+  rows.push('', '## Separately attributed critic');
   const critic = workspace.critic;
   if (critic) rows.push(`Reviewer: ${critic.reviewer} (${critic.reviewer_kind}); ${criticStatus(workspace, reviewDigest)}.`, `Counterargument: ${critic.counterargument}`, `Evidence gaps: ${critic.evidence_gaps}`, `Falsification: ${critic.falsification}`, ...critic.citations.map(c => `- ${c.url}; published ${c.published_at}`));
   else rows.push('No separately attributed critic review attached. A bear note or code review does not satisfy this step.');
