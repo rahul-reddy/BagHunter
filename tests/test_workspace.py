@@ -342,6 +342,15 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     comparison = client.get(f"/runs/{after}/compare/{before}").json()
     assert comparison["policy_changed"] and len(comparison["changes"]) == 3
     assert client.get(f"/runs/{before}/compare/{after}").status_code == 422
+    digest = client.get(f"/runs/{after}/reports/discovery_digest.md", params={"previous": before})
+    assert digest.status_code == 200 and f"Changes since run {before}" in digest.text
+    assert (
+        client.get(
+            f"/runs/{before}/reports/discovery_digest.md", params={"previous": after}
+        ).status_code
+        == 422
+    )
+
     data = client.get(f"/runs/{after}").json()
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths

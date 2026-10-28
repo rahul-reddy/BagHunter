@@ -1,3 +1,37 @@
+# Current handoff — report template completeness / 2026-10-28
+
+PR #43 Thesis Studio delivered as 7a104f7e5f4f after exact-head CI passed 485 backend / 44 browser
+tests, Gemini approved with zero blockers and the guard merged it. Main source matches the reviewed
+tree. Both actual Finviz/SEC and fixture Thesis Studio previews passed source binding, critic
+staleness, sixteen risk topics, save/reload, missing inputs and desktop/mobile accessibility.
+Source archive/receipt are under root artifacts/test_results/thesis-evidence-release-receipt.json.
+Finviz Elite + SEC remain scope; zero real investment theses are verified; full goal remains active.
+
+Current feat/report-completeness in C:/dev_projects/BagHunter-risk implements source-bound-reports-v2:
+primary links/acceptance/publication/processing clocks in dossiers; independent anchor inputs in
+historical cases; explicit earlier-run interval digests with queue/stage/theme/filing/quality changes.
+Unavailable legacy clocks/profiles remain missing. Invalid evidence rejects, and same-clock policy
+comparisons do not imply a refresh interval. See docs/REPORTS.md.
+
+Executed: 12 focused report/source/clock/legacy/nonfinite/private-URL/API tests passed; the archive/
+API workspace integration passed (13 tests including the unit cases). Backend lint/format/types
+passed. Four workspace browser tests passed before integrating PR #43; after integration current
+frontend lint/types/build passed and six combined workspace/Thesis browser checks passed. A final missing-policy guard now labels
+unknown comparisons explicitly; twelve focused unit tests and the enriched comparison browser
+case passed on the final guard. Frontend lint/types and final production build passed.
+Report-format version text and the explicit unknown-policy guard changed after archive
+integration; focused unit/API and browser checks passed after those refinements. No final full current-head CI/review/delivery is claimed. Freeze packages while pipeline
+checks run. Finish combined browser/current-source checks, then exact-head CI/review/guarded merge
+and main report preview.
+
+In parallel feat/research-notebook adds the required executable .ipynb and fixed-path runner; all
+cells executed with provenance/PIT/cache/label/stress assertions and four failure/interruption
+receipt tests passed. The phase-one specification audit draft is in BagHunter-operations/docs/
+SPECIFICATION_AUDIT.md. Mandatory schema/field contracts, classification metric scope and final
+per-item release proof remain open; do not hide these independent software gaps as data blockers.
+
+---
+
 # Current handoff — Thesis Studio evidence integration / 2026-10-28
 
 Full goal remains active. PR #39 delivered as a95d99cad484 with 459 backend / 39 browser CI,
