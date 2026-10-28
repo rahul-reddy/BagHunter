@@ -3,7 +3,8 @@
 Owner resumed full-app implementation. PR #38 stage policy delivered as 3dd0de4db22e with
 459 backend / 34 browser CI tests, independent review, guarded merge and main preview.
 PR #39 research delivered as a95d99cad484 with 459 backend / 39 browser CI tests,
-Claude approval and actual-source main preview. feat/robustness is separate and full QA remains in progress.
+Claude approval and actual-source main preview. PR #41 robustness delivered as 67311dadd6de: exact-head CI 472 backend / 41 browser,
+Gemini approval with zero blockers and guarded merge. Main preview is in progress.
 
 Current feat/operations adds scripts/operations_audit.py: bounded disk inventory, active fixture
 archive restore/checksum verification and optional twelve-request/four-worker local API smoke.
@@ -24,6 +25,44 @@ Gemini approved 6b14f9d with zero blockers and exact-head CI passed 472 backend 
 tests. Merging current research main resolves the handoff conflict and requires fresh CI/review.
 Full application completion still requires final item-by-item specification/release evidence.
 Finviz Elite + SEC remain the provider scope; zero real investment theses are verified.
+
+---
+
+# Current handoff — failure-oriented robustness / 2026-10-27
+
+Full-app work resumed. PR #38 stage policy delivered as 3dd0de4db22e: exact-head CI
+459 backend / 34 browser tests, independent approval and guarded merge. Main preview passed
+1,995 dated observations, 872 citation cutoffs, exports and desktop/mobile accessibility.
+PR #39 structured research delivered as a95d99cad484: updated head 21402d2 passed
+459 backend / 39 browser CI tests, Claude independently approved with zero blockers, and main
+real Finviz/SEC preview passed source clocks, canonical critic packets, stale-review/save/load,
+export binding and desktop/mobile accessibility. Source archive/receipt are in root artifacts.
+Operations PR #40 has independent approval; a test-isolation fix requires fresh verification.
+
+
+Current feat/robustness adds twelve retained source-bound stress attempts, constrained
+name/sector/cap-bucket exclusions, explicit filing processing lags, known-delist assumptions,
+recovery metrics, six frozen-weight feature ablations, archived JSON/Markdown and the browser
+inspection view. See docs/ROBUSTNESS.md. Highest-contribution removals are hindsight diagnostics;
+unsupported independent adjusted prices stay unavailable. No empirical validation is claimed.
+
+Executed on the implementation: 15 focused robustness/sensitivity tests passed, with source/policy
+binding, nonfinite/invalid policies, lag cutoffs, action missingness and recovery boundaries.
+Frontend lint/types/build and all 36 browser tests passed (before integration of PR #39).
+Full local QA's backend run completed with 463 passes / seven Windows skips / two failures.
+The old signature assertion is fixed and its rerun passed. The second failure was the validation
+report's complete-schema equality assertion, which omitted the newly archived robustness field.
+Initial exact-head CI confirmed only that remaining mismatch (471 passed / one failed); current
+expected-report assembly now includes the separately source/disk/API-verified robustness report.
+Both affected integration/boundary tests now pass together (98.71s); fresh full CI/review remain
+required. No application calculation changed for these assertion/schema compatibility fixes.
+After integration with PR #39, frontend lint/types/build and all 11 focused combined
+company/research/robustness browser checks passed. Gemini approved 531de7e with zero blockers;
+that approval does not cover subsequent fixes.
+No complete current-revision acceptance pass is claimed. Finish backend results, integrate main,
+then exact-head CI, independent review, guarded merge and main preview. Finviz Elite + SEC remain
+the provider scope; zero real investment theses are verified. Final item-by-item specification
+and release audit remain open. Full goal remains unfinished.
 
 ---
 

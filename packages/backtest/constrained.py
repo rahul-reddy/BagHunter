@@ -5,18 +5,19 @@ import math
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from packages.backtest.allocation import MODES, Allocation, allocation_targets, dated_volatility
 from packages.backtest.risk import daily_risk
 from packages.backtest.validation import performance
 from packages.research.features import eligible, snapshot
 from packages.research.outcomes import wealth_path
-from packages.shared.models import Dataset, Record
+from packages.shared.models import Action, Dataset, Record
 from packages.shared.numeric import require_finite
 
 
 class PortfolioPolicy(Record):
+    version: Literal["portfolio-v2-unvalidated"] = "portfolio-v2-unvalidated"
     selector: Literal["momentum_63d", "momentum_12_1", "revenue_growth", "seeded_random"] = (
         "momentum_63d"
     )
@@ -30,6 +31,24 @@ class PortfolioPolicy(Record):
     min_dollar_volume: float = Field(default=1_000_000, ge=0)
     min_price: float = Field(default=1, gt=0)
     one_way_cost_bps: float = Field(default=20, ge=0, le=1000)
+    filing_lag_hours: int = Field(default=24, ge=24, le=720)
+    excluded_security_ids: tuple[str, ...] = Field(default=(), max_length=50)
+    excluded_sectors: tuple[str, ...] = Field(default=(), max_length=50)
+    excluded_cap_buckets: tuple[str, ...] = Field(default=(), max_length=50)
+    delist_proceeds: Literal["reported", "zero_sensitivity"] = "reported"
+
+    @field_validator("excluded_security_ids", "excluded_sectors", "excluded_cap_buckets")
+    @classmethod
+    def valid_exclusions(cls, values: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(values)) != len(values) or any(
+            not value
+            or len(value) > 100
+            or value.strip() != value
+            or any(ord(char) < 32 for char in value)
+            for value in values
+        ):
+            raise ValueError("Exclusions require unique, bounded, nonblank exact values")
+        return tuple(sorted(values))
 
 
 def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
@@ -42,6 +61,12 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
 
 
 def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
+    source_actions = [Action.model_validate(action.model_dump()) for action in dataset.actions]
+    common = [i for i in dataset.instruments if i.security_type == "common"]
+    if set(policy.excluded_security_ids) - {i.security_id for i in common} or set(
+        policy.excluded_sectors
+    ) - {i.sector for i in common}:
+        raise ValueError("Declared exclusion does not match a known common instrument/sector")
     sessions = sorted({b.session for b in dataset.bars})
     lookup = {(b.security_id, b.session): b for b in dataset.bars}
     capital = policy.capital
@@ -61,8 +86,34 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         for instrument in dataset.instruments:
             if not eligible(instrument, clock):
                 continue
+            excluded = (
+                "DECLARED_SECURITY_EXCLUSION"
+                if instrument.security_id in policy.excluded_security_ids
+                else "DECLARED_SECTOR_EXCLUSION"
+                if instrument.sector in policy.excluded_sectors
+                else "DECLARED_CAP_BUCKET_EXCLUSION"
+                if instrument.cap_bucket in policy.excluded_cap_buckets
+                else None
+            )
+            if excluded:
+                exclusions.append(
+                    {
+                        "decision": str(decision),
+                        "security_id": instrument.security_id,
+                        "reason": excluded,
+                        "sector": instrument.sector,
+                        "cap_bucket": instrument.cap_bucket,
+                    }
+                )
+                continue
             try:
-                f = snapshot(instrument, dataset.bars, dataset.facts, clock)
+                f = snapshot(
+                    instrument,
+                    dataset.bars,
+                    dataset.facts,
+                    clock,
+                    lag_hours=policy.filing_lag_hours,
+                )
             except ValueError as exc:
                 if "insufficient price history" not in str(exc):
                     raise
@@ -132,6 +183,10 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         plan = allocation_targets(
             candidates, policy.allocation, policy.max_position, policy.max_sector
         )
+        selected_inputs = {f["security_id"]: f for f in candidates}
+        for target in plan["targets"]:
+            target["filing_lag_hours"] = policy.filing_lag_hours
+            target["known_filing_inputs"] = selected_inputs[target["security_id"]]["evidence"]
         allocation_ledger.append(
             {"decision": str(decision), "asof_time": clock.isoformat(), **plan}
         )
@@ -179,7 +234,11 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                 )
                 continue
             bars = [b for b in dataset.bars if b.security_id == sid]
-            events = [a for a in dataset.actions if a.security_id == sid]
+            events = [a for a in source_actions if a.security_id == sid]
+            if policy.delist_proceeds == "zero_sensitivity":
+                events = [
+                    a.model_copy(update={"value": 0.0}) if a.kind == "delist" else a for a in events
+                ]
             # Entry is next open. Ex-date actions on entry do not accrue to a new holder.
             path = wealth_path(bars, events, entry, exit_day)
             delisted = any(
@@ -290,8 +349,23 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         )
     return {
         "mode": "FIXTURE",
+        "dataset_sha256": hashlib.sha256(dataset.model_dump_json().encode()).hexdigest(),
         "status": "CONSTRAINED_SIMULATION_NOT_EMPIRICAL_VALIDATION",
         "policy": policy.model_dump(),
+        "action_assumptions": [
+            {
+                "security_id": a.security_id,
+                "effective_date": str(a.effective_date),
+                "source_id": a.source_id,
+                "reported_proceeds": a.value,
+                "assumed_proceeds": 0.0,
+                "role": "CONSERVATIVE_ASSUMPTION_NOT_SOURCE_FACT",
+            }
+            for a in source_actions
+            if a.kind == "delist"
+        ]
+        if policy.delist_proceeds == "zero_sensitivity"
+        else [],
         "rows": rows,
         "executions": executions,
         "exclusions": exclusions,
@@ -312,6 +386,8 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
             "Participation uses prior known 20-session dollar volume, not future execution volume",
             "Constant one-way costs combine commissions/spread/slippage; no calibrated impact",
             "Weekday fixture calendar; no real executable-return claim",
+            "Declared exclusions and filing lag are frozen before selection; "
+            "no unknown terminal proceeds are inferred",
         ],
     }
 
