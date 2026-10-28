@@ -18,7 +18,9 @@ permission case skipped for Linux CI. Backend lint/format/types passed. Frontend
 and all three new browsers passed, including actual Thesis Studio export through the offline CLI,
 source-bound Parquet/hash downloads, legacy unavailability and desktop/mobile Axe/keyboard checks.
 
-Integrate delivered main, rerun current-source archive integration and final gates, then exact-head
+After integrating main fbdd626281f9, all 32 focused contract/dossier/archive/API tests passed
+with one Windows symlink skip; repository lint/format/types and all three browsers passed.
+Finish exact-head
 CI, independent review, guarded merge and main previews. Classification PR #48 is separate; a
 new weekend-terminal missing-proceeds boundary is being corrected before delivery. The full
 00–08 per-item release audit remains open. Finviz Elite + SEC remain scope; zero verified real
