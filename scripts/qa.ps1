@@ -15,6 +15,7 @@ Check 'format' { uv run ruff format --check . }
 Check 'types' { uv run mypy packages apps/api }
 Check 'unit-integration-pit' { uv run pytest --cov=packages --cov=apps/api --cov-report=xml --junitxml=artifacts/test_results/pytest.xml }
 Check 'demo' { uv run baghunter demo }
+Check 'notebook' { uv run python scripts/run_research_notebook.py }
 Check 'web-lint' { npm --prefix apps/web run lint }
 Check 'web-types' { npm --prefix apps/web run typecheck }
 Check 'web-build' { npm --prefix apps/web run build }

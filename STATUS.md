@@ -1,3 +1,27 @@
+# Current handoff — reproducible research notebook / 2026-10-28
+
+PR #45 delivered the report archive/API serialization correction as 7ae07125f2f3 after
+498 backend / 44 browser CI tests and Gemini approval with zero blockers. This branch
+integrates that reviewed main. Finviz Elite + SEC remain scope; zero verified real theses.
+
+Current feat/research-notebook adds the required .ipynb and fixed-path runner. Seven cells
+verify source/code/policy provenance, cache reuse, publication cutoffs, gold/label isolation,
+synthetic cohorts, risk and all twelve retained stresses. Source outputs remain empty;
+ignored transcript and hashed execution receipts retain actual execution. Failure/interruption
+overwrites stale PASS receipts. CI and local QA execute the same notebook.
+
+Executed on this integrated source: all seven cells PASS in 49.17s, fixture run
+220996f2f91f3e5f, notebook SHA 28f6b95bfa49203352128694e38b4ba53449117d156a892cb21e5c714194562a.
+Four format/failure/interruption/CWD/receipt tests passed; whole-repo lint and format passed.
+Harness self-test and skill validation passed before base integration; rerun final harness
+checks, then exact-head CI, independent review, guarded merge and actual main execution.
+
+Classification integration in BagHunter-thesis found mismatched policy hash encoding and
+is being corrected; 21 core boundary tests passed. Mandatory schema/field reconciliation
+and full per-item release proof remain open. The full completion goal remains active.
+
+---
+
 # Current handoff — report serialization regression / 2026-10-28
 
 PR #44 merged as 16290402f8a1 after 497 backend / 44 browser CI tests and Gemini approval
@@ -20,6 +44,7 @@ four failure-receipt tests passing; hold its PR until this correction lands to f
 Classification core in BagHunter-thesis has 21 boundary tests passing; pipeline/UI work remains.
 The full specification/schema/classification/release audit remains unfinished. Finviz Elite + SEC
 remain scope; zero verified real investment theses. Full goal stays active.
+
 
 ---
 

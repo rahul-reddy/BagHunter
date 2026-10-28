@@ -145,3 +145,18 @@ discovery and momentum ranks, with frozen ledgers, matured outcomes and explicit
 The [current-company research desk](docs/COMPANY_RESEARCH.md) supports explicit SEC evidence
 attachments, assumption scenarios and saved/cited memo exports from Finviz observations. The
 [remaining requirement register](docs/REMAINING_REQUIREMENTS.md) tracks unfinished software.
+
+## Reproducible fixture notebook
+
+Open [notebooks/fixture_research.ipynb](notebooks/fixture_research.ipynb) with a Python kernel
+using this project's locked environment, or execute every code cell without a notebook server:
+
+```powershell
+uv run python scripts/run_research_notebook.py
+```
+
+The notebook verifies source digests, cache reuse, filing cutoffs and label separation, then
+inspects the synthetic cohorts, constrained portfolio and every declared robustness attempt.
+Outputs go only to ignored artifacts/notebook and artifacts/test_results. The hashed execution
+receipt and transcript distinguish a completed run from a failed/interrupted one. No provider
+requests or credentials are used. Fixture results are not empirical investment conclusions.
