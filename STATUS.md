@@ -1,3 +1,32 @@
+# Current handoff — reproducible research notebook / 2026-10-28
+
+Main 16290402f8a1 includes PR #44 source-bound reports, delivered after 497 backend / 44 browser
+CI tests, Gemini approval with zero blockers and the guarded merge. Main source equals the reviewed
+tree. Main report generation/preview is running. Earlier research/robustness/navigation/operations/
+Thesis Studio increments all have main previews and source packages/receipts under root artifacts.
+Fresh Finviz refresh archived 11,775 observations at 2026-10-28T13:02:34Z as snapshot c3388847b819...
+without rewriting older source bundles. Finviz Elite + SEC remain scope; zero verified real theses.
+
+Current feat/research-notebook adds the explicitly requested .ipynb artifact and fixed-path runner.
+Seven code cells verify raw/source/code/policy provenance, cache reuse, filing cutoff and gold/label
+separation, then inspect synthetic cohorts, constrained risk and all twelve stresses. No provider/
+model requests. Source outputs stay empty; transcript and hashed execution receipt are ignored.
+Failure/interruption overwrites stale PASS evidence. CI and local QA execute every notebook cell.
+
+Executed before integrating PR #44: initial six-cell cold run 21.43s; final seven-cell notebook
+(SHA e1b12e963d7a...) passed with cache reuse in 6.38s. Four format/failure/interruption/CWD/receipt
+tests, whole-repo lint/format, cross-review harness self-test and skill validation passed. Current
+source now includes delivered report main; rerun cells and final gates, then commit/push, exact-head
+CI, independent review, guarded merge and main execution. This is a research artifact, not empirical
+acceptance. The full goal remains active.
+
+Phase-one audit draft: BagHunter-operations/docs/SPECIFICATION_AUDIT.md. Mandatory schema/field
+contracts, classification scope and final per-item release proof remain open. A new classification
+engine in BagHunter-thesis has nineteen boundary tests passing but still needs pipeline/UI/acceptance
+integration; ranks never become probabilities and missing/unmatured labels remain explicit.
+
+---
+
 # Current handoff — report serialization regression / 2026-10-28
 
 PR #44 merged as 16290402f8a1 after 497 backend / 44 browser CI tests and Gemini approval
@@ -20,6 +49,7 @@ four failure-receipt tests passing; hold its PR until this correction lands to f
 Classification core in BagHunter-thesis has 21 boundary tests passing; pipeline/UI work remains.
 The full specification/schema/classification/release audit remains unfinished. Finviz Elite + SEC
 remain scope; zero verified real investment theses. Full goal stays active.
+
 
 ---
 
