@@ -1,3 +1,28 @@
+# Current handoff — report serialization regression / 2026-10-28
+
+PR #44 merged as 16290402f8a1 after 497 backend / 44 browser CI tests and Gemini approval
+with zero blockers. Main preview then found an archive/API case-report difference: generated
+matching strata were a Python tuple, but the same data restored from JSON rendered as a list.
+Current fix/report-serialization canonicalizes that field to JSON rather than container repr.
+No source, rank, label or performance calculation changes.
+
+Executed: 13 focused report tests passed, including the tuple/JSON round-trip regression;
+backend lint/format/types passed. A fresh actual fixture run 220996f2f91f3e5f passed equality
+between archived case/three memo files and rendering after run.json restoration. The regression
+also exercised the HTTP response against the original archive text; all 13 final focused tests passed.
+Then exact-head CI/review/guarded merge and a main archive/API/browser report preview. Do not
+claim the report increment's final main acceptance before this correction is delivered.
+
+Fresh Finviz refresh archived 11,775 observations as c3388847b819... on 2026-10-28T13:02:34Z;
+main actual-source research preview passed with that archive and existing SEC evidence, preserving
+older sources. The Notebook branch is rebased on report main and all seven cells executed with
+four failure-receipt tests passing; hold its PR until this correction lands to finish integration.
+Classification core in BagHunter-thesis has 21 boundary tests passing; pipeline/UI work remains.
+The full specification/schema/classification/release audit remains unfinished. Finviz Elite + SEC
+remain scope; zero verified real investment theses. Full goal stays active.
+
+---
+
 # Current handoff — report template completeness / 2026-10-28
 
 PR #43 Thesis Studio delivered as 7a104f7e5f4f after exact-head CI passed 485 backend / 44 browser

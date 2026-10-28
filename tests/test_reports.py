@@ -2,6 +2,7 @@
 
 import copy
 import importlib
+import json
 
 import pytest
 from fastapi.testclient import TestClient
@@ -208,3 +209,19 @@ def test_report_api_interval_binding_errors_and_corrupt_evidence_fail_closed(mon
     assert bad.status_code == 503 and "42" not in bad.text
     assert client.get(f"/runs/{run['run_id']}/dossiers/fixture-one").status_code == 503
     assert client.get(f"/runs/{run['run_id']}/dossiers/unknown").status_code == 404
+
+
+def test_archived_case_report_is_identical_after_tuple_strata_json_roundtrip(monkeypatch):
+    original = run_report()
+    original["study"]["pairs"][0]["strata"] = (
+        "Fixture sector",
+        "fixture-small",
+        "fixture-liquid",
+        "fixture-price",
+    )
+    restored = json.loads(json.dumps(original))
+    assert case_report(original) == case_report(restored)
+    module = importlib.import_module("apps.api.main")
+    monkeypatch.setattr(module, "read_run", lambda run_id: restored)
+    response = TestClient(module.app).get(f"/runs/{restored['run_id']}/reports/historical_cases.md")
+    assert response.status_code == 200 and response.text == case_report(original)
