@@ -1,3 +1,14 @@
+# Active implementation — classification and canonical contracts / 2026-10-28
+
+Main fbdd626281f9 delivers source-bound reports and the executable notebook with exact-head
+CI/review and actual main acceptance. Current classification branch has 22 focused backend tests
+and four final integrated browser checks passing; one earlier full-suite local timeout is recorded
+in STATUS.md. Finish final frontend gates, full exact-head CI, review, guarded merge and main preview.
+Continue canonical table/dossier persistence integration and the complete 00–08 per-item release
+matrix. Finviz Elite + SEC suffice; zero verified real theses. The full goal remains active.
+
+---
+
 # Active implementation — report completeness / 2026-10-28
 
 Main 7a104f7e5f4f delivers Thesis Studio evidence with 485 backend / 44 browser CI tests,

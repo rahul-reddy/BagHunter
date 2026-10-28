@@ -1,3 +1,38 @@
+# Current handoff — frozen multibagger classification / 2026-10-28
+
+Main fbdd626281f9 includes report corrections and the reproducible notebook. PR #47 CI passed
+502 backend / 44 browser tests and Gemini approved its exact head. Main reports passed saved/API
+equality, interval downloads, invalid interval rejection, keyboard and desktop/mobile accessibility.
+Notebook main execution passed all seven cells. Release receipts/source archives are under root artifacts.
+
+Current feat/outcome-classification implements frozen annual rank snapshots, all 1/2/3/5Y by
+5x/10x attempts, fixed-budget confusion counts and three common-population comparators. Missing
+outcomes/budgets remain explicit. Reports are archived and exposed in Validation Lab; no rank
+becomes a calibrated probability. See docs/CLASSIFICATION.md. Finviz Elite + SEC remain scope;
+zero verified real theses. The branch integrates delivered report/notebook/accessibility main.
+
+Further pre-merge red-team check reproduced a weekend-horizon bug: a known ended listing with
+no terminal event could receive a false non-hit despite unknown proceeds. That label now stays
+unknown; a paired test verifies explicit known zero proceeds remains a valid outcome. All 23
+core boundary cases passed after correction. The initial independent approval was for the older
+head; this fix requires fresh CI/review. The review's digest-label spacing advisory is also fixed.
+After correction, all 24 focused backend/archive/API tests and both classification browsers passed;
+current-source frontend lint/types/build and backend lint/format/types passed.
+
+Executed: 22 focused core/archive/API tests passed on the current backend source; backend
+lint/format/types passed. Frontend lint/types/build passed before the final main heading integration.
+The 46-case local browser run recorded 45 passes and one allocation-test timeout under concurrent
+local load. On the final integrated source, allocation, both classification cases and comparison
+all passed (four checks), including desktop/mobile Axe and keyboard. No test timeout was increased.
+Finish final frontend gates, exact-head full CI, independent review, guarded merge and main preview.
+
+Canonical contracts and immutable offline dossier persistence in BagHunter-operations have
+focused unit/integration/browser checks passing at their recorded revisions; not yet reviewed or
+delivered. Mandatory field reconciliation and the full per-item release audit remain open.
+The full completion goal stays active.
+
+---
+
 # Current handoff — comparison accessibility regression / 2026-10-28
 
 PR #45 delivered as 7ae07125f2f3 with 498 backend / 44 browser CI tests and independent
@@ -10,6 +45,7 @@ Finish exact-head CI/review/guarded
 merge and the full main report preview. Notebook PR #46 delivered as f0311d809451; its main seven-cell execution passed. Classification and mandatory
 schema reconciliation remain underway. Finviz Elite + SEC suffice. Full goal stays active;
 zero verified real theses.
+
 
 ---
 
@@ -95,6 +131,7 @@ cells executed with provenance/PIT/cache/label/stress assertions and four failur
 receipt tests passed. The phase-one specification audit draft is in BagHunter-operations/docs/
 SPECIFICATION_AUDIT.md. Mandatory schema/field contracts, classification metric scope and final
 per-item release proof remain open; do not hide these independent software gaps as data blockers.
+
 
 ---
 

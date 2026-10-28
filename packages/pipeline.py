@@ -14,6 +14,7 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from packages.backtest.classification import classification_markdown, evaluate_classification
 from packages.backtest.constrained import PortfolioPolicy, comparator_runs, simulate
 from packages.backtest.negative_controls import negative_controls
 from packages.backtest.robustness import robustness, robustness_markdown
@@ -154,6 +155,7 @@ def run(
     study["event_paths"] = event_study(dataset, event_policy)
     backtest = evaluate(dataset, seed, policy)
     validation = diagnostics(backtest)
+    validation["classification"] = evaluate_classification(dataset, asof, policy, seed=seed)
     validation["negative_controls"] = negative_controls(
         backtest["rows"], asof, seed, selector_model=backtest["model"]
     )
@@ -236,6 +238,11 @@ def run(
         dump(staging / "reports" / "source_manifest.json", source)
         dump(staging / "reports" / "toy_backtest.json", backtest)
         dump(staging / "reports" / "validation.json", validation)
+        dump(staging / "reports" / "classification.json", validation["classification"])
+        (staging / "reports" / "classification.md").write_text(
+            classification_markdown(validation["classification"], payload["run_id"]),
+            encoding="utf-8",
+        )
         dump(staging / "reports" / "robustness.json", validation["robustness"])
         (staging / "reports" / "robustness.md").write_text(
             robustness_markdown(validation["robustness"], payload["run_id"]), encoding="utf-8"
