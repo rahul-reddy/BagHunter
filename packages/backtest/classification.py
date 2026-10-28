@@ -257,7 +257,21 @@ def evaluate_classification(
                     "coverage_flag": "HORIZON_NOT_MATURED",
                 }
                 if mature:
-                    if any(
+                    missing_terminal = instrument.delisted and (
+                        instrument.last_seen is None
+                        or (
+                            anchor < instrument.last_seen < end
+                            and not any(
+                                action.security_id == instrument.security_id
+                                and action.kind == "delist"
+                                and anchor < action.effective_date <= end
+                                for action in known_actions
+                            )
+                        )
+                    )
+                    if missing_terminal:
+                        label["coverage_flag"] = "MISSING_KNOWN_TERMINAL_EVENT"
+                    elif any(
                         bar.security_id == instrument.security_id and bar.session == anchor
                         for bar in known_bars
                     ):

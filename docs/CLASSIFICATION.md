@@ -13,7 +13,8 @@ reduce it. Ranks and source/policy SHA bindings are frozen before hindsight labe
 The full anniversary horizon must mature at 23:00 UTC, even when one security delisted earlier.
 Every required fixture weekday price through the horizon or the day before a known terminal
 delist must exist. Missing anchor/interior/terminal prices and unavailable proceeds leave labels
-unknown. Known splits, cash dividends and delist proceeds follow the shared wealth arithmetic.
+unknown. A known ended listing without a terminal event also stays unknown, including weekend
+horizons whose last weekday price is present. Known splits, cash dividends and delist proceeds follow the shared wealth arithmetic.
 A maximum daily-close multiple differs from an intraday high and from terminal holding return.
 The synthetic weekday calendar and action effective-date availability are not real-exchange vintages.
 

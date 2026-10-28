@@ -11,6 +11,14 @@ outcomes/budgets remain explicit. Reports are archived and exposed in Validation
 becomes a calibrated probability. See docs/CLASSIFICATION.md. Finviz Elite + SEC remain scope;
 zero verified real theses. The branch integrates delivered report/notebook/accessibility main.
 
+Further pre-merge red-team check reproduced a weekend-horizon bug: a known ended listing with
+no terminal event could receive a false non-hit despite unknown proceeds. That label now stays
+unknown; a paired test verifies explicit known zero proceeds remains a valid outcome. All 23
+core boundary cases passed after correction. The initial independent approval was for the older
+head; this fix requires fresh CI/review. The review's digest-label spacing advisory is also fixed.
+After correction, all 24 focused backend/archive/API tests and both classification browsers passed;
+current-source frontend lint/types/build and backend lint/format/types passed.
+
 Executed: 22 focused core/archive/API tests passed on the current backend source; backend
 lint/format/types passed. Frontend lint/types/build passed before the final main heading integration.
 The 46-case local browser run recorded 45 passes and one allocation-test timeout under concurrent

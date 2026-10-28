@@ -276,3 +276,39 @@ def test_one_missing_interior_or_terminal_weekday_is_not_a_complete_maximum_labe
     label = next(label for label in row["labels"] if label["security_id"] == "fx-compound")
     assert label["hit"] is None and label["coverage_flag"] == "MISSING_WEEKDAY_PRICE_SESSIONS"
     assert label["missing_price_sessions"] == 1
+
+
+@pytest.mark.parametrize("known_event", [False, True])
+def test_weekend_horizon_does_not_infer_missing_terminal_proceeds(source, known_event):
+    last = date(2021, 12, 31)
+    changed = source.model_copy(
+        update={
+            "instruments": [
+                i.model_copy(update={"last_seen": last}) if i.security_id == "fx-failure" else i
+                for i in source.instruments
+            ],
+            "bars": [b for b in source.bars if b.security_id != "fx-failure" or b.session <= last],
+            "actions": [a for a in source.actions if a.security_id != "fx-failure"],
+        }
+    )
+    if known_event:
+        changed = changed.model_copy(
+            update={
+                "actions": [
+                    source.actions[0].model_copy(update={"effective_date": date(2022, 1, 1)})
+                ]
+            }
+        )
+    result = evaluate_classification(
+        changed, datetime.fromisoformat(DEFAULT_ASOF), DiscoveryPolicy()
+    )
+    row = next(
+        r for r in result["attempts"] if r["anchor"] == "2021-01-01" and r["horizon_years"] == 1
+    )
+    label = next(item for item in row["labels"] if item["security_id"] == "fx-failure")
+    if known_event:
+        assert label["hit"] is False
+        assert label["coverage_flag"] == "COMPLETE_FIXTURE"
+    else:
+        assert label["hit"] is None
+        assert label["coverage_flag"] == "MISSING_KNOWN_TERMINAL_EVENT"
