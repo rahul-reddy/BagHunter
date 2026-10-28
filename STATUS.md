@@ -1,3 +1,36 @@
+# Current handoff — bounded operations acceptance / 2026-10-27
+
+Owner resumed full-app implementation. PR #38 stage policy delivered as 3dd0de4db22e with
+459 backend / 34 browser CI tests, independent review, guarded merge and main preview.
+PR #39 research delivered as a95d99cad484 with 459 backend / 39 browser CI tests,
+Claude approval and actual-source main preview. PR #41 robustness delivered as 67311dadd6de: exact-head CI 472 backend / 41 browser,
+Gemini approval with zero blockers and guarded merge. Main robustness preview passed source-bound reports, all twelve retained attempts,
+lag and ablation inspection, missing-series handling, keyboard and desktop/mobile accessibility.
+PR #42 navigation delivered as b8c40001ab51 with 472 backend / 42 browser CI tests, independent
+approval and guarded merge; navigation main preview is running.
+
+Current feat/operations adds scripts/operations_audit.py: bounded disk inventory, active fixture
+archive restore/checksum verification and optional twelve-request/four-worker local API smoke.
+It never changes CURRENT, contacts providers or starts services. The updated runbook distinguishes
+raw-source/browser backups, hard-kill staging, rerun/cache recovery and unsupported CPU checkpoints;
+it reconciles SEC parent-declared historical submissions support. No automatic cleanup or RAM cap.
+
+Current 12 operations unit tests and targeted lint/format passed. The script executed against
+main run 9f2cd71dec90f783: 46,810,552 archive bytes within 512 MiB, verified restore, twelve
+successful loopback requests at concurrency four in 3.58 seconds, maximum 0.51 seconds.
+These are local smoke measurements, not production capacity or an SLO. Controlled KeyboardInterrupt before publication preserved the prior pointer and archives, cleaned
+staging, then reran successfully and reused the verified cache (targeted test passed in 176.70s).
+Whole-repository lint/format passed. Initial CI on 5f44c2b found one test-isolation failure
+(471 backend tests passed): the cancellation test added a third run to shared workspace state.
+The fix copies that fixture into its own temporary archive; both cancellation/rerun and the
+subsequent run-index/scenario test now pass together. Fresh exact-head CI/review are required;
+Gemini approved 6b14f9d with zero blockers and exact-head CI passed 472 backend / 34 browser
+tests. Merging current research main resolves the handoff conflict and requires fresh CI/review.
+Full application completion still requires final item-by-item specification/release evidence.
+Finviz Elite + SEC remain the provider scope; zero real investment theses are verified.
+
+---
+
 # Current handoff — research desk navigation / 2026-10-27
 
 PR #39 delivered as a95d99cad484: 459 backend / 39 browser CI tests, Claude approval with zero
