@@ -17,9 +17,12 @@ Times require UTC offsets; nonfinite numbers and inconsistent OHLC fail validati
 | run.json | run_id, source checksum, seed, model_version, asof | signals, study and toy evaluation for read-only UI |
 | source_manifest.json | source_id, checksum, latest source timestamp | fixture license, coverage, blocked real provider |
 
-Full target tables in `03_DATA_AND_ARCHITECTURE.md` are not all implemented. There is no real historical
-market-cap table, thesis table, instrument event ledger or production portfolio ledger yet. The toy
-execution audit is explicit JSON rather than a production execution schema.
+New fixture runs also contain ten canonical Parquet contracts with stable schemas and a
+checksum/null-count inventory. See [canonical tables](CANONICAL_TABLES.md). Missing original
+metadata remains null. Filing-derived event evidence and constrained execution exports are
+available; no production execution or causal-event claim is made. The generated thesis table
+is empty; source-bound dossier imports persist separately as unverified assertions through
+`baghunter import-thesis`. Browser drafts and imports are not trusted facts.
 
 Historical normalized exports have a separate [import contract](HISTORICAL_IMPORT.md), implemented
 in packages/data/history.py. Instruments have no synthetic bucket defaults; symbols have publication

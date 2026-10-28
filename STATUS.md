@@ -1,3 +1,31 @@
+# Current handoff — canonical contracts and persisted dossier assertions / 2026-10-28
+
+Main fbdd626281f9 delivers reports/notebook with exact-head CI/review and main acceptance.
+Current feat/canonical-data-contracts adds ten schema-stable Parquet contracts, null-count/hash
+inventory, safe read-only downloads and Data Quality inspection. Optional source identity,
+vendor-recording and ingestion metadata are preserved without inventing unknown values.
+Filing events are recorded facts, not causal catalysts; execution timestamps/exit fills stay
+unknown when not recorded. See docs/CANONICAL_TABLES.md and docs/SCHEMAS.md.
+
+`baghunter import-thesis` verifies a saved fixture run and exact dossier/source/candidate binding,
+validates explicit assumptions, and atomically persists the original dossier plus a canonical
+thesis row in a separate immutable assertion archive. Imported critique is unverified attribution;
+zero predictors/identities/theses are promoted. Current selection and run archives remain unchanged.
+
+Executed: 16 canonical unit/archive/API tests passed before dossier persistence was added.
+After persistence, 79 contract/dossier/historical/SEC-history tests passed; one Windows symlink
+permission case skipped for Linux CI. Backend lint/format/types passed. Frontend lint/types/build
+and all three new browsers passed, including actual Thesis Studio export through the offline CLI,
+source-bound Parquet/hash downloads, legacy unavailability and desktop/mobile Axe/keyboard checks.
+
+Integrate delivered main, rerun current-source archive integration and final gates, then exact-head
+CI, independent review, guarded merge and main previews. Classification PR #48 is separate; a
+new weekend-terminal missing-proceeds boundary is being corrected before delivery. The full
+00–08 per-item release audit remains open. Finviz Elite + SEC remain scope; zero verified real
+investment theses. The completion goal stays active.
+
+---
+
 # Current handoff — frozen multibagger classification / 2026-10-28
 
 Main fbdd626281f9 includes report corrections and the reproducible notebook. PR #47 CI passed
@@ -70,6 +98,7 @@ checks, then exact-head CI, independent review, guarded merge and actual main ex
 Classification integration in BagHunter-thesis found mismatched policy hash encoding and
 is being corrected; 21 core boundary tests passed. Mandatory schema/field reconciliation
 and full per-item release proof remain open. The full completion goal remains active.
+
 
 
 ---

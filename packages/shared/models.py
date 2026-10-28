@@ -23,6 +23,9 @@ class Instrument(Record):
     liquidity_bucket: str = "fixture-liquid"
     price_bucket: str = "fixture-5-25"
     delisted: bool = False
+    cik: str | None = Field(default=None, pattern=r"^\d{10}$")
+    exchange: str | None = Field(default=None, min_length=1)
+    identifiers_version: str | None = Field(default=None, min_length=1)
 
 
 class Symbol(Record):
@@ -30,6 +33,7 @@ class Symbol(Record):
     ticker: str
     valid_from: date
     valid_to: date | None = None
+    source: str | None = Field(default=None, min_length=1)
 
 
 class Bar(Record):
@@ -43,6 +47,14 @@ class Bar(Record):
     volume: int = Field(ge=0)
     source_id: str
     adjustment_policy: Literal["raw"] = "raw"
+    vendor_recorded_at: datetime | None = None
+
+    @field_validator("vendor_recorded_at")
+    @classmethod
+    def vendor_clock(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("vendor_recorded_at requires a timezone")
+        return value
 
     @model_validator(mode="after")
     def valid_range(self) -> "Bar":
@@ -70,6 +82,14 @@ class Fact(Record):
     amended: bool = False
     source_id: str
     source_url: str
+    ingestion_at: datetime | None = None
+
+    @field_validator("ingestion_at")
+    @classmethod
+    def ingestion_clock(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("ingestion_at requires a timezone")
+        return value
 
     @model_validator(mode="after")
     def valid_times(self) -> "Fact":
