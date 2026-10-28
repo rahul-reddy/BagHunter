@@ -1,3 +1,18 @@
+# Active implementation — Thesis Studio evidence / 2026-10-28
+
+Main b8c40001ab51 includes delivered source-bound research, twelve robustness attempts and
+accessible observation navigation, each with exact-head CI, independent review and main preview.
+Current feat/thesis-evidence adds run-bound research/critic packets and saves to Thesis Studio,
+explicit missing-input handling, sixteen risk topics and catalyst-bound critique. All 44 current-source browser tests
+and frontend lint/types/build passed after a mobile screenreader-label containment fix. Finish current-source frontend
+acceptance, integrate final main, exact-head CI/review/guarded merge and main preview. Operations
+PR #40 delivered as 86ae2fe1031b with 485 backend / 42 browser CI tests and independent approval;
+its main archive/restore/twelve-request load audit passed. Current thesis source integrates that main revision.
+Then continue the full numbered-specification/release audit; do not equate these milestones with
+full goal completion. Finviz Elite + SEC remain scope; zero verified real theses. See STATUS.md.
+
+---
+
 # Active implementation — retained robustness diagnostics / 2026-10-27
 
 PR #38 is delivered as 3dd0de4db22e with 459 backend / 34 browser CI tests and main preview.

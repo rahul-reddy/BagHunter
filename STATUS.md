@@ -1,3 +1,38 @@
+# Current handoff — Thesis Studio evidence integration / 2026-10-28
+
+Full goal remains active. PR #39 delivered as a95d99cad484 with 459 backend / 39 browser CI,
+independent approval and actual Finviz/SEC preview. PR #41 robustness delivered as 67311dadd6de
+with 472 backend / 41 browser CI, Gemini approval and main preview of twelve retained attempts,
+source-bound reports, lag/ablation inspection, missing series, keyboard and desktop/mobile access.
+PR #42 navigation delivered as b8c40001ab51 with 472 backend / 42 browser CI and independent
+approval. Main real-source research preview passed after that merge. Source archives and release
+receipts for all three are under root ignored artifacts. Operations PR #40 delivered as 86ae2fe1031b with 485 backend / 42 browser CI tests,
+Gemini approval with zero blockers and guarded merge. Main operations audit passed: 74,217,257 archive bytes within 512 MiB, checksum-verified
+restore, twelve successful loopback requests at concurrency four in 4.66 seconds (max 1.96s).
+This is bounded local smoke evidence, not a capacity/SLO claim.
+
+Current feat/thesis-evidence in C:/dev_projects/BagHunter-thesis extends structured evidence,
+peer/horizon/opportunity-cost and separate critic packets into fixture Thesis Studio. Packets bind
+run/security/source identity, candidate, explicit scenario input strings/results, notes and current
+calendar assertions. Draft saves are run/security-bound; legacy numeric notes can migrate without
+source/critic restoration. JSON dossiers and Markdown retain research/critic/calendar status.
+Empty numeric inputs stay missing instead of Number(empty) becoming zero. See THESIS_WORKSPACE.md.
+
+Frontend lint/types/build and all 44 browser tests passed after integrating main 86ae2fe1031b.
+The original new-case mobile failure was a screenreader label escaping its unpositioned scroll
+table; defining that container's positioning context fixed the page without hiding content.
+The final calendar propagation fix synchronizes parent research context in the mutation event,
+and critic/export stays disabled until the persisted calendar has initialized. Reload coverage
+passed. All sixteen risk topics have explicit unassessed/attributed records and dated source status.
+The final test refinement opens risk/critic details during desktop/mobile scans; both targeted
+thesis tests passed afterward. Exact-head CI, independent review and guarded delivery remain.
+
+
+Current thesis work integrates delivered main 86ae2fe1031b. The full current-source 44-browser acceptance passed; fresh CI/review/guarded delivery remain. No new provider credentials needed: Finviz Elite + SEC remain scope. Zero verified real
+theses. Full numbered-requirement and release evidence audit remains unfinished.
+
+---
+
 # Current handoff — bounded operations acceptance / 2026-10-27
 
 Owner resumed full-app implementation. PR #38 stage policy delivered as 3dd0de4db22e with

@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { download } from './downloads';
 
 type EventStatus = 'PLANNED' | 'OBSERVED' | 'INVALIDATED';
-type Catalyst = {id: string; date: string; title: string; source: string; condition: string; status: EventStatus};
+export type Catalyst = {id: string; date: string; title: string; source: string; condition: string; status: EventStatus};
 const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const validSource = (value: string) => {if (!value) return true; try {const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password;} catch {return false;}};
 const validEvent = (e: Catalyst) => e && typeof e.id === 'string' && e.id.length <= 100 && typeof e.date === 'string' && validDate(e.date) && typeof e.title === 'string' && e.title.length > 0 && e.title.length <= 300 && typeof e.source === 'string' && e.source.length <= 2048 && validSource(e.source) && typeof e.condition === 'string' && e.condition.length <= 1000 && ['PLANNED', 'OBSERVED', 'INVALIDATED'].includes(e.status);
 
-export function CatalystCalendar({securityId, ticker}: {securityId: string; ticker: string}) {
+export function CatalystCalendar({securityId, ticker, onChange}: {securityId: string; ticker: string; onChange?: (events:Catalyst[]) => void}) {
   const key = `baghunter.catalysts.v1.${securityId}`;
   const [events, setEvents] = useState<Catalyst[]>(() => {try {const data: unknown = JSON.parse(localStorage.getItem(key) ?? '[]'); return Array.isArray(data) && data.length <= 100 && data.every(validEvent) ? data : [];} catch {return [];}});
+  useEffect(() => {onChange?.(events);}, [events,onChange]);
   const [date, setDate] = useState('');
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
@@ -17,7 +18,7 @@ export function CatalystCalendar({securityId, ticker}: {securityId: string; tick
   const [filter, setFilter] = useState('ALL');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const persist = (next: Catalyst[]) => {setEvents(next); try {localStorage.setItem(key, JSON.stringify(next)); setMessage('Calendar saved in this browser.');} catch {setMessage('Browser storage unavailable; export the calendar to preserve it.');}};
+  const persist = (next: Catalyst[]) => {onChange?.(next); setEvents(next); try {localStorage.setItem(key, JSON.stringify(next)); setMessage('Calendar saved in this browser.');} catch {setMessage('Browser storage unavailable; export the calendar to preserve it.');}};
   const ordered = [...events].sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
   return <section className="panel"><div className="panel-title"><div><h2>Catalyst calendar</h2><p>{ticker} · dated operator assertions. Planned, observed and invalidated statuses are not independent evidence verification.</p></div><button className="secondary" onClick={() => download(`FIXTURE-${securityId}-catalysts.json`, JSON.stringify({mode: 'FIXTURE_USER_ASSERTIONS', security_id: securityId, events: ordered}, null, 2), 'application/json')}>Export catalyst calendar</button></div>
     <form onSubmit={event => {event.preventDefault(); setError(''); if (!validDate(date) || !title.trim() || !validSource(source)) {setError('Enter a valid date, catalyst title and optional public HTTPS source without embedded credentials.'); return;} if (events.length >= 100) {setError('Calendar limit reached: export or remove an event before adding another.'); return;} persist([...events, {id: crypto.randomUUID(), date, title: title.trim(), source, condition, status: 'PLANNED'}]); setTitle(''); setSource(''); setCondition('');}}>

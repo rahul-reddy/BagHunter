@@ -2,7 +2,10 @@ import {RobustnessLab} from './RobustnessLab';
 import { useEffect, useRef, useState } from 'react';
 import type { Run, Signal } from './main';
 import { download } from './downloads';
-import { CatalystCalendar } from './CatalystCalendar';
+import { CatalystCalendar, type Catalyst } from './CatalystCalendar';
+import {ResearchEvidence, useResearchDigest} from './ResearchEvidencePanel';
+import {emptyWorkspace, criticStatus, peerBands, riskRegister, researchEvidenceMemo, validateWorkspace} from './researchEvidence';
+import {initialThesisInputs, parseThesisInputs, restoreThesisDraft, validateThesisNotes, type ThesisInputs} from './thesisDraft';
 import { PortfolioComparisons } from './PortfolioComparisons';
 import { DailyRiskPanel } from './DailyRiskPanel';
 import { RankingSensitivity } from './RankingSensitivity';
@@ -52,12 +55,11 @@ export function usePreferences(): [Preferences, (next: Preferences) => void, str
 }
 
 type ScenarioResult = {per_share_value: number; annualized_change: number; diluted_shares: number; enterprise_value: number};
-type Assumptions = {revenue: number; shares: number; net_debt: number; reference_price: number; years: number; dilution: number; growth: number; margin: number; multiple: number};
-const initial: Assumptions = {revenue: 100_000_000, shares: 10_000_000, net_debt: 0, reference_price: 10, years: 3, dilution: .02, growth: .1, margin: .15, multiple: 15};
-const labels: Record<keyof Assumptions, string> = {revenue: 'Starting revenue (USD assumption)', shares: 'Starting shares (assumption)', net_debt: 'Net debt (USD; negative means net cash)', reference_price: 'Reference price (USD assumption)', years: 'Scenario horizon (years)', dilution: 'Annual dilution (fraction)', growth: 'Annual revenue growth (fraction)', margin: 'Operating margin (fraction)', multiple: 'EV / operating earnings multiple'};
+const initial = initialThesisInputs;
+const labels: Record<keyof ThesisInputs, string> = {revenue: 'Starting revenue (USD assumption)', shares: 'Starting shares (assumption)', net_debt: 'Net debt (USD; negative means net cash)', reference_price: 'Reference price (USD assumption)', years: 'Scenario horizon (years)', dilution: 'Annual dilution (fraction)', growth: 'Annual revenue growth (fraction)', margin: 'Operating margin (fraction)', multiple: 'EV / operating earnings multiple'};
 
 export function ThesisStudio({candidate, run}: {candidate: Signal; run: Run}) {
-  const [inputs, setInputs] = useState<Assumptions>(initial);
+  const [inputs, setInputs] = useState<ThesisInputs>(initial);
   const [calculation, setCalculation] = useState<{key: string; values: {name: string; value: ScenarioResult}[]} | null>(null);
   const results = calculation?.key === JSON.stringify(inputs) ? calculation.values : [];
   const [error, setError] = useState('');
@@ -68,15 +70,28 @@ export function ThesisStudio({candidate, run}: {candidate: Signal; run: Run}) {
   const [bear, setBear] = useState('');
   const [saved, setSaved] = useState('');
   const [monitorDate, setMonitorDate] = useState('');
+  const [workspace, setWorkspace] = useState(() => emptyWorkspace(new Date().toISOString()));
+  const [calendar, setCalendar] = useState<Catalyst[] | null>(null);
+  const sourceContext = {mode:run.mode,run_id:run.run_id,security_id:candidate.security_id,source_sha256s:run.sources.map(source => source.sha256)};
+  const storageKey = `baghunter.memo.v2.${run.run_id}.${candidate.security_id}`;
+  const notes = {thesis,catalyst,breaker,bear,monitorDate};
+  let workspaceIssue = '';
+  try {validateWorkspace(workspace,run.asof);validateThesisNotes(notes);parseThesisInputs(inputs);} catch (e) {workspaceIssue = (e as Error).message;}
+  const criticContext = {schema:'fixture-thesis-context-v1',source_context:sourceContext,asof:run.asof,model_version:run.model_version,sources:run.sources,candidate,assumptions:inputs,scenarios:results,notes,catalyst_calendar:calendar,workspace:{...workspace,critic:null}};
+  const reviewDigest = useResearchDigest(criticContext);
+  const exportReady = calendar !== null && !busy && results.length === 3 && !workspaceIssue;
+
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setBusy(true); setError(''); setCalculation(null);
-      const variants = [{name: 'Bear', growth: inputs.growth - .1, margin: inputs.margin - .05, multiple: Math.max(0, inputs.multiple - 5)},
-        {name: 'Base', growth: inputs.growth, margin: inputs.margin, multiple: inputs.multiple},
-        {name: 'Bull', growth: inputs.growth + .1, margin: inputs.margin + .05, multiple: inputs.multiple + 5}];
+      let numeric: ReturnType<typeof parseThesisInputs>;
+      try {numeric = parseThesisInputs(inputs);} catch (e) {setError((e as Error).message);setBusy(false);return;}
+      const variants = [{name: 'Bear', growth: numeric.growth - .1, margin: numeric.margin - .05, multiple: Math.max(0, numeric.multiple - 5)},
+        {name: 'Base', growth: numeric.growth, margin: numeric.margin, multiple: numeric.multiple},
+        {name: 'Bull', growth: numeric.growth + .1, margin: numeric.margin + .05, multiple: numeric.multiple + 5}];
       Promise.all(variants.map(async variant => {
-        const params = new URLSearchParams(Object.entries({...inputs, growth: variant.growth, margin: variant.margin, multiple: variant.multiple}).map(([k, v]) => [k, String(v)]));
+        const params = new URLSearchParams(Object.entries({...numeric, growth: variant.growth, margin: variant.margin, multiple: variant.multiple}).map(([k, v]) => [k, String(v)]));
         const response = await fetch(`/api/scenario?${params}`, {signal: controller.signal});
         if (!response.ok) throw new Error('Scenario inputs are outside supported bounds. Check positive revenue, shares, price and a 1–10 year horizon.');
         return {name: variant.name, value: await response.json() as ScenarioResult};
@@ -85,29 +100,32 @@ export function ThesisStudio({candidate, run}: {candidate: Signal; run: Run}) {
     }, 250);
     return () => {clearTimeout(timer); controller.abort();};
   }, [inputs]);
-  const memo = () => `# FIXTURE / USER ASSUMPTIONS — ${candidate.ticker}\n\nRun ${run.run_id}; as-of ${run.asof}. Not a verified thesis or investment forecast.\n\n## Hypothesis\n${thesis || 'Not entered'}\n\n## Assumptions\n${JSON.stringify(inputs, null, 2)}\n\nBear/base/bull offsets: growth -/+ 10 percentage points; operating margin -/+ 5 points; multiple -/+ 5, floored at zero. No probabilities. Net debt held constant.\n\n## Scenario arithmetic\n${results.map(r => `${r.name}: USD ${r.value.per_share_value.toFixed(2)} per diluted share; annualized change ${percent(r.value.annualized_change)}`).join('\n')}\n\n## Dated filing evidence (synthetic)\n${candidate.evidence.map(f => `- ${f.metric}, ${f.period_end}: ${f.value}; first public ${f.published_at}; source ${f.source_id}; accession ${f.accession}`).join('\n')}\n\n## Catalyst checklist\n${catalyst || 'None supplied'}\nReview date: ${monitorDate || 'Not set'}\n\n## Falsification monitor\n${breaker || 'Not supplied'}\n\n## Bear argument / alternative explanation\n${bear || 'Independent critique not supplied'}\n\n## Unresolved risks\nLiquidity, dilution, competition, refinancing, source coverage and model uncertainty require evidence. Independent adversarial review has not been performed. Zero real verified theses.\n`;
+  const memo = () => `# FIXTURE / USER ASSUMPTIONS — ${candidate.ticker}\n\nRun ${run.run_id}; as-of ${run.asof}. Not a verified thesis or investment forecast.\n\n## Hypothesis\n${thesis || 'Not entered'}\n\n## Assumptions\n${JSON.stringify(inputs, null, 2)}\n\nBear/base/bull offsets: growth -/+ 10 percentage points; operating margin -/+ 5 points; multiple -/+ 5, floored at zero. No probabilities. Net debt held constant.\n\n## Scenario arithmetic\n${results.map(r => `${r.name}: USD ${r.value.per_share_value.toFixed(2)} per diluted share; annualized change ${percent(r.value.annualized_change)}`).join('\n')}\n\n## Dated filing evidence (synthetic)\n${candidate.evidence.map(f => `- ${f.metric}, ${f.period_end}: ${f.value}; first public ${f.published_at}; source ${f.source_id}; accession ${f.accession}`).join('\n')}\n\n## Catalyst checklist\n${catalyst || 'None supplied'}\nReview date: ${monitorDate || 'Not set'}\n\n## Falsification monitor\n${breaker || 'Not supplied'}\n\n## Bear argument / alternative explanation\n${bear || 'Independent critique not supplied'}\n\n## Unresolved risks\nLiquidity, dilution, competition, refinancing, source coverage and model uncertainty require evidence. ${workspace.critic ? "See separately attributed critic status below; independence remains unverified." : "No separately attributed critic is attached."} Zero real verified theses.\n` + researchEvidenceMemo(workspace,reviewDigest).join('\n') + `\n\n## Dated catalyst assertions\n${JSON.stringify(calendar,null,2)}\n`;
   const save = () => {
-    try {localStorage.setItem(`baghunter.memo.${candidate.security_id}`, JSON.stringify({inputs, thesis, catalyst, breaker, bear, monitorDate})); setSaved('Draft saved in this browser.');}
-    catch {setSaved('Unable to save. Download the memo to preserve your work.');}
+    if (workspaceIssue) {setSaved(`Cannot save thesis draft: ${workspaceIssue}`);return;}
+    try {localStorage.setItem(storageKey, JSON.stringify({schema:'fixture-thesis-draft-v2',source_context:sourceContext,inputs,notes,research_workspace:workspace})); setSaved('Draft saved for this exact run and security in this browser.');}
+    catch {setSaved('Unable to save. Download the memo or dossier to preserve your work.');}
   };
   const load = () => {
     try {
-      const draft = JSON.parse(localStorage.getItem(`baghunter.memo.${candidate.security_id}`) ?? 'null');
-      if (!draft || !draft.inputs || Object.keys(draft.inputs).length !== Object.keys(initial).length || Object.keys(initial).some(k => !Number.isFinite(draft.inputs[k])) ||
-          ['thesis', 'catalyst', 'breaker', 'bear', 'monitorDate'].some(k => typeof draft[k] !== 'string')) throw new Error();
-      setCalculation(null); setInputs(draft.inputs); setThesis(draft.thesis); setCatalyst(draft.catalyst); setBreaker(draft.breaker); setBear(draft.bear); setMonitorDate(draft.monitorDate); setSaved('Saved draft loaded.');
-    } catch {setSaved('No valid saved draft for this security.');}
+      const raw = localStorage.getItem(storageKey) ?? localStorage.getItem(`baghunter.memo.${candidate.security_id}`);
+      const draft = restoreThesisDraft(JSON.parse(raw ?? 'null'),sourceContext,run.asof);
+      setCalculation(null);setInputs(draft.inputs);setWorkspace(draft.workspace);setThesis(draft.notes.thesis);setCatalyst(draft.notes.catalyst);setBreaker(draft.notes.breaker);setBear(draft.notes.bear);setMonitorDate(draft.notes.monitorDate);
+      setSaved(draft.legacy ? 'Legacy unbound notes and assumptions loaded; no sources or critic restored. Save a run-bound draft.' : 'Run-bound draft loaded; scenarios recalculate and critic status is rechecked against the current calendar.');
+    } catch (e) {setSaved(`Cannot load thesis draft: ${(e as Error).message}`);}
   };
+  const dossier = () => ({schema:'fixture-thesis-dossier-v2',mode:'FIXTURE_USER_ASSUMPTIONS',source_context:sourceContext,asof:run.asof,model_version:run.model_version,sources:run.sources,candidate,assumptions:inputs,scenarios:results,notes,catalyst_calendar:calendar,research_workspace:workspace,peer_comparisons:peerBands(workspace),risk_register:riskRegister(workspace),critic_status:criticStatus(workspace,reviewDigest),request_digest:reviewDigest,verified_real_theses:0});
   return <>
-    <section className="panel"><div className="panel-title"><div><p className="eyebrow">ASSUMPTIONS WORKBENCH</p><h2>{candidate.ticker} · Thesis Studio</h2><p>Illustrative defaults are user assumptions, not company financials. No probabilities or verified investment thesis.</p></div><button className="secondary" disabled={busy || results.length !== 3} onClick={() => download(`FIXTURE-${candidate.security_id}-memo.md`, memo())}>Download thesis memo</button></div>
-      <div className="input-grid">{(Object.keys(initial) as (keyof Assumptions)[]).map(k => <label key={k}>{labels[k]}<input type="number" step="any" value={inputs[k]} onChange={e => {setCalculation(null); setInputs({...inputs, [k]: Number(e.target.value)});}} /></label>)}</div>
+    <section className="panel"><div className="panel-title"><div><p className="eyebrow">ASSUMPTIONS WORKBENCH</p><h2>{candidate.ticker} · Thesis Studio</h2><p>Illustrative defaults are user assumptions, not company financials. No probabilities or verified investment thesis.</p></div><button className="secondary" disabled={!exportReady} onClick={() => download(`FIXTURE-${candidate.security_id}-memo.md`, memo())}>Download thesis memo</button></div>
+      <div className="input-grid">{(Object.keys(initial) as (keyof ThesisInputs)[]).map(k => <label key={k}>{labels[k]}<input type="number" step="any" value={inputs[k]} onChange={e => {setCalculation(null); setInputs({...inputs, [k]: e.target.value});}} /></label>)}</div>
       <p>Bear/base/bull offsets: growth ±10 percentage points, margin ±5 points, multiple ±5 (floor zero). All three scenarios share dilution and net debt assumptions.</p>
-      {busy && <p role="status">Calculating assumption scenarios…</p>}{error && <p role="alert">{error}</p>}
+      {busy && <p role="status">Calculating assumption scenarios…</p>}{error && !workspaceIssue && <p role="alert">{error}</p>}
       <div className="scenario-grid">{results.map(r => <article className="scenario-card" key={r.name}><h3>{r.name} scenario</h3><strong>${number(r.value.per_share_value)}</strong><p>Per diluted share, USD assumption</p><p>Annualized change {percent(r.value.annualized_change)}</p><p>Ending shares {number(r.value.diluted_shares)}</p></article>)}</div>
       <p className="footnote">EV = revenue × (1+growth)^years × operating margin × earnings multiple. Equity = max(0, EV − net debt). Divide by shares × (1+dilution)^years. No dividends, taxes or discounting modeled.</p>
     </section>
-    <CatalystCalendar key={candidate.security_id} securityId={candidate.security_id} ticker={candidate.ticker} />
-    <section className="panel"><h2>Research memo & falsification monitor</h2><div className="input-grid"><label>Research hypothesis<textarea aria-label="Research hypothesis" value={thesis} onChange={e => setThesis(e.target.value)} /></label><label>Catalysts and source citations<textarea aria-label="Catalysts and source citations" value={catalyst} onChange={e => setCatalyst(e.target.value)} /></label><label>Falsification conditions<textarea aria-label="Falsification conditions" value={breaker} onChange={e => setBreaker(e.target.value)} /></label><label>Bear argument and alternative explanation<textarea aria-label="Bear argument and alternative explanation" value={bear} onChange={e => setBear(e.target.value)} /></label><label>Next catalyst review date<input type="date" value={monitorDate} onChange={e => setMonitorDate(e.target.value)} /></label></div><div className="button-row"><button className="secondary" onClick={save}>Save draft locally</button><button className="secondary" onClick={load}>Load saved draft</button></div><p role="status">{saved}</p><p>Draft assertions require source verification and an independent critic. Notes do not change scores or research evidence.</p></section>
+    <CatalystCalendar key={candidate.security_id} securityId={candidate.security_id} ticker={candidate.ticker} onChange={setCalendar} />
+    <section className="panel"><ResearchEvidence workspace={workspace} onChange={setWorkspace} context={criticContext} digest={reviewDigest} enabled={exportReady}/>{workspaceIssue && <p role="alert">Thesis research needs correction: {workspaceIssue}</p>}<button className="secondary" disabled={!exportReady} onClick={() => download(`FIXTURE-${candidate.security_id}-dossier.json`,JSON.stringify(dossier(),null,2),'application/json')}>Download thesis dossier</button></section>
+    <section className="panel"><h2>Research memo & falsification monitor</h2><div className="input-grid"><label>Research hypothesis<textarea aria-label="Research hypothesis" maxLength={5000} value={thesis} onChange={e => setThesis(e.target.value)} /></label><label>Catalysts and source citations<textarea aria-label="Catalysts and source citations" maxLength={5000} value={catalyst} onChange={e => setCatalyst(e.target.value)} /></label><label>Falsification conditions<textarea aria-label="Falsification conditions" maxLength={5000} value={breaker} onChange={e => setBreaker(e.target.value)} /></label><label>Bear argument and alternative explanation<textarea aria-label="Bear argument and alternative explanation" maxLength={5000} value={bear} onChange={e => setBear(e.target.value)} /></label><label>Next catalyst review date<input type="date" value={monitorDate} onChange={e => setMonitorDate(e.target.value)} /></label></div><div className="button-row"><button className="secondary" onClick={save}>Save draft locally</button><button className="secondary" onClick={load}>Load saved draft</button></div><p role="status">{saved}</p><p>Draft assertions require source verification and an independent critic. Notes do not change scores or research evidence.</p></section>
   </>;
 }
 

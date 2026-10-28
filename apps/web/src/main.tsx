@@ -26,7 +26,7 @@ export type Signal = { security_id: string; name: string; ticker: string; stage:
   evidence: Fact[]; technical?: Technical; relative_evidence?: RelativeEvidence; chart: {date: string; close: number; volume?: number}[]; limitations: string[] };
 type Label = { security_id: string; horizon_years: number; max_multiple: number | null;
   terminal_total_return: number | null; max_drawdown: number | null; coverage_flag: string };
-export type Run = { run_id: string; asof: string; model_version: string; archive_integrity?: string; age_days: number;
+export type Run = { mode: 'FIXTURE'; run_id: string; asof: string; model_version: string; archive_integrity?: string; age_days: number;
   signals: Signal[]; limitations: string[]; thesis_status: string;
   sources: {source_id: string; sha256: string; latest_source_timestamp: string;
     coverage: string; license_note: string; market_provider: {reason: string}}[];
