@@ -1,6 +1,6 @@
 import {ResearchEvidence, useResearchDigest} from './ResearchEvidencePanel';
 import {emptyWorkspace, criticStatus, peerBands, validateWorkspace, awareTime, compareTime} from './researchEvidence';
-import {useCallback, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import type {Observation} from './FinvizBrowser';
 import {download} from './downloads';
 import {CompanyEvidencePicker, type CompanyEvidence} from './CompanyEvidence';
@@ -10,6 +10,8 @@ import {emptyAssumptions, emptyNotes, observationMemo, restoreResearch, type Com
 const labels: Record<keyof ObservationNotes, string> = {hypothesis: 'Observation research hypothesis', evidence: 'Sources and unresolved research questions', falsification: 'Observation falsification conditions', bear: 'Observation bear argument', review_date: 'Observation review date'};
 
 export function ObservationDesk({observation, source, onClose}: {observation: Observation; source: ObservationSource; onClose: () => void}) {
+  const heading = useRef<HTMLHeadingElement | null>(null);
+  useEffect(() => {heading.current?.focus();}, []);
   const storageKey = `baghunter.observation.v1.${source.mode}.${source.snapshot_id}.${observation.ticker}`;
   const [workspace, setWorkspace] = useState(() => emptyWorkspace(new Date().toISOString()));
   const [draft, setDraft] = useState<ObservationNotes>({...emptyNotes});
@@ -59,7 +61,7 @@ export function ObservationDesk({observation, source, onClose}: {observation: Ob
     issuer_evidence:attached ? {association_status:'OPERATOR_SELECTED_ENTITY_NOT_VERIFIED_SECURITY_MAPPING', ...attached} : null,
     limitations:['Current saved observation only; not historical PIT evidence', 'SEC attachment is an operator research association, not a security/class assignment', 'Source clocks remain separate; no merged PIT profile', 'No permanent identity, eligibility approval or ranking', 'Financial model inputs are user assumptions, not forecasts', 'Reported Finviz values retain provider scale; no automatic USD or share conversion']});
   return <section className="panel company-research" aria-label={`Research workspace for observation ${observation.ticker}`}>
-    <div className="panel-title"><div><p className="eyebrow">{source.mode} · CURRENT OBSERVATION · UNVERIFIED</p><h2>{observation.ticker} · Observation research desk</h2><p>{observation.company}. This is a source-bound research draft, with no assigned permanent identity or screening score.</p></div><button className="secondary" onClick={onClose}>Close observation desk</button></div>
+    <div className="panel-title"><div><p className="eyebrow">{source.mode} · CURRENT OBSERVATION · UNVERIFIED</p><h2 ref={heading} tabIndex={-1}>{observation.ticker} · Observation research desk</h2><p>{observation.company}. This is a source-bound research draft, with no assigned permanent identity or screening score.</p></div><button className="secondary" onClick={onClose}>Close observation desk</button></div>
     <p>Retrieved {source.retrieved_at}. Provider observation time is unknown. Reported price, market-cap scale, currency, security type and historical continuity are unverified.</p>
     <dl><dt>Snapshot</dt><dd className="hash">{source.snapshot_id}</dd><dt>Original CSV SHA-256</dt><dd className="hash">{source.source_sha256}</dd></dl>
     <div className="input-grid">{(Object.keys(emptyNotes) as (keyof ObservationNotes)[]).map(name => <label key={name}>{labels[name]}{name === 'review_date' ? <input type="date" value={draft[name]} onChange={event => setDraft({...draft, [name]:event.target.value})}/> : <textarea aria-label={labels[name]} maxLength={5000} value={draft[name]} onChange={event => setDraft({...draft, [name]:event.target.value})}/>}</label>)}</div>
