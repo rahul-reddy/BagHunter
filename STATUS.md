@@ -1,21 +1,27 @@
 # Current handoff — frozen multibagger classification / 2026-10-28
 
-Current feat/outcome-classification adds frozen annual rank snapshots, all 1/2/3/5Y by 5x/10x
-attempts, explicit missing/unmatured outcomes, fixed-budget confusion counts and three common-
-population comparators. No probability calibration or empirical success is inferred. Reports are
-archived and exposed in Validation Lab with provenance, filters, downloads and unavailable reasons.
-See docs/CLASSIFICATION.md. Finviz Elite + SEC remain scope; zero verified real theses.
+Main fbdd626281f9 includes report corrections and the reproducible notebook. PR #47 CI passed
+502 backend / 44 browser tests and Gemini approved its exact head. Main reports passed saved/API
+equality, interval downloads, invalid interval rejection, keyboard and desktop/mobile accessibility.
+Notebook main execution passed all seven cells. Release receipts/source archives are under root artifacts.
 
-Executed: 21 core boundary tests passed. The integrated archive/API workspace test found a policy
-fingerprint encoding mismatch, which was corrected to the discovery canonical serialization;
-all 22 focused tests then passed. Backend lint/types passed; formatting was corrected afterward.
-Frontend lint/types/build passed before the final mobile layout change. Both classification
-browser tests now pass, including desktop/mobile Axe and keyboard checks, after adding exact
-filter labels and wrapping pagination buttons. Source packages stayed frozen during pipeline tests.
+Current feat/outcome-classification implements frozen annual rank snapshots, all 1/2/3/5Y by
+5x/10x attempts, fixed-budget confusion counts and three common-population comparators. Missing
+outcomes/budgets remain explicit. Reports are archived and exposed in Validation Lab; no rank
+becomes a calibrated probability. See docs/CLASSIFICATION.md. Finviz Elite + SEC remain scope;
+zero verified real theses. The branch integrates delivered report/notebook/accessibility main.
 
-Integrate delivered report/notebook main, rerun current-source gates and archive integration,
-then exact-head CI, independent review, guarded delivery and main acceptance. Full schema/field
-reconciliation and per-item release audit remain open. The completion goal stays active.
+Executed: 22 focused core/archive/API tests passed on the current backend source; backend
+lint/format/types passed. Frontend lint/types/build passed before the final main heading integration.
+The 46-case local browser run recorded 45 passes and one allocation-test timeout under concurrent
+local load. On the final integrated source, allocation, both classification cases and comparison
+all passed (four checks), including desktop/mobile Axe and keyboard. No test timeout was increased.
+Finish final frontend gates, exact-head full CI, independent review, guarded merge and main preview.
+
+Canonical contracts and immutable offline dossier persistence in BagHunter-operations have
+focused unit/integration/browser checks passing at their recorded revisions; not yet reviewed or
+delivered. Mandatory field reconciliation and the full per-item release audit remain open.
+The full completion goal stays active.
 
 ---
 
