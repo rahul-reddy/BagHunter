@@ -83,6 +83,8 @@ class HistoricalInstrument(ImportRecord):
     security_type: Literal["common", "benchmark"]
     exchange: str = Field(min_length=1)
     delisted: bool
+    cik: str | None = Field(default=None, pattern=r"^\d{10}$")
+    identifiers_version: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
     def interval(self) -> "HistoricalInstrument":
@@ -99,6 +101,7 @@ class HistoricalSymbol(ImportRecord):
     valid_from: date
     valid_to: date | None = None
     published_at: datetime
+    source: str | None = Field(default=None, min_length=1)
 
     @field_validator("published_at")
     @classmethod

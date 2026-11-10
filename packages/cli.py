@@ -18,6 +18,7 @@ from packages.data.providers import SecClient
 from packages.data.reconciliation import inspect_reference
 from packages.data.reference import fetch_reference
 from packages.data.sec_facts import normalize_sec
+from packages.data.thesis_archive import import_thesis
 from packages.pipeline import DEFAULT_ASOF, run
 from packages.research.discovery import DiscoveryPolicy
 from packages.research.event_paths import EventPathPolicy
@@ -94,8 +95,19 @@ def main() -> None:
     issuer.add_argument("--snapshot", required=True)
     issuer.add_argument("--reference", required=True)
     issuer.add_argument("--mode", required=True, choices=["FIXTURE", "EXTERNAL_UNVERIFIED"])
+    thesis = sub.add_parser(
+        "import-thesis", help="Archive a fixture dossier as unverified assertions"
+    )
+    thesis.add_argument("--dossier", type=Path, required=True)
+    thesis.add_argument("--run-root", type=Path, default=Path("data/fixture/latest"))
     args = parser.parse_args()
-    if args.command == "normalize-sec":
+    if args.command == "import-thesis":
+        try:
+            result = import_thesis(args.dossier, args.run_root)
+        except (ValueError, OSError, TypeError, KeyError, RecursionError, OverflowError):
+            print("Thesis import rejected; input details suppressed.", file=sys.stderr)
+            raise SystemExit(2) from None
+    elif args.command == "normalize-sec":
         try:
             report = normalize_sec(
                 _read(args.submissions, 20 * 1024 * 1024),

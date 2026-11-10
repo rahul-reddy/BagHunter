@@ -352,6 +352,16 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     )
 
     data = client.get(f"/runs/{after}").json()
+    contracts = data["data_contracts"]
+    assert client.get(f"/runs/{after}/reports/canonical_contracts.json").json() == contracts
+    assert len(contracts["tables"]) == 10
+    for name, descriptor in contracts["tables"].items():
+        table_path = root / "runs" / after / "contracts" / f"{name}.parquet"
+        body = table_path.read_bytes()
+        assert hashlib.sha256(body).hexdigest() == descriptor["sha256"]
+        assert client.get(f"/runs/{after}/tables/{name}.parquet").content == body
+        assert pq.read_table(table_path).num_rows == descriptor["rows"]
+    assert contracts["tables"]["thesis"]["rows"] == 0
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
     path_dir = root / "runs" / after

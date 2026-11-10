@@ -14,6 +14,7 @@ from fastapi.responses import Response
 
 from packages.backtest.classification import classification_markdown
 from packages.backtest.robustness import robustness_markdown
+from packages.data.contracts import SCHEMAS
 from packages.data.finviz import _read, read_snapshot
 from packages.data.provider_refresh import read_sec_bundle
 from packages.data.reconciliation import inspect_reference
@@ -397,6 +398,32 @@ def compare_runs(run_id: str, previous_id: str) -> dict[str, Any]:
     }
 
 
+@app.get("/runs/{run_id}/tables/{table_name}.parquet")
+def canonical_download(run_id: str, table_name: str) -> Response:
+    data = read_run(run_id)
+    inventory = data.get("data_contracts")
+    if table_name not in SCHEMAS or inventory is None:
+        raise HTTPException(404, "No saved canonical table")
+    if not isinstance(inventory, dict) or not isinstance(inventory.get("tables"), dict):
+        raise HTTPException(503, "Invalid saved canonical inventory")
+    if table_name not in inventory["tables"]:
+        raise HTTPException(404, "No saved canonical table")
+    folder = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest")) / "runs" / run_id
+    relative = f"contracts/{table_name}.parquet"
+    try:
+        verify_integrity(folder, only=relative)
+        body = _read(folder / relative, 20 * 1024 * 1024)
+    except (OSError, ValueError, KeyError, TypeError):
+        raise HTTPException(503, "Canonical table integrity unavailable") from None
+    return Response(
+        body,
+        media_type="application/vnd.apache.parquet",
+        headers={
+            "Content-Disposition": f'attachment; filename="FIXTURE-{run_id}-{table_name}.parquet"'
+        },
+    )
+
+
 @app.get("/runs/{run_id}/reports/{report_name}")
 def report_download(
     run_id: str,
@@ -411,6 +438,7 @@ def report_download(
         "source_manifest.json": data["sources"],
         "validation.json": data.get("validation", {}),
         "classification.json": data.get("validation", {}).get("classification"),
+        "canonical_contracts.json": data.get("data_contracts"),
         "negative_controls.json": data.get("validation", {}).get("negative_controls", {}),
         "discovery_negative_controls.json": data.get("validation", {}).get(
             "discovery_negative_controls", {}

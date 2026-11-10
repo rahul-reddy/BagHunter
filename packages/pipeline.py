@@ -20,6 +20,7 @@ from packages.backtest.negative_controls import negative_controls
 from packages.backtest.robustness import robustness, robustness_markdown
 from packages.backtest.toy import evaluate
 from packages.backtest.validation import diagnostics
+from packages.data.contracts import canonical_tables, write_contracts
 from packages.data.fixture import fixture
 from packages.data.providers import UnconfiguredMarketProvider
 from packages.data.run_archive import verify_integrity, write_integrity
@@ -224,8 +225,12 @@ def run(
         raw_path.write_bytes(raw)
     staging = Path(tempfile.mkdtemp(prefix="run-", dir=output.parent))
     try:
-        dump(staging / "run.json", payload)
         dump(staging / "source_manifest.json", source)
+        contract = write_contracts(staging / "contracts", canonical_tables(dataset, payload))
+        payload["data_contracts"] = contract
+        dump(staging / "run.json", payload)
+        dump(staging / "reports" / "canonical_contracts.json", contract)
+
         for name in ("instruments", "symbols", "bars", "facts", "actions"):
             table(
                 staging / "silver" / f"{name}.parquet",
