@@ -1,3 +1,28 @@
+# Current handoff — explicit replay input contract / 2026-11-10
+
+Fixture CLI commands now support explicit --universe fixture-common-v1, bounded combined policy
+--config and exact saved --source-manifest verification before cache activation/publication.
+Unknown universes, conflicting policy files, duplicate/oversized/nonfinite JSON and mismatched
+source metadata fail explicitly. Current Finviz observations cannot be promoted via these flags.
+Omitted controls preserve the existing defaults; policies and hashes remain archived.
+
+Nine new boundary/CLI tests passed, plus backend lint/format/types. An actual configured demo
+produced ccebaa3755b06432; replay using its saved manifest reused the identical cache. A rejected
+external manifest returned exit code 2 and preserved CURRENT and the archived run hash. Evidence
+is under ignored artifacts/replay-input-receipt.json. See docs/REPLAY_INPUTS.md.
+
+After integrating reports, dated cohort/industry context and admission/comparator work, backend
+lint/format/types and all 36 replay/admission boundary tests passed. An actual configured demo
+produced 69753ca1119522bf; replay with its saved manifest reused the identical cache. Main report
+PR #55 is delivered (575 backend / 52 browser CI). Cohort #56 and admission #57 have independent
+Gemini approval; their exact-head CI/delivery are separate. Deliver this contract through its own
+exact-head CI, independent review and guarded merge. Continue the
+complete 00–08 release matrix. Finviz Elite + SEC remain scope; zero verified real theses.
+The full application completion goal remains active.
+
+
+---
+
 # Current handoff — dated admission and earnings-comparator availability / 2026-11-10
 
 This branch adds explicit USD capitalization observations, optional numeric cap/annualized 20D
