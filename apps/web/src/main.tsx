@@ -1,5 +1,6 @@
 import type {ClassificationReport} from './OutcomeClassification';
 import {DataContracts, type DataContractInventory} from './DataContracts';
+import {RadarFilterControls, emptyRadarFilters, matchesRadar, parseRadarFilters, compareRadar, type RadarSort} from './RadarFilters';
 import type {RobustnessReport} from './RobustnessLab';
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -78,15 +79,15 @@ function App() {
   const [page, setPage] = useState('Command Center');
   const [selected, setSelected] = useState('fx-compound');
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'score' | 'return_63d' | 'relative_volume' | 'dollar_volume_20d' | 'completeness'>('score');
+  const [sort, setSort] = useState<RadarSort>('score');
   const [stage, setStage] = useState('ALL');
   const [reload, setReload] = useState(0);
   const [activeRun, setActiveRun] = useState('current');
   const [preferences, setPreferences, storageError] = usePreferences();
-  const [volumeFloor, setVolumeFloor] = useState(0);
+  const [radarFilters,setRadarFilters] = useState({...emptyRadarFilters});
   const [consolidationOnly, setConsolidationOnly] = useState(false);
   const [capBucket, setCapBucket] = useState('ALL');
-  const [momentumFloor, setMomentumFloor] = useState(-100);
+
   useEffect(() => {
     const controller = new AbortController();
     fetch(`/api/runs/${activeRun}`, { signal: controller.signal }).then(async r => {
@@ -99,24 +100,27 @@ function App() {
   }, [reload, activeRun]);
   const candidate = run?.signals.find(s => s.security_id === selected) ?? run?.signals[0];
   const open = (s: Signal) => {setSelected(s.security_id); setPage('Candidate DNA');};
+  let radarIssue = '';
+  try {parseRadarFilters(radarFilters);} catch(e) {radarIssue=(e as Error).message;}
   const filtered = run?.signals.filter(s => `${s.ticker} ${s.security_id} ${s.name}`.toLowerCase()
     .includes(search.toLowerCase()) && (stage === 'ALL' || s.stage === stage)
     && s.dollar_volume_20d >= preferences.minLiquidity && s.completeness >= preferences.minCoverage
     && (preferences.sector === 'ALL' || s.sector === preferences.sector)
     && (!preferences.watchOnly || preferences.watchlist.includes(s.security_id))
-    && (capBucket === 'ALL' || s.cap_bucket === capBucket) && s.return_63d * 100 >= momentumFloor
-    && s.relative_volume >= volumeFloor && (!consolidationOnly || s.consolidation))
-    .sort((a, b) => b[sort] - a[sort]) ?? [];
+    && (capBucket === 'ALL' || s.cap_bucket === capBucket)
+    && !radarIssue && matchesRadar(s,radarFilters) && (!consolidationOnly || s.consolidation))
+    .sort((a, b) => compareRadar(a,b,sort)) ?? [];
   const radar = <section className="panel"><div className="panel-title"><div><h2>Research queue</h2>
     <p>Trace every rank to its inputs. All names below are fictional.</p></div><span className="tag">FIXTURE</span></div>
     <div className="filters"><label>Find a security<input value={search} onChange={e => setSearch(e.target.value)} placeholder="Ticker or permanent ID" /></label>
       <label>Stage<select value={stage} onChange={e => setStage(e.target.value)}><option value="ALL">All stages</option>{['WATCH', 'IGNITION', 'EMERGING', 'CONFIRMED', 'EXTENDED/AGING', 'INVALIDATED'].map(s => <option key={s}>{s}</option>)}</select></label>
-      <label>Rank by<select value={sort} onChange={e => setSort(e.target.value as typeof sort)}><option value="score">Research score</option><option value="return_63d">3-month momentum</option><option value="relative_volume">Relative volume</option><option value="dollar_volume_20d">Liquidity</option><option value="completeness">Evidence coverage</option></select></label>
+      <label>Rank by<select value={sort} onChange={e => setSort(e.target.value as typeof sort)}><option value="score">Research score</option><option value="return_1d">1-day momentum</option><option value="return_5d">1-week momentum</option><option value="return_21d">1-month momentum</option><option value="return_63d">3-month momentum</option><option value="revenue_growth">Reported revenue growth</option><option value="operating_margin">Reported operating margin</option><option value="relative_volume">Relative volume</option><option value="dollar_volume_20d">Liquidity</option><option value="completeness">Evidence coverage</option></select></label>
       <label>Sector<select value={preferences.sector} onChange={e => setPreferences({...preferences, sector: e.target.value})}><option value="ALL">All sectors</option>{[...new Set(run?.signals.map(s => s.sector))].filter(Boolean).map(s => <option key={s}>{s}</option>)}</select></label>
-      <label>Cap bucket (fixture strata)<select value={capBucket} onChange={e => setCapBucket(e.target.value)}><option value="ALL">All cap buckets</option>{[...new Set(run?.signals.map(s => s.cap_bucket))].filter(Boolean).map(b => <option key={b}>{b}</option>)}</select></label><label>Minimum 3M return (%)<input type="number" value={momentumFloor} onChange={e => setMomentumFloor(Number(e.target.value))} /></label><label>Minimum relative volume<input type="number" min="0" step=".1" value={volumeFloor} onChange={e => setVolumeFloor(Math.max(0, Number(e.target.value)))} /></label></div>
+      <label>Cap bucket (fixture strata)<select value={capBucket} onChange={e => setCapBucket(e.target.value)}><option value="ALL">All cap buckets</option>{[...new Set(run?.signals.map(s => s.cap_bucket))].filter(Boolean).map(b => <option key={b}>{b}</option>)}</select></label></div>
+      <RadarFilterControls filters={radarFilters} onChange={setRadarFilters} signals={run?.signals ?? []}/>{radarIssue && <p role="alert">{radarIssue}</p>}
       <div className="button-row"><label className="check-label"><input type="checkbox" checked={preferences.watchOnly} onChange={e => setPreferences({...preferences, watchOnly: e.target.checked})} />Saved watchlist only</label><label className="check-label"><input type="checkbox" checked={consolidationOnly} onChange={e => setConsolidationOnly(e.target.checked)} />Consolidating bases only</label></div>
-    <div className="table-scroll" tabIndex={0}><table><caption className="sr-only">Synthetic research candidates</caption><thead><tr><th>Security / permanent ID</th><th>Stage</th><th>Score*</th><th>1D</th><th>1W</th><th>1M</th><th>3M</th><th>Coverage</th><th>Saved</th></tr></thead>
-      <tbody>{filtered.map(s => <tr key={s.security_id}><td><button className="security" onClick={() => open(s)}>{s.ticker}<small>{s.security_id}</small></button></td><td><span className="stage">{s.stage}</span></td><td><button className="score" aria-label={`${s.score.toFixed(1)} / 100 ↗ Score breakdown for ${s.ticker}`} onClick={() => open(s)}>{s.score.toFixed(1)} <span>/ 100 ↗</span></button></td>{[s.return_1d, s.return_5d, s.return_21d, s.return_63d].map((r, i) => <td className={r >= 0 ? 'positive' : 'negative'} key={i}>{pct(r)}</td>)}<td>{(s.completeness * 100).toFixed(0)}%</td><td><button aria-label={`${preferences.watchlist.includes(s.security_id) ? 'Saved' : 'Save'} ${s.ticker} to watchlist`} aria-pressed={preferences.watchlist.includes(s.security_id)} onClick={() => setPreferences({...preferences, watchlist: preferences.watchlist.includes(s.security_id) ? preferences.watchlist.filter(id => id !== s.security_id) : [...preferences.watchlist, s.security_id]})}>{preferences.watchlist.includes(s.security_id) ? 'Saved' : 'Save'}</button></td></tr>)}</tbody></table></div>
+    <div className="table-scroll" tabIndex={0}><table><caption className="sr-only">Synthetic research candidates</caption><thead><tr><th>Security / permanent ID</th><th>Stage</th><th>Score*</th><th>1D</th><th>1W</th><th>1M</th><th>3M</th><th>Reported revenue growth</th><th>Reported operating margin</th><th>Coverage</th><th>Recorded risk flags</th><th>Saved</th></tr></thead>
+      <tbody>{filtered.map(s => <tr key={s.security_id}><td><button className="security" onClick={() => open(s)}>{s.ticker}<small>{s.security_id}</small></button></td><td><span className="stage">{s.stage}</span></td><td><button className="score" aria-label={`${s.score.toFixed(1)} / 100 ↗ Score breakdown for ${s.ticker}`} onClick={() => open(s)}>{s.score.toFixed(1)} <span>/ 100 ↗</span></button></td>{[s.return_1d, s.return_5d, s.return_21d, s.return_63d].map((r, i) => <td className={r >= 0 ? 'positive' : 'negative'} key={i}>{pct(r)}</td>)}<td>{percent(s.financials?.revenue_growth)}</td><td>{percent(s.financials?.operating_margin)}</td><td>{(s.completeness * 100).toFixed(0)}%</td><td className="wrap-cell">{Array.isArray(s.risk_flags) ? s.risk_flags.join(', ') || 'None recorded' : 'Missing risk status'}</td><td><button aria-label={`${preferences.watchlist.includes(s.security_id) ? 'Saved' : 'Save'} ${s.ticker} to watchlist`} aria-pressed={preferences.watchlist.includes(s.security_id)} onClick={() => setPreferences({...preferences, watchlist: preferences.watchlist.includes(s.security_id) ? preferences.watchlist.filter(id => id !== s.security_id) : [...preferences.watchlist, s.security_id]})}>{preferences.watchlist.includes(s.security_id) ? 'Saved' : 'Save'}</button></td></tr>)}</tbody></table></div>
     {filtered.length === 0 && <p className="empty">No securities match these filters.</p>}
     <p className="footnote">*Unvalidated heuristic. Missing components reduce the attainable score; coverage is not a probability.</p></section>;
 

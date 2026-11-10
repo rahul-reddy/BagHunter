@@ -1,3 +1,25 @@
+# Current handoff — complete Radar display filters / 2026-11-10
+
+Main 7a40ea861c55 delivers classification PR #48 after 525 backend / 46 browser checks,
+Gemini approval with zero blockers and the guarded merge. Current feat/discovery-filters adds
+1D/1W/1M/3M filters/sorts, dated reported financial growth/margin controls, coverage and required
+risk flags. Blank thresholds disable a filter; zero is explicit, and missing values never become
+zero. Known numeric values sort before missing values with deterministic ID ties. These controls
+only filter the displayed saved run, not the strategy policy or backtest.
+
+At the unchanged pre-integration source on October 28, frontend lint/types/build and three focused
+browser/parser/compatibility checks passed, including desktop/mobile Axe. An initial test compared
+runtime served_at clocks as immutable data; it was corrected to compare the actual saved research
+fields. No production behavior was weakened. Integrate current delivered main, rerun current-source
+checks, then exact-head CI, independent review, guarded merge and main preview.
+
+Canonical contracts/persisted assertions are undergoing final integration in BagHunter-operations.
+The per-item audit also identifies regime-cohort controls, dated industry matching and thin named
+validation/failed-lookalike exports for further implementation. Finviz Elite + SEC remain scope;
+zero verified real theses. The full app completion goal remains active.
+
+---
+
 # Current handoff — canonical contracts and persisted dossier assertions / 2026-11-10
 
 Main 7a40ea861c55 delivers classification PR #48 with 525 backend / 46 browser CI tests,
