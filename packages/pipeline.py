@@ -39,6 +39,7 @@ from packages.research.reports import (
 from packages.research.sensitivity import ranking_sensitivity
 from packages.research.technical import technical_report
 from packages.research.validation_reports import failed_lookalikes_report, model_validation_report
+from packages.shared.replay import verify_manifest
 
 DEFAULT_ASOF = "2022-01-03T23:00:00+00:00"
 
@@ -61,6 +62,8 @@ def run(
     policy: DiscoveryPolicy | None = None,
     portfolio_policy: PortfolioPolicy | None = None,
     event_policy: EventPathPolicy | None = None,
+    *,
+    source_manifest: Path | None = None,
 ) -> dict[str, Any]:
     if asof.utcoffset() is None:
         raise ValueError("asof must include timezone")
@@ -72,6 +75,19 @@ def run(
     dataset = fixture()
     raw = dataset.model_dump_json().encode()
     checksum = hashlib.sha256(raw).hexdigest()
+    source = {
+        "source_id": "fixture-v1",
+        "mode": "FIXTURE",
+        "provider": "local-generator-v1",
+        "url": "fixture://fixture-v1",
+        "sha256": checksum,
+        "license_note": "Synthetic local test observations; no real securities",
+        "retrieved_at": "GENERATED_NOT_RETRIEVED",
+        "coverage": "4 fictional instruments including benchmark; weekday calendar",
+        "latest_source_timestamp": max(b.available_at for b in dataset.bars).isoformat(),
+        "market_provider": UnconfiguredMarketProvider().get_coverage_report(),
+    }
+    verify_manifest(source_manifest, source)
     policy = policy or DiscoveryPolicy()
     portfolio_policy = portfolio_policy or PortfolioPolicy(seed=seed)
     event_policy = event_policy or EventPathPolicy(seed=seed)
@@ -114,18 +130,7 @@ def run(
             "evaluation_windows": len(cached["backtest"]["rows"]),
             "cache_reused": True,
         }
-    source = {
-        "source_id": "fixture-v1",
-        "mode": "FIXTURE",
-        "provider": "local-generator-v1",
-        "url": "fixture://fixture-v1",
-        "sha256": checksum,
-        "license_note": "Synthetic local test observations; no real securities",
-        "retrieved_at": "GENERATED_NOT_RETRIEVED",
-        "coverage": "4 fictional instruments including benchmark; weekday calendar",
-        "latest_source_timestamp": max(b.available_at for b in dataset.bars).isoformat(),
-        "market_provider": UnconfiguredMarketProvider().get_coverage_report(),
-    }
+
     discovery = discover(dataset, asof, policy or DiscoveryPolicy())
     features = discovery["signals"]
     if not features:

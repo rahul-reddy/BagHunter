@@ -22,6 +22,7 @@ from packages.data.thesis_archive import import_thesis
 from packages.pipeline import DEFAULT_ASOF, run
 from packages.research.discovery import DiscoveryPolicy
 from packages.research.event_paths import EventPathPolicy
+from packages.shared.replay import ReplayConfig, read_object
 
 
 def main() -> None:
@@ -31,6 +32,22 @@ def main() -> None:
         cmd = sub.add_parser(name, help="Rebuild complete synthetic vertical slice")
         cmd.add_argument("--asof", default=DEFAULT_ASOF)
         cmd.add_argument("--seed", type=int, default=7)
+        cmd.add_argument(
+            "--universe",
+            choices=["fixture-common-v1"],
+            default="fixture-common-v1",
+            help="Explicit closed fictional common-share universe; no real-data promotion",
+        )
+        cmd.add_argument(
+            "--source-manifest",
+            type=Path,
+            help="Verify a saved fixture source manifest before replay, including cache reuse",
+        )
+        cmd.add_argument(
+            "--config",
+            type=Path,
+            help="JSON discovery/portfolio/event policies; exclusive with individual policy files",
+        )
         cmd.add_argument("--output", type=Path, default=Path("data/fixture/latest"))
         cmd.add_argument("--policy", type=Path, help="Local JSON discovery policy; fixture only")
         cmd.add_argument("--portfolio-policy", type=Path, help="Local JSON portfolio constraints")
@@ -256,6 +273,9 @@ def main() -> None:
             raise SystemExit(2) from None
     else:
         try:
+            if args.config and any((args.policy, args.portfolio_policy, args.event_policy)):
+                raise ValueError("Use a composite config or individual policy files")
+            config = ReplayConfig.model_validate(read_object(args.config)) if args.config else None
             policy = (
                 DiscoveryPolicy.model_validate_json(_read(args.policy, 64 * 1024))
                 if args.policy
@@ -271,6 +291,18 @@ def main() -> None:
                 if args.event_policy
                 else None
             )
+            if config:
+                policy = config.discovery
+                portfolio_policy = (
+                    config.portfolio
+                    if "portfolio" in config.model_fields_set
+                    else PortfolioPolicy(seed=args.seed)
+                )
+                event_policy = (
+                    config.event
+                    if "event" in config.model_fields_set
+                    else EventPathPolicy(seed=args.seed)
+                )
             result = run(
                 args.output,
                 datetime.fromisoformat(args.asof),
@@ -278,8 +310,9 @@ def main() -> None:
                 policy,
                 portfolio_policy,
                 event_policy,
+                source_manifest=args.source_manifest,
             )
-        except (ValueError, OSError, TypeError, KeyError) as exc:
+        except (ValueError, OSError, TypeError, KeyError, RecursionError) as exc:
             print(
                 f"Fixture refresh rejected ({type(exc).__name__}); raw details suppressed.",
                 file=sys.stderr,
