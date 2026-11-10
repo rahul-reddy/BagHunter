@@ -15,13 +15,18 @@ export type PortfolioComparison = {id: string; policy: {selector: string; alloca
 const percent = (v: number | null | undefined) => v == null ? 'Missing' : `${(v*100).toFixed(2)}%`;
 const label = (value: string) => ({cap_ranked:'Ranked position caps', equal_weight:'Equal weight', inverse_volatility:'Inverse volatility', sector_neutral:'Equal-sector targets', cash:'Cash'}[value] ?? value);
 
-export function PortfolioComparisons({comparisons, runId}: {comparisons?: PortfolioComparison[]; runId: string}) {
+export type ComparatorCatalog = {policy: string; dataset_sha256: string; attempts: {
+  id: string; status: string; reason: string | null; policy: {selector: string; allocation: string}; metrics?: null
+}[]};
+
+export function PortfolioComparisons({comparisons, catalog, runId}: {comparisons?: PortfolioComparison[]; catalog?: ComparatorCatalog; runId: string}) {
   const [selectedId, setSelectedId] = useState('');
   const [decision, setDecision] = useState('');
   const selected = comparisons?.find(c => c.id === selectedId) ?? comparisons?.[0];
   const plan = selected?.allocation_ledger.find(p => p.decision === decision) ?? selected?.allocation_ledger[0];
   return <section className="panel portfolio-comparisons" aria-label="Allocation comparisons">
     <h2>Allocation comparison evidence</h2>
+    {catalog ? <><p>Every declared comparison attempt is retained, including unavailable rankings. Annual earnings growth uses dated annual net income; revenue growth remains a separate comparator.</p><div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable comparator availability"><table><caption>Declared comparator availability</caption><thead><tr><th>Ranking</th><th>Allocation</th><th>Status</th><th>Reason</th></tr></thead><tbody>{catalog.attempts.map(a => <tr key={a.id}><td>{a.policy.selector}</td><td>{label(a.policy.allocation)}</td><td>{a.status}</td><td>{a.reason ?? 'Calculated fixture only'}</td></tr>)}</tbody></table></div><a href={`/api/runs/${runId}/reports/comparator_catalog.json`}>Download comparator availability</a></> : <p>Comparator availability was not recorded in this archive. Missing attempts are not reconstructed.</p>}
     {!comparisons?.length ? <p>Allocation comparison ledgers unavailable in this archive. Rebuild the fixture pipeline to create a new run.</p> : <>
       <p>FIXTURE · raw-price inputs · predeclared ranking and allocation variations. Every variation uses the configured capital, dates, price/liquidity floors, costs, participation, position and sector caps. Results describe artificial paths; no winning rule is selected.</p>
       <div className="table-scroll" tabIndex={0}><table><caption>Ranking and allocation comparisons</caption><thead><tr><th>Ranking</th><th>Allocation</th><th>Return</th><th>Daily drawdown</th><th>Daily volatility</th><th>Executions</th><th>Exclusions</th></tr></thead><tbody>{comparisons.map(c => <tr key={c.id}><td>{c.policy.selector}</td><td>{label(c.policy.allocation)}</td><td>{percent(c.metrics.total_return)}</td><td>{percent(c.daily_risk.max_drawdown)}</td><td>{percent(c.daily_risk.annualized_volatility)}</td><td>{c.executions.length}</td><td>{c.exclusions.length}</td></tr>)}</tbody></table></div>

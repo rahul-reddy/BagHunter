@@ -1,7 +1,8 @@
 # Historical export adapter and coverage audit
 
 This adapter ingests a **normalized local export**, not a vendor API. The owner has Finviz Elite;
-no export or authenticated provider connection has been supplied. See [Finviz handoff](FINVIZ.md).
+current Finviz snapshots and SEC filings are connected separately. Historical exports must retain
+original dated semantics. See [Finviz handoff](FINVIZ.md).
 The adapter enables a licensed source to be brought into a bounded, auditable staging area.
 It does not activate candidates, fit a model, establish alpha, or verify a data license independently.
 
@@ -77,7 +78,10 @@ Next step after a provider/export is supplied: map its original format to this c
 audit coverage and entitlements, and only then add explicit real-data research activation with tests.
 
 
-Optional dated `industry_history.json` is supported by historical-import-v3 when checksum-listed
+Optional dated `industry_history.json` is supported by historical-import-v4 when checksum-listed
 in the manifest. Source IDs and permanent identities must match the bundle; publications cannot
 postdate retrieval. Known revisions and half-open validity are separate from retrieval. Records
-remain quarantined. See COHORT_CONTEXT.md. V3 snapshot identities preserve older derived archives.
+remain quarantined. See COHORT_CONTEXT.md. V4 snapshot identities preserve older derived archives.
+Optional checksum-listed `market_caps.json` preserves explicit dated USD observations; see
+[admission controls](ADMISSION.md). Omission remains an explicit coverage gap, without conversion
+of current Finviz reported cap values or automatic research activation.

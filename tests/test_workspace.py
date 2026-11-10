@@ -352,6 +352,17 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     )
 
     data = client.get(f"/runs/{after}").json()
+    catalog = data["portfolio"]["comparator_catalog"]
+    assert client.get(f"/runs/{after}/reports/comparator_catalog.json").json() == catalog
+    assert catalog == json.loads(
+        (root / "runs" / after / "reports/comparator_catalog.json").read_text()
+    )
+    assert catalog["dataset_sha256"] == data["sources"][0]["sha256"]
+    assert len(catalog["attempts"]) == 8
+    unavailable = [
+        a for a in catalog["attempts"] if a["status"] == "UNAVAILABLE_DATED_ANNUAL_EARNINGS"
+    ]
+    assert len(unavailable) == 1 and unavailable[0]["metrics"] is None
     contracts = data["data_contracts"]
     assert client.get(f"/runs/{after}/reports/canonical_contracts.json").json() == contracts
     assert len(contracts["tables"]) == 10

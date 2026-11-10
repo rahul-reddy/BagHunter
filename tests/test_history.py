@@ -334,3 +334,113 @@ def test_optional_industry_integrity_and_vintage_boundaries_reject(bundle, mutat
         (bundle / "industry_history.json").write_text("[]", encoding="utf-8")
     with pytest.raises(ValueError):
         LocalHistoryProvider(bundle)
+
+
+def test_optional_dated_usd_caps_are_hashed_bounded_and_quarantined(bundle, tmp_path):
+    row = {
+        "security_id": "fixture-history-a",
+        "observed_at": "2020-01-02T00:00:00Z",
+        "published_at": "2020-01-02T12:00:00Z",
+        "valid_until": "2020-01-04T00:00:00Z",
+        "value_usd": 0,
+        "currency": "USD",
+        "source_id": "fixture-history-v1",
+    }
+    source_id = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))["source_id"]
+    row["source_id"] = source_id
+    path = bundle / "market_caps.json"
+    path.write_text(json.dumps([row]), encoding="utf-8")
+    manifest_path = bundle / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["files"]["market_caps"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    provider = LocalHistoryProvider(bundle)
+    assert provider.get_market_caps([row["security_id"]], "2020-01-02T11:59:59Z") == []
+    assert (
+        provider.get_market_caps([row["security_id"]], "2020-01-02T12:00:00Z")[0]["value_usd"] == 0
+    )
+    assert provider.get_market_caps([row["security_id"]], "2020-01-04T00:00:00Z") == []
+    output = tmp_path / "imported"
+    report = ingest(bundle, output)
+    archive = output / "fixture" / report["snapshot_id"]
+    assert report["counts"]["market_caps"] == 1
+    assert (archive / "raw/market_caps.json").read_bytes() == path.read_bytes()
+    assert (archive / "silver/market_caps.parquet").is_file()
+    change(bundle, "market_caps", lambda rows: rows[0].update(source_id="other-source"))
+    with pytest.raises(ValueError, match="source_id"):
+        LocalHistoryProvider(bundle)
+
+
+@pytest.mark.parametrize(
+    "change_row",
+    [
+        {"security_id": "unknown"},
+        {"currency": "EUR"},
+        {"published_at": "2028-01-01T00:00:00Z"},
+        {"value_usd": "100"},
+    ],
+)
+def test_optional_market_cap_source_units_identity_and_clock_reject(bundle, change_row):
+    manifest_path = bundle / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    rows = [
+        {
+            "security_id": "fixture-history-a",
+            "observed_at": "2020-01-02T00:00:00Z",
+            "published_at": "2020-01-02T12:00:00Z",
+            "valid_until": "2030-01-01T00:00:00Z",
+            "value_usd": 100,
+            "currency": "USD",
+            "source_id": manifest["source_id"],
+            **change_row,
+        }
+    ]
+    path = bundle / "market_caps.json"
+    path.write_text(json.dumps(rows), encoding="utf-8")
+    manifest["files"]["market_caps"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError):
+        LocalHistoryProvider(bundle)
+
+
+def test_industry_and_capitalization_optional_tables_coexist_without_source_promotion(
+    bundle, tmp_path
+):
+    source_id = LocalHistoryProvider(bundle).manifest.source_id
+    add_industry_table(
+        bundle,
+        [
+            {
+                "security_id": "fixture-history-a",
+                "industry": "Fixture industry",
+                "industry_version": "fixture-v1",
+                "valid_from": "2019-01-01",
+                "published_at": "2020-01-01T00:00:00Z",
+                "source_id": source_id,
+            }
+        ],
+    )
+    path = bundle / "market_caps.json"
+    path.write_text("[]", encoding="utf-8")
+    change(
+        bundle,
+        "market_caps",
+        lambda rows: rows.append(
+            {
+                "security_id": "fixture-history-a",
+                "observed_at": "2020-01-02T00:00:00Z",
+                "published_at": "2020-01-02T00:00:00Z",
+                "valid_until": "2020-01-04T00:00:00Z",
+                "value_usd": 100,
+                "currency": "USD",
+                "source_id": source_id,
+            }
+        ),
+    )
+    report = ingest(bundle, tmp_path / "imported")
+    assert report["status"] == "QUARANTINED_NOT_RESEARCH_READY"
+    assert report["counts"]["market_caps"] == report["counts"]["industry_records"] == 1
+    silver = tmp_path / "imported/fixture" / report["snapshot_id"] / "silver"
+    assert (silver / "market_caps.parquet").is_file()
+    assert (silver / "industry_history.parquet").is_file()
+    assert ingest(bundle, tmp_path / "imported") == report
