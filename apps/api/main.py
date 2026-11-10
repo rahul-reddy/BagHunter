@@ -401,9 +401,12 @@ def compare_runs(run_id: str, previous_id: str) -> dict[str, Any]:
 @app.get("/runs/{run_id}/tables/{table_name}.parquet")
 def canonical_download(run_id: str, table_name: str) -> Response:
     data = read_run(run_id)
-    if table_name not in SCHEMAS or table_name not in data.get("data_contracts", {}).get(
-        "tables", {}
-    ):
+    inventory = data.get("data_contracts")
+    if table_name not in SCHEMAS or inventory is None:
+        raise HTTPException(404, "No saved canonical table")
+    if not isinstance(inventory, dict) or not isinstance(inventory.get("tables"), dict):
+        raise HTTPException(503, "Invalid saved canonical inventory")
+    if table_name not in inventory["tables"]:
         raise HTTPException(404, "No saved canonical table")
     folder = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest")) / "runs" / run_id
     relative = f"contracts/{table_name}.parquet"

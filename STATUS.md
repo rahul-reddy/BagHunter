@@ -25,6 +25,10 @@ ingestion_at field to legacy input evidence. The profile now preserves only supp
 fields; explicit null and known ingestion times remain retained. The original exact-citation/input-
 immutability test is unchanged, and new cases exercise absent/null/known ingestion metadata.
 Previous approval covers the older head; this correction requires new CI and independent review.
+A further legacy-boundary advisory exposed explicit-null contract descriptors causing a 500.
+Null/missing inventories now return 404, while malformed descriptors fail closed with 503;
+new cases preserve the existing corrupt-download and no-recomputation assertions. The focused
+41-check suite passed again with one Windows link skip after the inventory guard.
 The directory-publication retry advisory is also addressed with bounded retries. Simulated
 transient locks recover; permanent locks leave no partial assertion archive or source-pointer
 change. All 41 focused citation/contract/dossier checks passed with one Windows link-permission

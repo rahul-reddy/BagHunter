@@ -213,3 +213,8 @@ def test_read_only_download_checks_saved_manifest_and_never_rebuilds_legacy(tmp_
     (folder / "run.json").write_text(json.dumps(run), encoding="utf-8")
     write_integrity(folder)
     assert client.get(f"/runs/{run_id}/tables/instrument.parquet").status_code == 404
+    for inventory, expected in [(None, 404), ([], 503), ({"tables": None}, 503)]:
+        run["data_contracts"] = inventory
+        (folder / "run.json").write_text(json.dumps(run), encoding="utf-8")
+        write_integrity(folder)
+        assert client.get(f"/runs/{run_id}/tables/instrument.parquet").status_code == expected
