@@ -188,6 +188,7 @@ def event_study(dataset: Dataset, policy: EventPathPolicy) -> dict[str, Any]:
             policy.seed,
             horizon_years=policy.horizon_years,
             max_hit_threshold=policy.max_hit_threshold,
+            industry_history=dataset.industry_history,
         )
         row["pairs"] = pairs
         row["cases"] = sum(m["outcome_group"] == "CASE" for m in row["members"])
@@ -258,7 +259,8 @@ def event_report(report: dict[str, Any] | None, run_id: str) -> str:
                 f"Case {pair['case_security_id']}; control {pair['control_security_id']}; "
                 f"control probability {pair['control_sampling_probability']}; "
                 f"sampling weight {pair['control_weight']}. Retrospective strata: "
-                f"{', '.join(pair['strata'])}.",
+                f"{json.dumps(pair['strata'], ensure_ascii=False)}; "
+                f"matching basis {pair.get('matching_basis', 'LEGACY_SECTOR_PROXY')}.",
                 "",
             ]
             for sid in (pair["case_security_id"], pair["control_security_id"]):

@@ -5,8 +5,10 @@ import random
 from datetime import date, datetime
 from typing import Any
 
+from packages.research.cohort_context import industry_at
 from packages.research.features import eligible, utc_asof
-from packages.shared.models import Action, Bar, Instrument
+from packages.shared.models import Action, Bar, IndustryClassification, Instrument
+from packages.shared.numeric import require_finite
 
 
 def wealth_path(
@@ -90,14 +92,20 @@ def matched_pairs(
     *,
     horizon_years: int = 1,
     max_hit_threshold: float = 5,
+    industry_history: list[IndustryClassification] | None = None,
 ) -> list[dict[str, Any]]:
     asof = utc_asof(asof)
     if (
-        horizon_years not in (1, 2, 3, 5)
+        type(horizon_years) is not int
+        or horizon_years not in (1, 2, 3, 5)
+        or type(seed) is not int
+        or not 0 <= seed < 2**32
+        or type(max_hit_threshold) not in (int, float)
         or not math.isfinite(max_hit_threshold)
         or not 1 <= max_hit_threshold <= 100
     ):
         raise ValueError("Bounded matching horizon/threshold required")
+    require_finite(labels, "matching outcomes")
     pool = {i.security_id: i for i in instruments if eligible(i, asof)}
     labels = [
         row
@@ -106,36 +114,76 @@ def matched_pairs(
         and row["horizon_years"] == horizon_years
         and row["max_multiple"] is not None
     ]
-    cases = [row for row in labels if row["max_multiple"] >= max_hit_threshold]
+    if len({row["security_id"] for row in labels}) != len(labels):
+        raise ValueError("Duplicate matching outcome identity")
+    if any(type(row["max_multiple"]) not in (int, float) for row in labels):
+        raise ValueError("Matching multiple must be numeric")
+    cases = sorted(
+        [row for row in labels if row["max_multiple"] >= max_hit_threshold],
+        key=lambda row: row["security_id"],
+    )
     rng = random.Random(seed)
     pairs = []
+    industry_rows: dict[str, list[IndustryClassification]] = {}
+    for classification in industry_history or []:
+        industry_rows.setdefault(classification.security_id, []).append(classification)
+    contexts = {sid: industry_at(industry_rows.get(sid, []), sid, asof) for sid in pool}
     for case in cases:
         ci = pool.get(case["security_id"])
         if ci is None:
             continue
-        strata = (ci.sector, ci.cap_bucket, ci.liquidity_bucket, ci.price_bucket)
-        controls = sorted(
-            [
-                row["security_id"]
-                for row in labels
-                if row["max_multiple"] < max_hit_threshold
-                and row["security_id"] in pool
-                and (
-                    pool[row["security_id"]].sector,
-                    pool[row["security_id"]].cap_bucket,
-                    pool[row["security_id"]].liquidity_bucket,
-                    pool[row["security_id"]].price_bucket,
-                )
-                == strata
-            ]
+        case_context = contexts[ci.security_id]
+        if case_context["status"] == "AMBIGUOUS_KNOWN_CLASSIFICATION":
+            continue
+        dated_industry = case_context["status"] == "DATED_CLASSIFICATION_AVAILABLE"
+        basis = "DATED_INDUSTRY_METADATA" if dated_industry else "EXPLICIT_SECTOR_PROXY"
+        grouping = (
+            (case_context["industry_version"], case_context["industry"])
+            if dated_industry
+            else ci.sector
         )
+        strata = (grouping, ci.cap_bucket, ci.liquidity_bucket, ci.price_bucket)
+        controls = []
+        for row in labels:
+            sid = row["security_id"]
+            if row["max_multiple"] >= max_hit_threshold or sid not in pool:
+                continue
+            instrument = pool[sid]
+            context = contexts[sid]
+            if context["status"] == "AMBIGUOUS_KNOWN_CLASSIFICATION":
+                continue
+            other_group: tuple[Any, Any] | str
+            if dated_industry:
+                if context["status"] != "DATED_CLASSIFICATION_AVAILABLE":
+                    continue
+                other_group = (context["industry_version"], context["industry"])
+            else:
+                other_group = instrument.sector
+            if (
+                other_group,
+                instrument.cap_bucket,
+                instrument.liquidity_bucket,
+                instrument.price_bucket,
+            ) == strata:
+                controls.append(sid)
+        controls.sort()
         if controls:
+            selected_control = rng.choice(controls)
             pairs.append(
                 {
                     "anchor": str(asof.date()),
                     "case_security_id": ci.security_id,
-                    "control_security_id": rng.choice(controls),
-                    "strata": strata,
+                    "control_security_id": selected_control,
+                    "matching_basis": basis,
+                    "case_industry_context": case_context,
+                    "control_industry_context": contexts[selected_control],
+                    "strata": (
+                        case_context["industry_version"],
+                        case_context["industry"],
+                        *strata[1:],
+                    )
+                    if dated_industry
+                    else strata,
                     "matching_seed": seed,
                     "horizon_years": horizon_years,
                     "max_hit_threshold": max_hit_threshold,

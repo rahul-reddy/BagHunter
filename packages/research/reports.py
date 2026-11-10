@@ -127,6 +127,20 @@ def case_report(run: dict[str, Any]) -> str:
                 "",
             ]
         )
+        lines.append(f"Matching basis: {pair.get('matching_basis', 'LEGACY_SECTOR_PROXY')}.")
+        for role in ("case", "control"):
+            context = pair.get(f"{role}_industry_context")
+            if context and context.get("industry") is not None:
+                if (
+                    _clock(context["asof"]) != anchor_clock
+                    or _clock(context["latest_publication"]) > anchor_clock
+                ):
+                    raise ValueError("Historical industry context exceeds its anchor")
+                lines.append(
+                    f"{role}: {context['industry']} / {context['industry_version']}; "
+                    f"known {_clock(context['latest_publication']).isoformat()}; "
+                    f"sources {json.dumps(context['source_ids'])}."
+                )
         for sid in (pair["case_security_id"], pair["control_security_id"]):
             feature = next(
                 (f for f in run["study"].get("anchor_features", []) if f["security_id"] == sid),

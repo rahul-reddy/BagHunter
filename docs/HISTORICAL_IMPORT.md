@@ -75,3 +75,9 @@ an empty filing history. Credentialed vendor HTTP access and historical SEC pars
 
 Next step after a provider/export is supplied: map its original format to this contract, independently
 audit coverage and entitlements, and only then add explicit real-data research activation with tests.
+
+
+Optional dated `industry_history.json` is supported by historical-import-v3 when checksum-listed
+in the manifest. Source IDs and permanent identities must match the bundle; publications cannot
+postdate retrieval. Known revisions and half-open validity are separate from retrieval. Records
+remain quarantined. See COHORT_CONTEXT.md. V3 snapshot identities preserve older derived archives.
