@@ -7,11 +7,12 @@ risk flags. Blank thresholds disable a filter; zero is explicit, and missing val
 zero. Known numeric values sort before missing values with deterministic ID ties. These controls
 only filter the displayed saved run, not the strategy policy or backtest.
 
-At the unchanged pre-integration source on October 28, frontend lint/types/build and three focused
-browser/parser/compatibility checks passed, including desktop/mobile Axe. An initial test compared
-runtime served_at clocks as immutable data; it was corrected to compare the actual saved research
-fields. No production behavior was weakened. Integrate current delivered main, rerun current-source
-checks, then exact-head CI, independent review, guarded merge and main preview.
+After integrating delivered classification main on November 10, frontend lint/types/build and
+all three focused parser/Radar/compatibility browser checks passed on the current source,
+including desktop/mobile Axe, missing-last sorts and unchanged saved research fields. The earlier
+runtime-clock test issue is fixed by comparing immutable research fields, not served_at.
+Finish exact-head CI, independent review, guarded merge and main preview after the canonical
+contracts increment lands; no final combined-delivery claim is made yet.
 
 Canonical contracts/persisted assertions are undergoing final integration in BagHunter-operations.
 The per-item audit also identifies regime-cohort controls, dated industry matching and thin named
