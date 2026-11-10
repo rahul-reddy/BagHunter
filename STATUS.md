@@ -1,6 +1,8 @@
-# Current handoff — canonical contracts and persisted dossier assertions / 2026-10-28
+# Current handoff — canonical contracts and persisted dossier assertions / 2026-11-10
 
-Main fbdd626281f9 delivers reports/notebook with exact-head CI/review and main acceptance.
+Main 7a40ea861c55 delivers classification PR #48 with 525 backend / 46 browser CI tests,
+independent exact-head approval and main archive/API/filter/accessibility preview. Reports and
+notebook also have delivered-main acceptance. This branch integrates that main.
 Current feat/canonical-data-contracts adds ten schema-stable Parquet contracts, null-count/hash
 inventory, safe read-only downloads and Data Quality inspection. Optional source identity,
 vendor-recording and ingestion metadata are preserved without inventing unknown values.
@@ -18,13 +20,12 @@ permission case skipped for Linux CI. Backend lint/format/types passed. Frontend
 and all three new browsers passed, including actual Thesis Studio export through the offline CLI,
 source-bound Parquet/hash downloads, legacy unavailability and desktop/mobile Axe/keyboard checks.
 
-After integrating main fbdd626281f9, all 32 focused contract/dossier/archive/API tests passed
-with one Windows symlink skip; repository lint/format/types and all three browsers passed.
-Finish exact-head
-CI, independent review, guarded merge and main previews. Classification PR #48 is separate; a
-new weekend-terminal missing-proceeds boundary is being corrected before delivery. The full
-00–08 per-item release audit remains open. Finviz Elite + SEC remain scope; zero verified real
-investment theses. The completion goal stays active.
+On November 10 after integrating classification main, 32 focused canonical/dossier/archive/API
+checks passed with one Windows symlink skip. Repository lint/format/types and frontend lint/types/
+build passed. Five combined classification/contracts browsers passed, including actual dossier
+export -> offline CLI persistence and desktop/mobile Axe. Finish exact-head full CI, independent
+review, guarded merge and main previews. Radar filters and the full 00–08 audit remain active.
+Finviz Elite + SEC remain scope; zero verified real theses; the full goal is unfinished.
 
 ---
 
