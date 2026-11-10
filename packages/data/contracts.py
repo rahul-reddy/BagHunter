@@ -9,6 +9,7 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from packages.research.admission import capitalization_at
 from packages.research.features import eligible, utc_asof
 from packages.shared.models import Dataset
 from packages.shared.numeric import require_finite
@@ -130,7 +131,9 @@ def canonical_tables(dataset: Dataset, run: dict[str, Any]) -> dict[str, list[di
                 asof_date=clock.date().isoformat(),
                 eligible=included,
                 rejection_reason=None if included else "NOT_ASOF_LISTED_COMMON_SHARE",
-                marketcap_asof=None,
+                marketcap_asof=capitalization_at(
+                    dataset.market_caps, instrument.security_id, clock
+                )["value_usd"],
                 dollar_volume=signals.get(instrument.security_id, {}).get("dollar_volume_20d"),
                 source_snapshot_id=checksum,
                 eligibility_basis="FIXTURE_LISTING_TYPE_ONLY_NOT_STRATEGY_ELIGIBILITY",

@@ -1,3 +1,35 @@
+# Current handoff — dated admission and earnings-comparator availability / 2026-11-10
+
+This branch adds explicit USD capitalization observations, optional numeric cap/annualized 20D
+volatility admission bounds and retained target/exclusion evidence. Annual earnings growth uses
+knowable annual net-income facts after filing lag; revenue/quarterly income cannot substitute.
+Every declared comparator attempt is saved, including missing earnings with null metrics.
+Validation Lab displays/downloads this catalog and preserves legacy unavailability. Optional
+checksum-listed market-cap exports remain quarantined. See docs/ADMISSION.md.
+
+Executed: 73 admission/history/contracts backend cases passed, followed by 16 canonical cases
+including explicit-zero/future-cap export boundaries. The archive/API workspace integration passed.
+Backend lint/types and frontend lint/types/build passed. Both current and legacy comparator
+browsers passed with archive downloads, mobile/desktop Axe and keyboard checks. One initial
+combined browser exceeded its 30-second limit at the final legacy reload; separating the two
+independent flows preserved every assertion and both now pass.
+
+After integrating the report and dated cohort/industry changes, all 112 focused admission,
+history, canonical, validation-report and cohort tests passed. An additional combined optional-
+tables case passed, preserving industry and capitalization in the same quarantined bundle.
+Frontend lint/types/build and five combined cohort/comparator/legacy/report browsers passed.
+The combined importer is v4, preserving previous derived archive identities. This composition
+still requires full exact-head CI and independent review before guarded delivery.
+
+Main fe060062338d delivers Radar and canonical contracts. Reports PR #55 has 40 current-source
+backend cases, browser acceptance and Gemini approval; CI is running. Dated cohort/industry work
+is committed/tested separately. Integrate those delivered changes, then finish final gates,
+exact-head CI, independent review and guarded merge. Continue the full 00–08 release audit.
+Finviz Elite + SEC remain scope; zero verified real theses. Full completion goal stays active.
+
+
+---
+
 # Current handoff — dated industry and cohort-regime context / 2026-11-10
 
 This branch integrates main fe060062338d plus the named validation/adverse report change in

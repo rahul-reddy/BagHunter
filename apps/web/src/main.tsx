@@ -10,7 +10,7 @@ import { TechnicalEvidence, type Technical, type RelativeEvidence } from './Tech
 import { EventPaths, type EventPathReport } from './EventPaths';
 import { FinvizBrowser } from './FinvizBrowser';
 import { SecEvidenceBrowser } from './SecEvidenceBrowser';
-import type { PortfolioComparison } from './PortfolioComparisons';
+import type { ComparatorCatalog, PortfolioComparison } from './PortfolioComparisons';
 import type { DailyRisk } from './DailyRiskPanel';
 import type { Sensitivity } from './RankingSensitivity';
 import type { NegativeControlReport } from './NegativeControls';
@@ -37,7 +37,7 @@ export type Run = {
   sources: {source_id: string; sha256: string; latest_source_timestamp: string;
     coverage: string; license_note: string; market_provider: {reason: string}}[];
   discovery?: {history_scope?: string; history?: Record<string, StageHistoryRow[]>; sensitivity?: Sensitivity; policy: Record<string, unknown>; policy_sha256: string; stage_counts: Record<string, number>; breadth: number | null; regime: string; benchmark_return_63d: number | null};
-  portfolio?: {comparator_runs?: PortfolioComparison[]; daily_risk?: DailyRisk; daily_curve?: {date: string; equity: number; basis: string}[]; policy: {capital: number; max_position: number; max_sector: number; participation: number; one_way_cost_bps: number}; ending_equity: number;
+  portfolio?: {comparator_catalog?: ComparatorCatalog; comparator_runs?: PortfolioComparison[]; daily_risk?: DailyRisk; daily_curve?: {date: string; equity: number; basis: string}[]; policy: {capital: number; max_position: number; max_sector: number; participation: number; one_way_cost_bps: number}; ending_equity: number;
     comparators: {id?: string; allocation?: string; selector: string; metrics: {total_return: number | null; max_drawdown: number | null}; executions: number; excluded: number; ending_equity: number}[];
     metrics: {total_return: number | null; max_drawdown: number | null; win_rate: number | null}; limitations: string[];
     rows: {decision: string; deployment_fraction: number; costs: number; turnover: number; ending_equity: number}[];

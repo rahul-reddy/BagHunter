@@ -3,7 +3,7 @@
 import copy
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -16,7 +16,7 @@ from packages.data.contracts import SCHEMAS, canonical_tables, write_contracts
 from packages.data.fixture import fixture
 from packages.data.history import HistoricalInstrument, HistoricalSymbol
 from packages.data.run_archive import write_integrity
-from packages.shared.models import Bar, Fact
+from packages.shared.models import Bar, CapitalizationObservation, Fact
 
 
 @pytest.fixture
@@ -102,6 +102,30 @@ def test_execution_export_preserves_costs_without_inventing_exit_price_or_time(s
     assert rejection["rejected_reason"] == "PRICE_OR_LIQUIDITY_FLOOR"
     assert rejection["assumed_fill"] is None and rejection["costs"] is None
     assert rejection["timestamp"] == "2021-01-01T23:00:00+00:00"
+
+
+def test_universe_export_uses_only_dated_usd_capitalization_not_current_reported_values(
+    source_and_run,
+):
+    source, run = source_and_run
+    clock = datetime.fromisoformat(run["asof"])
+    known = CapitalizationObservation(
+        security_id="fx-compound",
+        observed_at=clock,
+        published_at=clock,
+        valid_until=clock + timedelta(days=1),
+        value_usd=0,
+        currency="USD",
+        source_id="fixture-v1",
+    )
+    future = known.model_copy(
+        update={"value_usd": 1e9, "published_at": clock + timedelta(seconds=1)}
+    )
+    source = source.model_copy(update={"market_caps": [known, future]})
+    run["sources"][0]["sha256"] = hashlib.sha256(source.model_dump_json().encode()).hexdigest()
+    rows = canonical_tables(source, run)["universe_membership"]
+    assert next(row for row in rows if row["security_id"] == "fx-compound")["marketcap_asof"] == 0
+    assert next(row for row in rows if row["security_id"] == "fx-steady")["marketcap_asof"] is None
 
 
 def test_filing_events_are_attributed_source_records_without_classification(source_and_run):

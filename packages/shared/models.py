@@ -141,6 +141,34 @@ class IndustryClassification(Record):
         return self
 
 
+class CapitalizationObservation(Record):
+    security_id: str = Field(min_length=1, max_length=100)
+    observed_at: datetime
+    published_at: datetime
+    valid_until: datetime
+    value_usd: float = Field(ge=0, le=1e16)
+    currency: Literal["USD"]
+    source_id: str = Field(min_length=1, max_length=100)
+
+    @field_validator("value_usd", mode="before")
+    @classmethod
+    def numeric_capitalization(cls, value: object) -> object:
+        if type(value) not in (int, float):
+            raise ValueError("Capitalization must be an explicit finite USD number")
+        return value
+
+    @model_validator(mode="after")
+    def dated_observation(self) -> "CapitalizationObservation":
+        if any(
+            value.utcoffset() is None
+            for value in (self.observed_at, self.published_at, self.valid_until)
+        ):
+            raise ValueError("Capitalization clocks require timezones")
+        if self.published_at < self.observed_at or self.valid_until <= self.observed_at:
+            raise ValueError("Invalid capitalization publication or validity timeline")
+        return self
+
+
 class Dataset(Record):
     mode: Literal["FIXTURE"]
     instruments: list[Instrument]
@@ -149,3 +177,4 @@ class Dataset(Record):
     facts: list[Fact]
     actions: list[Action]
     industry_history: list[IndustryClassification] = Field(default_factory=list)
+    market_caps: list[CapitalizationObservation] = Field(default_factory=list)

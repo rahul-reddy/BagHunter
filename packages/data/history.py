@@ -16,12 +16,20 @@ import pyarrow.parquet as pq
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from packages.research.features import facts_at, utc_asof
-from packages.shared.models import Action, Bar, Fact, IndustryClassification, Record
+from packages.shared.models import (
+    Action,
+    Bar,
+    CapitalizationObservation,
+    Fact,
+    IndustryClassification,
+    Record,
+)
 
 TABLES = ("instruments", "symbols", "universe", "bars", "actions", "facts", "sessions")
+OPTIONAL_TABLES = ("industry_history", "market_caps")
 MAX_FILE_BYTES = 20 * 1024 * 1024
 MAX_EXPECTED_CELLS = 5_000_000
-VERSION = "historical-import-v3"
+VERSION = "historical-import-v4"
 
 
 class ImportRecord(Record):
@@ -66,7 +74,7 @@ class Manifest(ImportRecord):
             raise ValueError(
                 "source_url must be a public source reference without credentials/query"
             )
-        if not set(TABLES) <= set(self.files) <= (set(TABLES) | {"industry_history"}):
+        if not set(TABLES).issubset(self.files) or set(self.files) - set(TABLES + OPTIONAL_TABLES):
             raise ValueError("manifest must hash every required table, including empty tables")
         if any(
             len(h) != 64 or any(c not in "0123456789abcdef" for c in h) for h in self.files.values()
@@ -160,10 +168,7 @@ class LocalHistoryProvider:
         self.raw = {"manifest": read_bytes(manifest_path, 65536)}
         self.manifest = Manifest.model_validate_json(self.raw["manifest"])
         parsed: dict[str, Any] = {}
-        for name in (
-            *TABLES,
-            *(("industry_history",) if "industry_history" in self.manifest.files else ()),
-        ):
+        for name in self.manifest.files:
             path = (self.directory / f"{name}.json").resolve()
             if path.parent != self.directory:
                 raise ValueError("import table must stay within bundle directory")
@@ -173,6 +178,8 @@ class LocalHistoryProvider:
             value = json.loads(body)
             if not isinstance(value, list):
                 raise ValueError(f"table must be a JSON array: {name}")
+            if name in OPTIONAL_TABLES and len(value) > 100_000:
+                raise ValueError("optional table exceeds row budget")
             parsed[name] = value
             self.raw[name] = body
         self.instruments = [HistoricalInstrument.model_validate(r) for r in parsed["instruments"]]
@@ -182,6 +189,9 @@ class LocalHistoryProvider:
         self.bars = [Bar.model_validate(r) for r in parsed["bars"]]
         self.actions = [Action.model_validate(r) for r in parsed["actions"]]
         self.facts = [Fact.model_validate(r) for r in parsed["facts"]]
+        self.market_caps = [
+            CapitalizationObservation.model_validate(r) for r in parsed.get("market_caps", [])
+        ]
         self.sessions = [date.fromisoformat(s) for s in parsed["sessions"]]
         if len(parsed.get("industry_history", [])) > 100_000:
             raise ValueError("Industry history exceeds import budget")
@@ -203,10 +213,18 @@ class LocalHistoryProvider:
             self.actions,
             self.facts,
             self.industry_history,
+            self.market_caps,
         ):
             if any(r.security_id not in ids for r in rows):
                 raise ValueError("table refers to an unknown permanent security ID")
-        for rows in (self.membership, self.bars, self.actions, self.facts, self.industry_history):
+        for rows in (
+            self.membership,
+            self.bars,
+            self.actions,
+            self.facts,
+            self.industry_history,
+            self.market_caps,
+        ):
             if any(r.source_id != self.manifest.source_id for r in rows):
                 raise ValueError("row source_id does not match manifest")
         keys = [(b.security_id, b.session) for b in self.bars]
@@ -221,6 +239,7 @@ class LocalHistoryProvider:
             + [m.published_at for m in self.membership]
             + [m.asof_time for m in self.membership]
             + [row.published_at for row in self.industry_history]
+            + [m.published_at for m in self.market_caps]
         )
         if any(p > self.manifest.retrieved_at for p in publications):
             raise ValueError("source contains observations after its declared retrieval time")
@@ -326,6 +345,18 @@ class LocalHistoryProvider:
     def get_filings(self, cik: str, start: str, end: str) -> list[dict[str, Any]]:
         raise NotImplementedError("filing documents are not included in a market-history bundle")
 
+    def get_market_caps(self, security_ids: list[str], asof: str) -> list[dict[str, Any]]:
+        self._known_ids(security_ids)
+        clock = self._clock(asof)
+        return [
+            row.model_dump(mode="json")
+            for row in self.market_caps
+            if row.security_id in security_ids
+            and row.observed_at <= clock
+            and row.published_at <= clock
+            and clock < row.valid_until
+        ]
+
     def _known_ids(self, security_ids: list[str]) -> None:
         if not set(security_ids).issubset({i.security_id for i in self.instruments}):
             raise ValueError("requested permanent ID is not present in the bundle")
@@ -352,6 +383,8 @@ class LocalHistoryProvider:
             flags.append("DATED_INDUSTRY_HISTORY_MISSING")
         if not self.facts:
             flags.append("FUNDAMENTALS_MISSING")
+        if not self.market_caps:
+            flags.append("DATED_USD_CAPITALIZATION_MISSING")
         if not self.membership:
             flags.append("UNIVERSE_MEMBERSHIP_MISSING")
         if not self.sessions:
@@ -396,6 +429,7 @@ class LocalHistoryProvider:
                 "bars": len(self.bars),
                 "universe_rows": len(self.membership),
                 "facts": len(self.facts),
+                "market_caps": len(self.market_caps),
                 "actions": len(self.actions),
                 "industry_records": len(self.industry_history),
                 "missing_price_sessions": missing,
@@ -455,6 +489,7 @@ def ingest(directory: Path, output: Path) -> dict[str, Any]:
             ("actions", provider.actions),
             ("facts", provider.facts),
             ("industry_history", provider.industry_history),
+            ("market_caps", provider.market_caps),
         ):
             if rows:
                 pq.write_table(

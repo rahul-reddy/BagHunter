@@ -15,7 +15,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from packages.backtest.classification import classification_markdown, evaluate_classification
-from packages.backtest.constrained import PortfolioPolicy, comparator_runs, simulate
+from packages.backtest.constrained import PortfolioPolicy, comparator_catalog, simulate
 from packages.backtest.negative_controls import negative_controls
 from packages.backtest.robustness import robustness, robustness_markdown
 from packages.backtest.toy import evaluate
@@ -187,7 +187,9 @@ def run(
     )
     portfolio = simulate(dataset, portfolio_policy or PortfolioPolicy())
     validation["robustness"] = robustness(dataset, portfolio_policy, portfolio)
-    comparisons = comparator_runs(dataset, portfolio_policy)
+    catalog = comparator_catalog(dataset, portfolio_policy)
+    comparisons = catalog["reports"]
+    portfolio["comparator_catalog"] = {k: v for k, v in catalog.items() if k != "reports"}
     portfolio["comparator_runs"] = comparisons
     portfolio["comparators"] = [
         {
@@ -271,6 +273,7 @@ def run(
         )
         dump(staging / "reports" / "portfolio.json", portfolio)
         dump(staging / "reports" / "portfolio_comparators.json", portfolio["comparator_runs"])
+        dump(staging / "reports" / "comparator_catalog.json", portfolio["comparator_catalog"])
         dump(staging / "reports" / "portfolio_policy.json", portfolio["policy"])
         dump(staging / "reports" / "cohort_grid.json", study["cohorts"])
         dump(staging / "reports" / "event_paths.json", study["event_paths"])

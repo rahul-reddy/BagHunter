@@ -5,11 +5,12 @@ import math
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from packages.backtest.allocation import MODES, Allocation, allocation_targets, dated_volatility
 from packages.backtest.risk import daily_risk
 from packages.backtest.validation import performance
+from packages.research.admission import annual_earnings_growth, capitalization_at
 from packages.research.features import eligible, snapshot
 from packages.research.outcomes import wealth_path
 from packages.shared.models import Action, Dataset, Record
@@ -18,9 +19,9 @@ from packages.shared.numeric import require_finite
 
 class PortfolioPolicy(Record):
     version: Literal["portfolio-v2-unvalidated"] = "portfolio-v2-unvalidated"
-    selector: Literal["momentum_63d", "momentum_12_1", "revenue_growth", "seeded_random"] = (
-        "momentum_63d"
-    )
+    selector: Literal[
+        "momentum_63d", "momentum_12_1", "revenue_growth", "earnings_growth", "seeded_random"
+    ] = "momentum_63d"
     allocation: Allocation = "cap_ranked"
     volatility_window: Literal[20, 60] = 60
     seed: int = 7
@@ -36,6 +37,33 @@ class PortfolioPolicy(Record):
     excluded_sectors: tuple[str, ...] = Field(default=(), max_length=50)
     excluded_cap_buckets: tuple[str, ...] = Field(default=(), max_length=50)
     delist_proceeds: Literal["reported", "zero_sensitivity"] = "reported"
+    min_capitalization_usd: float | None = Field(default=None, ge=0, le=1e16)
+    max_capitalization_usd: float | None = Field(default=None, ge=0, le=1e16)
+    max_capitalization_age_days: int = Field(default=5, strict=True, ge=0, le=365)
+    max_earnings_age_days: int = Field(default=550, strict=True, ge=0, le=730)
+    max_annualized_volatility_20d: float | None = Field(default=None, ge=0, le=10)
+
+    @field_validator(
+        "min_capitalization_usd",
+        "max_capitalization_usd",
+        "max_annualized_volatility_20d",
+        mode="before",
+    )
+    @classmethod
+    def explicit_numeric_bounds(cls, value: object) -> object:
+        if value is not None and type(value) not in (int, float):
+            raise ValueError("Admission bounds must be explicit finite numbers")
+        return value
+
+    @model_validator(mode="after")
+    def ordered_capitalization_bounds(self) -> "PortfolioPolicy":
+        if (
+            self.min_capitalization_usd is not None
+            and self.max_capitalization_usd is not None
+            and self.min_capitalization_usd > self.max_capitalization_usd
+        ):
+            raise ValueError("Minimum capitalization exceeds maximum")
+        return self
 
     @field_validator("excluded_security_ids", "excluded_sectors", "excluded_cap_buckets")
     @classmethod
@@ -51,6 +79,10 @@ class PortfolioPolicy(Record):
         return tuple(sorted(values))
 
 
+class UnavailableRankingInputs(ValueError):
+    """No dated earnings observations were rankable; a comparator must remain unavailable."""
+
+
 def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
     try:
         result = _simulate(dataset, policy)
@@ -61,6 +93,10 @@ def simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
 
 
 def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
+    if dataset.mode != "FIXTURE":
+        raise ValueError("Constrained fixture simulation cannot relabel external observations")
+    policy = PortfolioPolicy.model_validate(policy.model_dump())
+    known_earnings_inputs = 0
     source_actions = [Action.model_validate(action.model_dump()) for action in dataset.actions]
     common = [i for i in dataset.instruments if i.security_type == "common"]
     if set(policy.excluded_security_ids) - {i.security_id for i in common} or set(
@@ -157,6 +193,26 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                     )
                     continue
                 f["selection_score"] = f["revenue_growth"]
+            elif policy.selector == "earnings_growth":
+                earnings = annual_earnings_growth(
+                    dataset.facts,
+                    instrument.security_id,
+                    clock,
+                    policy.filing_lag_hours,
+                    policy.max_earnings_age_days,
+                )
+                if earnings["value"] is None:
+                    exclusions.append(
+                        {
+                            "decision": str(decision),
+                            "security_id": instrument.security_id,
+                            "reason": earnings["status"],
+                        }
+                    )
+                    continue
+                known_earnings_inputs += 1
+                f["selection_score"] = earnings["value"]
+                f["earnings_growth_evidence"] = earnings
             elif policy.selector == "seeded_random":
                 digest = hashlib.sha256(
                     f"{policy.seed}:{decision}:{instrument.security_id}".encode()
@@ -170,6 +226,54 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                         "decision": str(decision),
                         "security_id": instrument.security_id,
                         "reason": "PRICE_OR_LIQUIDITY_FLOOR",
+                    }
+                )
+                continue
+            cap = capitalization_at(
+                dataset.market_caps,
+                instrument.security_id,
+                clock,
+                policy.max_capitalization_age_days,
+            )
+            volatility = (
+                dated_volatility(dataset.bars, instrument.security_id, clock, 20)
+                if policy.max_annualized_volatility_20d is not None
+                else None
+            )
+            admission_reason = None
+            if (
+                policy.min_capitalization_usd is not None
+                or policy.max_capitalization_usd is not None
+            ):
+                cap_value = cap["value_usd"]
+                if cap_value is None:
+                    admission_reason = cap["status"]
+                elif (
+                    policy.min_capitalization_usd is not None
+                    and cap_value < policy.min_capitalization_usd
+                ):
+                    admission_reason = "BELOW_DATED_CAPITALIZATION_FLOOR"
+                elif (
+                    policy.max_capitalization_usd is not None
+                    and cap_value > policy.max_capitalization_usd
+                ):
+                    admission_reason = "ABOVE_DATED_CAPITALIZATION_CEILING"
+            if admission_reason is None and volatility is not None:
+                if volatility["value"] is None:
+                    admission_reason = "MISSING_DATED_VOLATILITY_FOR_ADMISSION"
+                elif volatility["value"] > policy.max_annualized_volatility_20d:
+                    admission_reason = "ABOVE_ANNUALIZED_20D_VOLATILITY_CEILING"
+            f["admission_evidence"] = {
+                "capitalization": cap,
+                "annualized_volatility_20d": volatility,
+            }
+            if admission_reason:
+                exclusions.append(
+                    {
+                        "decision": str(decision),
+                        "security_id": instrument.security_id,
+                        "reason": admission_reason,
+                        "admission_evidence": f["admission_evidence"],
                     }
                 )
                 continue
@@ -187,6 +291,13 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
         for target in plan["targets"]:
             target["filing_lag_hours"] = policy.filing_lag_hours
             target["known_filing_inputs"] = selected_inputs[target["security_id"]]["evidence"]
+            target["admission_evidence"] = selected_inputs[target["security_id"]][
+                "admission_evidence"
+            ]
+            if policy.selector == "earnings_growth":
+                target["earnings_growth_evidence"] = selected_inputs[target["security_id"]][
+                    "earnings_growth_evidence"
+                ]
         allocation_ledger.append(
             {"decision": str(decision), "asof_time": clock.isoformat(), **plan}
         )
@@ -347,11 +458,16 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
                 },
             }
         )
+    if policy.selector == "earnings_growth" and known_earnings_inputs == 0:
+        raise UnavailableRankingInputs("No dated rankable annual net-income growth inputs")
     return {
         "mode": "FIXTURE",
         "dataset_sha256": hashlib.sha256(dataset.model_dump_json().encode()).hexdigest(),
         "status": "CONSTRAINED_SIMULATION_NOT_EMPIRICAL_VALIDATION",
         "policy": policy.model_dump(),
+        "known_earnings_inputs": known_earnings_inputs
+        if policy.selector == "earnings_growth"
+        else None,
         "action_assumptions": [
             {
                 "security_id": a.security_id,
@@ -392,17 +508,56 @@ def _simulate(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
     }
 
 
-def comparator_runs(dataset: Dataset, policy: PortfolioPolicy) -> list[dict[str, Any]]:
+def comparator_catalog(dataset: Dataset, policy: PortfolioPolicy) -> dict[str, Any]:
     """Predeclared one-axis variations; preserve every ledger, not only favorable summaries."""
     variations = []
     if policy.allocation != "cash":
-        for selector in ("momentum_63d", "momentum_12_1", "revenue_growth", "seeded_random"):
+        for selector in (
+            "momentum_63d",
+            "momentum_12_1",
+            "revenue_growth",
+            "earnings_growth",
+            "seeded_random",
+        ):
             if selector != policy.selector:
                 variations.append({"selector": selector})
     variations.extend({"allocation": mode} for mode in MODES if mode != policy.allocation)
     result = []
+    attempts = []
     for variation in variations:
         changed = PortfolioPolicy.model_validate(policy.model_dump() | variation)
-        report = simulate(dataset, changed)
-        result.append({"id": f"{changed.selector}__{changed.allocation}", **report})
-    return result
+        identifier = f"{changed.selector}__{changed.allocation}"
+        try:
+            report = simulate(dataset, changed)
+        except UnavailableRankingInputs:
+            attempts.append(
+                {
+                    "id": identifier,
+                    "status": "UNAVAILABLE_DATED_ANNUAL_EARNINGS",
+                    "reason": "No dated rankable annual net-income growth inputs; "
+                    "no revenue proxy or cash return substituted",
+                    "policy": changed.model_dump(),
+                    "metrics": None,
+                }
+            )
+            continue
+        attempts.append(
+            {
+                "id": identifier,
+                "status": "CALCULATED_FIXTURE_COMPARATOR",
+                "reason": None,
+                "policy": changed.model_dump(),
+            }
+        )
+        result.append({"id": identifier, **report})
+    return {
+        "policy": "declared-comparator-catalog-v1",
+        "attempts": attempts,
+        "reports": result,
+        "dataset_sha256": hashlib.sha256(dataset.model_dump_json().encode()).hexdigest(),
+    }
+
+
+def comparator_runs(dataset: Dataset, policy: PortfolioPolicy) -> list[dict[str, Any]]:
+    """Compatibility view of available reports; catalog retains unavailable attempts."""
+    return comparator_catalog(dataset, policy)["reports"]  # type: ignore[no-any-return]

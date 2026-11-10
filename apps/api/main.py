@@ -466,6 +466,7 @@ def report_download(
         "toy_backtest.json": data["backtest"],
         "portfolio.json": data.get("portfolio", {}),
         "portfolio_comparators.json": data.get("portfolio", {}).get("comparator_runs", []),
+        "comparator_catalog.json": data.get("portfolio", {}).get("comparator_catalog"),
         "portfolio_policy.json": data.get("portfolio", {}).get("policy", {}),
         "cohort_grid.json": data["study"].get("cohorts", {}),
         "event_paths.json": data["study"].get("event_paths"),
