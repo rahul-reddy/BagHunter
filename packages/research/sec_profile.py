@@ -66,7 +66,7 @@ def financial_profile(normalized: dict[str, Any]) -> dict[str, Any]:
             "operating_margin": None,
             "net_margin": None,
             "cashflow_margin": None,
-            "citations": [revenue.model_dump(mode="json")],
+            "citations": [revenue.model_dump(mode="json", exclude_unset=True)],
         }
         if i:
             prior = revenues[i - 1]
@@ -76,7 +76,7 @@ def financial_profile(normalized: dict[str, Any]) -> dict[str, Any]:
             ):
                 growth = ratio(revenue.value, prior.value)
                 row["revenue_growth"] = growth - 1 if growth is not None else None
-                row["citations"].append(prior.model_dump(mode="json"))
+                row["citations"].append(prior.model_dump(mode="json", exclude_unset=True))
         for metric, amount, margin in (
             ("annual_operating_income", "operating_income", "operating_margin"),
             ("annual_net_income", "net_income", "net_margin"),
@@ -86,7 +86,7 @@ def financial_profile(normalized: dict[str, Any]) -> dict[str, Any]:
             if numerator is not None and numerator.unit == revenue.unit == "USD":
                 row[amount] = numerator.value
                 row[margin] = ratio(numerator.value, revenue.value)
-                row["citations"].append(numerator.model_dump(mode="json"))
+                row["citations"].append(numerator.model_dump(mode="json", exclude_unset=True))
         if (
             i
             and row["revenue_growth"] is not None

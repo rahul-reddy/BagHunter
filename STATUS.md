@@ -20,6 +20,16 @@ permission case skipped for Linux CI. Backend lint/format/types passed. Frontend
 and all three new browsers passed, including actual Thesis Studio export through the offline CLI,
 source-bound Parquet/hash downloads, legacy unavailability and desktop/mobile Axe/keyboard checks.
 
+First full CI recorded 556 passes and one failure: SEC profile citations added an unset null
+ingestion_at field to legacy input evidence. The profile now preserves only supplied provenance
+fields; explicit null and known ingestion times remain retained. The original exact-citation/input-
+immutability test is unchanged, and new cases exercise absent/null/known ingestion metadata.
+Previous approval covers the older head; this correction requires new CI and independent review.
+The directory-publication retry advisory is also addressed with bounded retries. Simulated
+transient locks recover; permanent locks leave no partial assertion archive or source-pointer
+change. All 41 focused citation/contract/dossier checks passed with one Windows link-permission
+skip after these fixes; backend lint/format/types passed. Fresh full CI/review remain required.
+
 On November 10 after integrating classification main, 32 focused canonical/dossier/archive/API
 checks passed with one Windows symlink skip. Repository lint/format/types and frontend lint/types/
 build passed. Five combined classification/contracts browsers passed, including actual dossier

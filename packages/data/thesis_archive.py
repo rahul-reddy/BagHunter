@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -165,5 +166,12 @@ def import_thesis(dossier: Path, run_root: Path) -> dict[str, Any]:
             (stage / "dossier.json").write_bytes(body)
             pq.write_table(table, stage / "thesis.parquet")
             (stage / "receipt.json").write_bytes(_json(receipt))
-            stage.rename(target)
+            for attempt in range(3):
+                try:
+                    stage.rename(target)
+                    break
+                except PermissionError:
+                    if attempt == 2:
+                        raise
+                    time.sleep(0.05 * (attempt + 1))
     return receipt

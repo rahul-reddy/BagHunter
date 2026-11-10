@@ -105,3 +105,15 @@ def test_overflow_is_missing_and_entity_or_clock_mismatch_rejects():
         profile([fact("2022-12-31", 1, security_id="other")])
     with pytest.raises(ValueError, match="availability policy"):
         profile([], asof="2023-04-01T00:00:00")
+
+
+@pytest.mark.parametrize("ingestion", [None, "2023-02-05T00:00:00Z"])
+def test_supplied_ingestion_metadata_is_preserved_without_inventing_absent_fields(ingestion):
+    supplied = fact("2022-12-31", 100, ingestion_at=ingestion)
+    original = copy.deepcopy(supplied)
+    row = profile([supplied])["latest"]
+    assert row["citations"] == [supplied]
+    assert row["citations"][0]["ingestion_at"] == ingestion
+    assert supplied == original
+    legacy = fact("2022-12-31", 100)
+    assert "ingestion_at" not in profile([legacy])["latest"]["citations"][0]

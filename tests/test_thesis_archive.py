@@ -182,3 +182,33 @@ def test_corrupt_run_and_linked_output_cannot_persist(dossier, tmp_path):
     with pytest.raises(ValueError, match="Linked"):
         import_thesis(path, root)
     assert list(outside.iterdir()) == []
+
+
+@pytest.mark.parametrize("permanent", [False, True])
+def test_transient_publication_lock_retries_and_permanent_lock_leaves_no_partial_archive(
+    dossier, monkeypatch, permanent
+):
+    path, root, _ = dossier
+    original = Path.rename
+    remaining = 3 if permanent else 2
+    pointer = (root / "CURRENT").read_bytes()
+
+    def locked(self, target):
+        nonlocal remaining
+        if self.name == "assertion" and remaining:
+            remaining -= 1
+            raise PermissionError("Simulated publication lock")
+        return original(self, target)
+
+    monkeypatch.setattr(Path, "rename", locked)
+    if permanent:
+        with pytest.raises(PermissionError):
+            import_thesis(path, root)
+        assert list(Path("data/research/thesis_assertions/fixture").iterdir()) == []
+    else:
+        receipt = import_thesis(path, root)
+        target = Path("data/research/thesis_assertions/fixture") / receipt["archive_id"]
+        assert (target / "dossier.json").read_bytes() == path.read_bytes()
+        assert pq.read_table(target / "thesis.parquet").num_rows == 1
+        assert not list(target.parent.glob(".staging-*"))
+    assert (root / "CURRENT").read_bytes() == pointer
