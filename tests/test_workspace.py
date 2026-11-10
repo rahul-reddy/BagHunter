@@ -365,6 +365,19 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
     path_dir = root / "runs" / after
+    for report_name in ("model_validation.md", "failed_lookalikes.md"):
+        response = client.get(f"/runs/{after}/reports/{report_name}")
+        assert response.status_code == 200
+        assert response.content == (path_dir / "reports" / report_name).read_bytes()
+        assert "archived-validation-atlas-v1" in response.text
+        assert after in response.text and data["sources"][0]["sha256"] in response.text
+        assert (
+            client.get(
+                f"/runs/{after}/reports/{report_name}", params={"previous": before}
+            ).status_code
+            == 422
+        )
+
     classification = client.get(f"/runs/{after}/reports/classification.json").json()
     assert classification == data["validation"]["classification"]
     assert classification == json.loads((path_dir / "reports/classification.json").read_text())

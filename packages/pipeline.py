@@ -37,6 +37,7 @@ from packages.research.reports import (
 )
 from packages.research.sensitivity import ranking_sensitivity
 from packages.research.technical import technical_report
+from packages.research.validation_reports import failed_lookalikes_report, model_validation_report
 
 DEFAULT_ASOF = "2022-01-03T23:00:00+00:00"
 
@@ -300,18 +301,10 @@ def run(
             encoding="utf-8",
         )
         (staging / "reports" / "failed_lookalikes.md").write_text(
-            "# Synthetic failed lookalike\n\nDEMO-B is a fictional failed peer matched to DEMO-A.\n"
-            "The fixture includes a zero-proceeds delisting; it is not a real case study.\n"
+            failed_lookalikes_report(payload), encoding="utf-8"
         )
         (staging / "reports" / "model_validation.md").write_text(
-            "# Demonstration only\n\nFrozen 63-day momentum, next-open fills, 40 bps round-trip.\n"
-            "13 sequential non-overlapping screening windows; no fitted model or holdout claim.\n"
-            "See toy_backtest.json for dates, rows, comparators and limitations.\n"
-            f"\nDate-local negative controls at {asof.isoformat()}: "
-            f"{validation['negative_controls']['windows']} matured testable windows. "
-            "See negative_controls.json for frozen ranks, irrelevant ranks, date-local null ranges "
-            "and availability exclusions. Descriptive fixture checks only; no p-value, alpha "
-            "or untouched-holdout claim.\n"
+            model_validation_report(payload), encoding="utf-8"
         )
         write_integrity(staging)
         # Immutable run folder + atomic pointer avoids partial reads during refresh.
