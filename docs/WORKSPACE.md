@@ -147,3 +147,13 @@ aggregate facts do not prove original extraction vintage, publisher authenticity
 Real research still requires original-vintage and licensed PIT universe/action/delisting evidence.
 For explicit manual downloads using the owner's existing Finviz subscription and `.env` SEC
 contact, see [Provider refresh](PROVIDER_REFRESH.md). Finviz remains the selected market provider.
+
+
+## Radar display thresholds
+
+Radar supports separate minimum 1D/1W/1M/3M returns, relative volume, reported revenue growth,
+reported operating margin, factor coverage and recorded risk flags. Additional filters expand
+below the main controls. Blank means disabled; explicit zero remains active. Required missing
+financial/risk values are excluded rather than filled. Financial sorting puts missing values
+last and resolves ties by permanent ID. Reset research thresholds restores all display defaults.
+These controls do not alter archived scores, policies, observations or backtest results.

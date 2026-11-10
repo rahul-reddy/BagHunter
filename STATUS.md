@@ -1,3 +1,26 @@
+# Current handoff — complete Radar display filters / 2026-11-10
+
+Main 2fe1c810b52d delivers canonical contracts PR #53 after 561 backend / 49 browser CI
+checks, Gemini approval and the guarded merge. Main verified all ten Parquet hashes, explicit
+unknown metadata, mobile/desktop access and actual dossier export -> CLI persistence. Current feat/discovery-filters adds
+1D/1W/1M/3M filters/sorts, dated reported financial growth/margin controls, coverage and required
+risk flags. Blank thresholds disable a filter; zero is explicit, and missing values never become
+zero. Known numeric values sort before missing values with deterministic ID ties. These controls
+only filter the displayed saved run, not the strategy policy or backtest.
+
+After integrating delivered contracts main on November 10, frontend lint/types/build and six
+combined Radar/parser/contracts/compatibility browser cases passed, including desktop/mobile Axe,
+missing-last sorts, real saved-dossier persistence and unchanged saved research fields. Finish
+exact-head CI, independent review, guarded merge and main preview. No unrun combined-suite pass
+is claimed.
+
+Canonical contracts/persisted assertions are delivered; see their main release receipt.
+The per-item audit also identifies regime-cohort controls, dated industry matching and thin named
+validation/failed-lookalike exports for further implementation. Finviz Elite + SEC remain scope;
+zero verified real theses. The full app completion goal remains active.
+
+---
+
 # Current handoff — canonical contracts and persisted dossier assertions / 2026-11-10
 
 Main 7a40ea861c55 delivers classification PR #48 with 525 backend / 46 browser CI tests,

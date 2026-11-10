@@ -1,3 +1,15 @@
+# Active completion work — Radar, reports and cohort context / 2026-11-10
+
+Main 2fe1c810b52d delivers classification plus canonical contracts/persisted assertions with
+561 backend / 49 browser CI checks, independent review and main acceptance. Current Radar filter
+branch passes frontend gates and six combined browser checks. Finish its exact-head CI/review/
+guarded merge and main preview. Named validation/adverse reports are committed/tested in
+BagHunter-research; dated industry and regime context is under acceptance in BagHunter-thesis.
+Continue the requirement-by-requirement audit and remaining admission/comparator/release gaps.
+Finviz Elite + SEC remain scope; zero verified real theses. Full completion goal stays active.
+
+---
+
 # Active implementation — classification and canonical contracts / 2026-10-28
 
 Main fbdd626281f9 delivers source-bound reports and the executable notebook with exact-head

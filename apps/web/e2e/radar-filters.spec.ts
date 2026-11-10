@@ -1,0 +1,55 @@
+import {test,expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import {compareRadar,emptyRadarFilters,matchesRadar,parseRadarFilters} from '../src/RadarFilters';
+import type {Signal} from '../src/main';
+
+test('display threshold parsing distinguishes zero, blanks, missing and malformed values',()=>{
+  expect(parseRadarFilters({...emptyRadarFilters})).toEqual({});
+  expect(parseRadarFilters({...emptyRadarFilters,revenue_growth:'0'})).toEqual({revenue_growth:0});
+  for(const value of ['NaN','Infinity',' ','1e999','-1','101']) expect(()=>parseRadarFilters({...emptyRadarFilters,completeness:value})).toThrow();
+  const missing={security_id:'z',financials:{revenue_growth:null},risk_flags:undefined} as unknown as Signal;
+  const zero={security_id:'a',financials:{revenue_growth:0},risk_flags:[]} as unknown as Signal;
+  expect(matchesRadar(missing,{...emptyRadarFilters})).toBe(true);
+  expect(matchesRadar(missing,{...emptyRadarFilters,revenue_growth:'0'})).toBe(false);
+  expect(matchesRadar(zero,{...emptyRadarFilters,revenue_growth:'0'})).toBe(true);
+  expect(matchesRadar(missing,{...emptyRadarFilters,risk_flag:'NONE'})).toBe(false);
+  expect(matchesRadar(zero,{...emptyRadarFilters,risk_flag:'NONE'})).toBe(true);
+  expect([missing,zero].sort((a,b)=>compareRadar(a,b,'revenue_growth'))).toEqual([zero,missing]);
+  expect(compareRadar({...zero,security_id:'a'},{...zero,security_id:'b'},'revenue_growth')).toBeLessThan(0);
+});
+
+test('Radar combines horizon, financial, risk and coverage filters without changing archived results',async({page,request})=>{
+  const original=await(await request.get('/api/runs/current')).json();
+  const run=structuredClone(original);
+  run.signals[0]={...run.signals[0],return_1d:.1,return_5d:.2,return_21d:.3,return_63d:.4,completeness:.9,financials:{...run.signals[0].financials,revenue_growth:.2,operating_margin:.1},risk_flags:['LOW_LIQUIDITY']};
+  run.signals[1]={...run.signals[1],return_1d:-.1,return_5d:-.2,return_21d:-.3,return_63d:-.4,completeness:.8,financials:{...run.signals[1].financials,revenue_growth:null,operating_margin:null},risk_flags:undefined};
+  run.signals[2]={...run.signals[2],return_1d:0,return_5d:0,return_21d:0,return_63d:0,completeness:1,financials:{...run.signals[2].financials,revenue_growth:0,operating_margin:0},risk_flags:[]};
+  await page.route('**/api/runs/current',route=>route.fulfill({json:run}));
+  await page.goto('/');await page.getByRole('button',{name:'BagHunter Radar',exact:true}).click();
+  const table=page.getByRole('table',{name:'Synthetic research candidates',exact:true});
+  await expect(table.getByRole('row')).toHaveCount(4);
+  await page.getByText('Additional horizon, financial, risk and coverage filters',{exact:false}).click();
+  await page.getByLabel('Minimum 1D return (%)',{exact:true}).fill('0');
+  await expect(table.getByRole('row')).toHaveCount(3);
+  await page.getByLabel('Minimum 1W return (%)',{exact:true}).fill('10');
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await page.getByLabel('Minimum 1W return (%)',{exact:true}).fill('');
+  await page.getByLabel('Minimum reported revenue growth (%)',{exact:true}).fill('0');
+  await expect(table.getByRole('row')).toHaveCount(3);
+  await page.getByRole('combobox',{name:'Required risk flag',exact:true}).selectOption('NONE');
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await expect(table.getByRole('button',{name:`${run.signals[2].ticker} ${run.signals[2].security_id}`,exact:true})).toBeVisible();
+  await page.getByLabel('Minimum factor coverage (%)',{exact:true}).fill('101');
+  await expect(page.getByRole('alert')).toContainText('finite value');
+  await expect(table.getByRole('row')).toHaveCount(1);
+  await page.getByRole('button',{name:'Reset research thresholds',exact:true}).click();
+  await expect(table.getByRole('row')).toHaveCount(4);
+  await page.getByLabel('Rank by',{exact:false}).selectOption('revenue_growth');
+  await expect(table.getByRole('row').nth(3)).toContainText(run.signals[1].ticker);
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+  const after=await(await request.get('/api/runs/current')).json();
+  for(const key of ['run_id','code_sha256','sources','signals','study','backtest','validation','portfolio']) expect(after[key]).toEqual(original[key]);
+});
