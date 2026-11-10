@@ -3,7 +3,15 @@
 import math
 from datetime import UTC, date, datetime, timedelta
 
-from packages.shared.models import Action, Bar, Dataset, Fact, Instrument, Symbol
+from packages.shared.models import (
+    Action,
+    Bar,
+    Dataset,
+    Fact,
+    IndustryClassification,
+    Instrument,
+    Symbol,
+)
 
 
 def fixture() -> Dataset:
@@ -95,6 +103,21 @@ def fixture() -> Dataset:
         symbols=[
             Symbol(security_id=i.security_id, ticker=i.ticker, valid_from=i.first_seen)
             for i in instruments
+        ],
+        industry_history=[
+            IndustryClassification(
+                security_id=sid,
+                industry=industry,
+                industry_version="fixture-industry-v1",
+                valid_from=date(2019, 1, 1),
+                published_at=datetime(2019, 1, 1, tzinfo=UTC),
+                source_id="fixture-v1",
+            )
+            for sid, industry in (
+                ("fx-compound", "Fixture industrial components"),
+                ("fx-failure", "Fixture industrial components"),
+                ("fx-steady", "Fixture business services"),
+            )
         ],
         actions=[
             Action(

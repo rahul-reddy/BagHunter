@@ -3,9 +3,10 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from packages.research.cohort_context import benchmark_regime, industry_at
 from packages.research.features import eligible
 from packages.research.outcomes import outcome
-from packages.shared.models import Dataset
+from packages.shared.models import Dataset, IndustryClassification
 
 
 def cohort_grid(dataset: Dataset) -> dict[str, Any]:
@@ -13,11 +14,15 @@ def cohort_grid(dataset: Dataset) -> dict[str, Any]:
     anchors = []
     for year in sorted({day.year for day in sessions})[1:]:
         anchors.append(next(day for day in sessions if day.year == year))
+    industry_rows: dict[str, list[IndustryClassification]] = {}
+    for row in dataset.industry_history:
+        industry_rows.setdefault(row.security_id, []).append(row)
     labels = []
     grid = []
     for anchor in anchors:
         clock = datetime(anchor.year, anchor.month, anchor.day, 23, tzinfo=UTC)
         population = [i for i in dataset.instruments if eligible(i, clock)]
+        context = benchmark_regime(dataset, clock)
         for years in (1, 2, 3, 5):
             records: list[dict[str, Any]] = []
             for instrument in population:
@@ -37,7 +42,19 @@ def cohort_grid(dataset: Dataset) -> dict[str, Any]:
                     record = outcome(
                         instrument.security_id, dataset.bars, dataset.actions, anchor, years
                     )
-                records.append(record | {"sector": instrument.sector})
+                industry = industry_at(
+                    industry_rows.get(instrument.security_id, []), instrument.security_id, clock
+                )
+                records.append(
+                    record
+                    | {
+                        "sector": instrument.sector,
+                        "regime": context["regime"],
+                        "benchmark_context": context,
+                        "industry_asof": industry["industry"],
+                        "industry_context": industry,
+                    }
+                )
             labels.extend(records)
             for sector in ["ALL", *sorted({i.sector for i in population})]:
                 selected = [r for r in records if sector == "ALL" or r["sector"] == sector]
@@ -49,6 +66,8 @@ def cohort_grid(dataset: Dataset) -> dict[str, Any]:
                             "anchor": str(anchor),
                             "horizon_years": years,
                             "sector": sector,
+                            "regime": context["regime"],
+                            "benchmark_context": context,
                             "threshold": threshold,
                             "eligible": len(selected),
                             "complete": len(complete),

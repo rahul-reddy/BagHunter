@@ -1,3 +1,28 @@
+# Current handoff — dated industry and cohort-regime context / 2026-11-10
+
+This branch integrates main fe060062338d plus the named validation/adverse report change in
+PR #55. Canonical contracts and Radar are delivered. The report PR has current-source 40-test
+backend and browser acceptance; its full CI/review is pending.
+
+Published/validity-bound industry assignments drive deterministic case/control matching,
+with taxonomy/source evidence, ambiguity exclusion and explicit sector-proxy fallback. Optional
+checksum-listed historical industry rows remain quarantined. Current Finviz metadata is never
+backdated. Cohorts retain dated 63-session raw benchmark-return signs, with missing/stale/
+ambiguous history unavailable. Museum adds regime/all-anchor controls and correlated-observation
+scope; legacy contexts are not reconstructed. See docs/COHORT_CONTEXT.md.
+
+After integration, backend lint/format/types and 76 context/history/event/report tests passed.
+Frontend lint/types/build and all three combined cohort/legacy/named-report browser tests passed,
+including archive/API download equality, dated matching evidence, keyboard and desktop/mobile Axe.
+The previous standalone source also passed its workspace integration. Next deliver after PR #55
+through exact-head CI, independent review, guarded merge and actual main acceptance.
+
+Admission/earnings comparator work is under acceptance in BagHunter-operations. Continue the full
+00–08 matrix and final release proof. Finviz Elite + SEC remain scope; zero verified real theses.
+The full completion goal stays active.
+
+---
+
 # Current handoff — complete saved validation and adverse-outcome reports / 2026-11-10
 
 Main fe060062338d delivers Radar PR #54 after 561 backend / 51 browser CI checks,

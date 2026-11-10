@@ -163,6 +163,16 @@ def test_early_history_delisted_peers_and_unmatched_cases_are_retained(study):
             ]
         }
     )
+    changed = changed.model_copy(
+        update={
+            "industry_history": [
+                row.model_copy(update={"industry": "Other fixture industry"})
+                if row.security_id == "fx-failure"
+                else row
+                for row in changed.industry_history
+            ]
+        }
+    )
     unmatched = anchor(event_study(changed, EventPathPolicy()))
     assert unmatched["unmatched_cases"] == ["fx-compound"] and unmatched["pairs"] == []
     assert unmatched["eligible"] == 3

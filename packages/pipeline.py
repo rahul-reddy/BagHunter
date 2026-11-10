@@ -24,6 +24,7 @@ from packages.data.contracts import canonical_tables, write_contracts
 from packages.data.fixture import fixture
 from packages.data.providers import UnconfiguredMarketProvider
 from packages.data.run_archive import verify_integrity, write_integrity
+from packages.research.cohort_context import benchmark_regime, industry_at
 from packages.research.cohorts import cohort_grid
 from packages.research.discovery import DiscoveryPolicy, discover
 from packages.research.event_paths import EventPathPolicy, event_report, event_rows, event_study
@@ -138,15 +139,24 @@ def run(
         if eligible(i, anchor)
         for years in (1, 2, 3, 5)
     ]
-    pairs = matched_pairs(dataset.instruments, labels, anchor, seed)
+    pairs = matched_pairs(
+        dataset.instruments, labels, anchor, seed, industry_history=dataset.industry_history
+    )
     study: dict[str, Any] = {
         "mode": "FIXTURE",
         "anchor": anchor.isoformat(),
         "labels": labels,
         "pairs": pairs,
-        "denominator": 3,
+        "denominator": sum(eligible(i, anchor) for i in dataset.instruments),
         "scope": "Closed artificial universe, not empirical base rates",
-        "matching": "As-of date, fixture industry/cap/liquidity/price buckets; seeded random",
+        "matching": "Published dated industry when available; explicit sector proxy otherwise; "
+        "dated fixture cap/liquidity/price buckets; seeded random",
+        "benchmark_context": benchmark_regime(dataset, anchor),
+        "industry_context": {
+            i.security_id: industry_at(dataset.industry_history, i.security_id, anchor)
+            for i in dataset.instruments
+            if eligible(i, anchor)
+        },
         "anchor_features": [
             snapshot(i, dataset.bars, dataset.facts, anchor)
             for i in dataset.instruments
@@ -232,7 +242,7 @@ def run(
         dump(staging / "run.json", payload)
         dump(staging / "reports" / "canonical_contracts.json", contract)
 
-        for name in ("instruments", "symbols", "bars", "facts", "actions"):
+        for name in ("instruments", "symbols", "bars", "facts", "actions", "industry_history"):
             table(
                 staging / "silver" / f"{name}.parquet",
                 [row.model_dump(mode="json") for row in getattr(dataset, name)],

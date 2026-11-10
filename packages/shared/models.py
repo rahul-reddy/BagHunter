@@ -118,6 +118,29 @@ class Action(Record):
         return self
 
 
+class IndustryClassification(Record):
+    security_id: str = Field(min_length=1)
+    industry: str = Field(min_length=1, max_length=300)
+    industry_version: str = Field(min_length=1, max_length=100)
+    valid_from: date
+    valid_to: date | None = None
+    published_at: datetime
+    source_id: str = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def dated_classification(self) -> "IndustryClassification":
+        if self.published_at.utcoffset() is None:
+            raise ValueError("Industry publication requires a timezone")
+        if self.valid_to is not None and self.valid_to <= self.valid_from:
+            raise ValueError("Industry validity interval must be half-open and nonempty")
+        if any(
+            not value.strip() or value.strip() != value
+            for value in (self.industry, self.industry_version, self.source_id)
+        ):
+            raise ValueError("Industry metadata requires exact, nonblank labels")
+        return self
+
+
 class Dataset(Record):
     mode: Literal["FIXTURE"]
     instruments: list[Instrument]
@@ -125,3 +148,4 @@ class Dataset(Record):
     bars: list[Bar]
     facts: list[Fact]
     actions: list[Action]
+    industry_history: list[IndustryClassification] = Field(default_factory=list)

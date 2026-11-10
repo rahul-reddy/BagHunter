@@ -30,3 +30,5 @@
 .outcome-classification{min-width:0;overflow-wrap:anywhere}.outcome-classification .pagination{flex-wrap:wrap}.outcome-classification .filters label{min-width:0;max-width:100%}.outcome-classification select{max-width:100%}
 .data-contracts{min-width:0;overflow-wrap:anywhere}.data-contracts details{margin:12px 0}
 .radar-filters{margin:18px 0;min-width:0}.radar-filters .filters{margin-top:15px}.radar-filters select{max-width:100%}
+
+.cohort-explorer{min-width:0;overflow-wrap:anywhere}.cohort-explorer .filters label{min-width:0;max-width:100%}.cohort-explorer select{max-width:100%}

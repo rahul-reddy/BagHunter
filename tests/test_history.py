@@ -267,3 +267,70 @@ def test_future_ingestion_timestamp_cannot_be_reactivated(bundle, tmp_path):
     path.write_text(json.dumps(stored), encoding="utf-8")
     with pytest.raises(ValueError, match="ingestion timeline"):
         ingest(bundle, tmp_path / "imported")
+
+
+def add_industry_table(bundle, rows):
+    body = json.dumps(rows).encode()
+    (bundle / "industry_history.json").write_bytes(body)
+    path = bundle / "manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    manifest["retrieved_at"] = "2020-01-10T00:00:00Z"
+    manifest["files"]["industry_history"] = hashlib.sha256(body).hexdigest()
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+
+
+def test_optional_hashed_industry_history_is_published_cut_off_and_preserved_in_quarantine(
+    bundle, tmp_path
+):
+    old = {
+        "security_id": "fixture-history-a",
+        "industry": "Fixture old industry",
+        "industry_version": "fixture-taxonomy-v1",
+        "valid_from": "2019-01-01",
+        "valid_to": None,
+        "published_at": "2020-01-01T00:00:00Z",
+        "source_id": "fixture-history-v1",
+    }
+    provider = LocalHistoryProvider(bundle)
+    old["source_id"] = provider.manifest.source_id
+    revised = {**old, "industry": "Later revision", "published_at": "2020-01-05T00:00:00Z"}
+    add_industry_table(bundle, [old, revised])
+    provider = LocalHistoryProvider(bundle)
+    assert [
+        r["industry"]
+        for r in provider.get_industry_history(["fixture-history-a"], "2020-01-01T23:00:00Z")
+    ] == ["Fixture old industry"]
+    assert len(provider.get_industry_history(["fixture-history-a"], "2020-01-06T00:00:00Z")) == 2
+    report = ingest(bundle, tmp_path / "imported")
+    assert report["counts"]["industry_records"] == 2
+    assert report["status"] == "QUARANTINED_NOT_RESEARCH_READY"
+    folder = tmp_path / "imported/fixture" / report["snapshot_id"]
+    assert (folder / "raw/industry_history.json").read_bytes() == (
+        bundle / "industry_history.json"
+    ).read_bytes()
+    assert (folder / "silver/industry_history.parquet").exists()
+    assert ingest(bundle, tmp_path / "imported") == report
+
+
+@pytest.mark.parametrize("mutation", ["digest", "identity", "source", "future_publication"])
+def test_optional_industry_integrity_and_vintage_boundaries_reject(bundle, mutation):
+    provider = LocalHistoryProvider(bundle)
+    row = {
+        "security_id": "fixture-history-a",
+        "industry": "Fixture industry",
+        "industry_version": "v1",
+        "valid_from": "2019-01-01",
+        "published_at": "2020-01-01T00:00:00Z",
+        "source_id": provider.manifest.source_id,
+    }
+    if mutation == "identity":
+        row["security_id"] = "unknown"
+    elif mutation == "source":
+        row["source_id"] = "another-source"
+    elif mutation == "future_publication":
+        row["published_at"] = "2030-01-01T00:00:00Z"
+    add_industry_table(bundle, [row])
+    if mutation == "digest":
+        (bundle / "industry_history.json").write_text("[]", encoding="utf-8")
+    with pytest.raises(ValueError):
+        LocalHistoryProvider(bundle)

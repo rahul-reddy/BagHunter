@@ -362,6 +362,16 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
         assert client.get(f"/runs/{after}/tables/{name}.parquet").content == body
         assert pq.read_table(table_path).num_rows == descriptor["rows"]
     assert contracts["tables"]["thesis"]["rows"] == 0
+    assert data["study"]["pairs"][0]["matching_basis"] == "DATED_INDUSTRY_METADATA"
+    assert (
+        data["study"]["industry_context"]["fx-compound"]["industry"]
+        == "Fixture industrial components"
+    )
+    contexts = data["study"]["cohorts"]["labels"]
+    assert contexts and all("regime" in row and "industry_context" in row for row in contexts)
+    assert client.get(f"/runs/{after}/reports/cohort_grid.json").json() == data["study"]["cohorts"]
+    industry_path = root / "runs" / after / "silver/industry_history.parquet"
+    assert pq.read_table(industry_path).num_rows == 3
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
     path_dir = root / "runs" / after
