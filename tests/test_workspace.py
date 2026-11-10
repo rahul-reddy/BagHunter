@@ -355,6 +355,18 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
     paths = data["study"]["event_paths"]
     assert client.get(f"/runs/{after}/reports/event_paths.json").json() == paths
     path_dir = root / "runs" / after
+    classification = client.get(f"/runs/{after}/reports/classification.json").json()
+    assert classification == data["validation"]["classification"]
+    assert classification == json.loads((path_dir / "reports/classification.json").read_text())
+    assert classification["dataset_sha256"] == data["sources"][0]["sha256"]
+    assert classification["selector_policy_sha256"] == data["discovery"]["policy_sha256"]
+    assert classification["calibration"]["brier_score"] is None
+    text = client.get(f"/runs/{after}/reports/classification.md").text
+    assert text == (path_dir / "reports/classification.md").read_text()
+    assert after in text and "not probabilities" in text
+    assert not {"classification", "max_multiple", "label_hit"} & set(
+        pq.read_schema(path_dir / "gold/features.parquet").names
+    )
     stress = client.get(f"/runs/{after}/reports/robustness.json").json()
     assert stress == data["validation"]["robustness"]
     assert stress == json.loads((path_dir / "reports" / "robustness.json").read_text())
@@ -425,6 +437,7 @@ def test_run_index_comparison_exports_and_scenarios(workspace, monkeypatch):
             "negative_controls": controls,
             "discovery_negative_controls": discovery_controls,
             "robustness": stress,
+            "classification": classification,
         }
         == data["validation"]
     )

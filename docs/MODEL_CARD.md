@@ -93,3 +93,8 @@ reports. Only matured labels are permuted within date; a predated irrelevant ran
 identity knowledge. Null ranges/tail fractions remain descriptive fixture arithmetic, not p-values
 or evidence of predictive skill. Numeric guards preserve missing factors or reject unrepresentable
 calculations before publication. See [negative controls](NEGATIVE_CONTROLS.md).
+
+
+Separate frozen-budget 5x/10x classification now retains every 1/2/3/5Y attempt and compares
+configured discovery, 63D momentum and seeded random ranks. Missing labels and unachievable budgets
+remain explicit; no rank is promoted to a probability or calibrated hit rate. See CLASSIFICATION.md.
