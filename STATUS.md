@@ -1,3 +1,27 @@
+# Current handoff — complete saved validation and adverse-outcome reports / 2026-11-10
+
+Main fe060062338d delivers Radar PR #54 after 561 backend / 51 browser CI checks,
+independent approval and guarded merge. Its two main browser checks passed. Canonical
+contracts and persistent dossier assertions are delivered in PR #53 with main acceptance.
+
+This branch replaces placeholder model_validation.md and failed_lookalikes.md with complete
+source-bound reports rendered from saved chronology, costs, ledgers, risk, uncertainty,
+classification and robustness fields. Missing outcomes remain explicit; causal explanations,
+calibrated probabilities and empirical validity are not invented. The API verifies and serves
+the actual archived Markdown, preserving legacy text. Museum and Validation Lab offer downloads.
+
+On this integrated revision, backend lint/format/types and frontend lint/types/build passed.
+The real-browser report download, archive/API equality, desktop/mobile Axe and keyboard test
+passed. The previous integrated base passed all 15 report/workspace cases. The broader current
+report + workspace suite is running; its result is not yet claimed. Next finish exact-head CI,
+independent review, guarded merge and main report preview. See docs/REPORTS.md.
+
+Dated industry/cohort context is committed in BagHunter-thesis. Admission/earnings comparator
+implementation is in BagHunter-operations. Continue the full 00–08 audit and final release proof.
+Finviz Elite + SEC remain scope; zero verified real theses. Full completion goal remains active.
+
+---
+
 # Current handoff — complete Radar display filters / 2026-11-10
 
 Main 2fe1c810b52d delivers canonical contracts PR #53 after 561 backend / 49 browser CI
@@ -18,6 +42,7 @@ Canonical contracts/persisted assertions are delivered; see their main release r
 The per-item audit also identifies regime-cohort controls, dated industry matching and thin named
 validation/failed-lookalike exports for further implementation. Finviz Elite + SEC remain scope;
 zero verified real theses. The full app completion goal remains active.
+
 
 ---
 

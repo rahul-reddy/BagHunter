@@ -433,6 +433,22 @@ def report_download(
     data = read_run(run_id)
     if previous is not None and report_name != "discovery_digest.md":
         raise HTTPException(422, "A prior run applies only to the discovery digest")
+    if report_name in ("failed_lookalikes.md", "model_validation.md"):
+        folder = Path(os.environ.get("BAGHUNTER_DATA", "data/fixture/latest")) / "runs" / run_id
+        relative = f"reports/{report_name}"
+        if not (folder / relative).exists():
+            raise HTTPException(404, "No saved research report in this archive")
+        try:
+            verify_integrity(folder, only=relative)
+            body = _read(folder / relative, 2 * 1024 * 1024)
+            body.decode("utf-8")
+        except (OSError, ValueError, KeyError, TypeError, UnicodeError):
+            raise HTTPException(503, "Saved research report integrity unavailable") from None
+        return Response(
+            body,
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{report_name}"'},
+        )
     reports = {
         "technical_evidence.json": technical_report(data),
         "source_manifest.json": data["sources"],

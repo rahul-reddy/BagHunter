@@ -34,3 +34,22 @@ or independently verified thesis-breaker feed. No weekly cadence or forced pick 
 Legacy reports render available archive fields and disclose missing clocks/profiles. Reports and
 underlying archives stay fixture-labeled. No primary-source fact, return, causal story, current
 identity, calibration or empirical finding is inferred from a report template.
+
+
+## Complete validation and adverse-outcome exports
+
+New runs generate `archived-validation-atlas-v1` in `model_validation.md` and
+`failed_lookalikes.md`. Validation retains actual periods, policy/cost assumptions, chronological
+partitions, saved comparator metrics, constrained turnover/cost ledgers, daily-close risk,
+descriptive subgroups, illustrative uncertainty, classification coverage and every stress status.
+Unknown ratios stay unavailable. Retrospective evaluation dates can extend beyond the screening
+clock and do not become knowable predictors at that clock.
+
+The adverse-outcome atlas preserves nonpositive terminal returns, including round-tripping
+maximum-hit winners, and separately lists missing terminal outcomes. Saved case/control assignments,
+matching weights and source/code fingerprints remain explicit. No causal reason for divergence is
+invented and overlapping horizons do not become independent samples.
+
+Museum and Validation Lab offer these named downloads. The API serves checksum-verified archived
+bytes, preserving legacy summaries rather than regenerating them under newer code. Missing saved
+reports return 404; corrupt or unverified artifacts return 503. No archive is repaired by reading it.
